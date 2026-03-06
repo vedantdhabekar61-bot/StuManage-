@@ -1,0 +1,33 @@
+import type { Metadata } from 'next';
+import { Inter, Cormorant_Garamond } from 'next/font/google';
+import '@/globals.css';
+
+const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+const cormorant = Cormorant_Garamond({ 
+  subsets: ['latin'], 
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-serif' 
+});
+
+export const metadata: Metadata = {
+  title: 'LibManager - Smart Library Management',
+  description: 'Manage your reading room and study library efficiently.',
+};
+
+import { BottomNav } from '@/components/bottom-nav';
+import { PageTransition } from '@/components/page-transition';
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+      <body className="bg-slate-50 text-slate-900 antialiased font-sans" suppressHydrationWarning>
+        <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
+          <PageTransition>
+            {children}
+          </PageTransition>
+          <BottomNav />
+        </div>
+      </body>
+    </html>
+  );
+}
