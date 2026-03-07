@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
 
-export function WelcomeScreen() {
+export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -19,6 +19,7 @@ export function WelcomeScreen() {
   const handleDismiss = () => {
     setIsVisible(false);
     localStorage.setItem('hasSeenWelcome', 'true');
+    if (onDismiss) onDismiss();
   };
 
   if (!isVisible) return null;

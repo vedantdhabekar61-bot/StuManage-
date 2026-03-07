@@ -13,22 +13,34 @@ export const metadata: Metadata = {
   title: 'LibManager - Smart Library Management',
   description: 'Manage your reading room and study library efficiently.',
   manifest: '/manifest.json',
+};
+
+export const viewport = {
   themeColor: '#2563eb',
 };
 
 import { BottomNav } from '@/components/bottom-nav';
 import { PageTransition } from '@/components/page-transition';
+import { AuthProvider } from '@/hooks/use-auth';
+import { AuthGuard } from '@/components/auth-guard';
+import { SubscriptionGuard } from '@/components/subscription-guard';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="bg-slate-50 text-slate-900 antialiased font-sans" suppressHydrationWarning>
-        <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
-          <PageTransition>
-            {children}
-          </PageTransition>
-          <BottomNav />
-        </div>
+        <AuthProvider>
+          <AuthGuard>
+            <SubscriptionGuard>
+              <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
+                <PageTransition>
+                  {children}
+                </PageTransition>
+                <BottomNav />
+              </div>
+            </SubscriptionGuard>
+          </AuthGuard>
+        </AuthProvider>
       </body>
     </html>
   );

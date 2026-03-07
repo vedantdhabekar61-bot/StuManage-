@@ -2,7 +2,6 @@
 
 import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
-import { WelcomeScreen } from '@/components/welcome-screen';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from '@/hooks/use-settings';
@@ -10,9 +9,13 @@ import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
 import { useMemo } from 'react';
 
+import { useAuth } from '@/hooks/use-auth';
+import { LogOut } from 'lucide-react';
+
 export default function Dashboard() {
   const { settings } = useSettings();
   const { students, isLoaded, updateStudent } = useStudents();
+  const { logout, user } = useAuth();
   
   const metrics = useMemo(() => {
     const activeStudents = students.length;
@@ -86,12 +89,30 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
   }
 
   return (
-    <>
-      <WelcomeScreen />
-      <main className="flex flex-col gap-6 p-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500">Welcome back, Library Manager</p>
+    <main className="flex flex-col gap-6 p-6">
+      <header className="flex items-center justify-between">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-slate-500">Welcome back, {user?.name || 'Library Manager'}</p>
+            {user?.isSubscribed ? (
+              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 border border-amber-100">
+                Premium
+              </span>
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+                Free Trial
+              </span>
+            )}
+          </div>
+        </div>
+        <button 
+          onClick={logout}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+          title="Logout"
+        >
+          <LogOut className="h-5 w-5" />
+        </button>
       </header>
 
       {/* Metrics Grid */}
@@ -209,7 +230,6 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
         </div>
       </section>
     </main>
-    </>
   );
 }
 

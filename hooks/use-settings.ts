@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/hooks/use-auth';
 
 const SETTINGS_KEY = 'libmanager_settings';
 
@@ -13,24 +15,61 @@ const DEFAULT_SETTINGS: Settings = {
 };
 
 export function useSettings() {
-  const [settings, setSettings] = useState<Settings>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(SETTINGS_KEY);
-      if (saved) {
-        try {
-          return JSON.parse(saved);
-        } catch (e) {
-          console.error('Failed to parse settings', e);
-        }
-      }
-    }
-    return DEFAULT_SETTINGS;
-  });
+  const { user } = useAuth();
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
-  const updateSettings = (newSettings: Partial<Settings>) => {
+  useEffect(() => {
+    const fetchSettings = async () => {
+      if (!user) {
+        const saved = localStorage.getItem(SETTINGS_KEY);
+        if (saved) {
+          try {
+            setSettings(JSON.parse(saved));
+          } catch (e) {
+            console.error('Failed to parse local settings', e);
+          }
+        }
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('settings')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) {
+          console.warn('Supabase settings fetch error:', error.message);
+          const saved = localStorage.getItem(SETTINGS_KEY);
+          if (saved) setSettings(JSON.parse(saved));
+        } else if (data) {
+          setSettings(data as Settings);
+        }
+      } catch (e) {
+        console.error('Failed to fetch settings from Supabase', e);
+      }
+    };
+
+    fetchSettings();
+  }, [user]);
+
+  const updateSettings = async (newSettings: Partial<Settings>) => {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+
+    if (user) {
+      try {
+        const { error } = await supabase
+          .from('settings')
+          .upsert({ ...updated, user_id: user.id }, { onConflict: 'user_id' });
+        
+        if (error) console.error('Supabase settings upsert error:', error.message);
+      } catch (e) {
+        console.error('Failed to update settings in Supabase', e);
+      }
+    }
   };
 
   return { settings, updateSettings };
