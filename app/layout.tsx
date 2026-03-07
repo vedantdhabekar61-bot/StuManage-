@@ -12,6 +12,8 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   title: 'LibManager - Smart Library Management',
   description: 'Manage your reading room and study library efficiently.',
+  manifest: '/manifest.json',
+  themeColor: '#2563eb',
 };
 
 import { BottomNav } from '@/components/bottom-nav';
