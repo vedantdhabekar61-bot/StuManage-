@@ -60,22 +60,56 @@ export default function LoginPage() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6">
-      <div className="w-full max-w-sm space-y-8">
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        className="w-full max-w-sm space-y-8"
+      >
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"
+          >
             <BookOpen className="h-8 w-8" />
-          </div>
-          <h1 className="mt-6 font-serif text-3xl font-bold text-slate-900">Welcome Back</h1>
-          <p className="mt-2 text-sm text-slate-500">Log in to your LibManager account.</p>
+          </motion.div>
+          <motion.h1 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="mt-6 font-serif text-3xl font-bold text-slate-900"
+          >
+            Welcome Back
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mt-2 text-sm text-slate-500"
+          >
+            Log in to your LibManager account.
+          </motion.p>
         </div>
 
         {error && (
-          <div className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-medium text-rose-600">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-medium text-rose-600"
+          >
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+        <motion.form 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.6 }}
+          onSubmit={handleSubmit} 
+          className="mt-8 space-y-4"
+        >
           <div className="space-y-4">
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
@@ -148,7 +182,7 @@ export default function LoginPage() {
               )}
             </button>
           </div>
-        </form>
+        </motion.form>
 
         <p className="text-center text-sm text-slate-500">
           Don&apos;t have an account?{' '}
@@ -156,7 +190,7 @@ export default function LoginPage() {
             Sign Up
           </Link>
         </p>
-      </div>
+      </motion.div>
     </main>
   );
 }

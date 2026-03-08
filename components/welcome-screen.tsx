@@ -1,64 +1,78 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Book, X } from 'lucide-react';
+import { motion } from 'motion/react';
+import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
 
 export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    // Check if user has seen this before
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome');
-    if (!hasSeenWelcome) {
-      setIsVisible(true);
-    }
-  }, []);
-
   const handleDismiss = () => {
-    setIsVisible(false);
     localStorage.setItem('hasSeenWelcome', 'true');
     if (onDismiss) onDismiss();
   };
 
-  if (!isVisible) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-lg bg-white shadow-xl">
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#fdfcf8] p-6">
+      <div className="relative flex h-full w-full max-w-md flex-col items-center justify-center gap-12 text-center">
+        {/* Background Accents */}
+        <div className="absolute top-1/4 left-1/2 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-100/30 blur-3xl" />
         
-        {/* Header with Close Button */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-          <div className="flex items-center gap-2 text-blue-600">
-            <Book size={20} />
-            <span className="font-bold tracking-tight text-slate-800">DeskTrack</span>
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center gap-6"
+        >
+          <div className="relative">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-amber-50 text-amber-600 shadow-inner">
+              <BookOpen className="h-12 w-12" />
+            </div>
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              className="absolute -right-2 -top-2 text-amber-400"
+            >
+              <Sparkles className="h-8 w-8" />
+            </motion.div>
           </div>
-          <button 
-            onClick={handleDismiss}
-            className="text-slate-400 hover:text-slate-600 transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
+          
+          <div className="flex flex-col gap-3">
+            <h1 className="font-serif text-5xl font-light tracking-tight text-slate-900">
+              Welcome to <span className="font-medium italic">LibManager</span>
+            </h1>
+            <p className="mx-auto max-w-[280px] text-sm leading-relaxed text-slate-500">
+              A quiet space for focused minds. Manage your reading room with elegance and ease.
+            </p>
+          </div>
+        </motion.div>
 
-        {/* Content Body */}
-        <div className="px-6 py-8 text-center">
-          <h2 className="text-2xl font-semibold text-slate-900">Welcome to LibManager</h2>
-          <p className="mt-2 text-slate-600">
-            Your workspace for managing library tasks efficiently. 
-            Track books, manage members, and organize your desk in one place.
-          </p>
-        </div>
-
-        {/* Action Footer */}
-        <div className="bg-slate-50 px-6 py-4 flex justify-end">
+        <motion.div
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ delay: 0.8, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="flex w-full flex-col gap-4"
+        >
           <button
             onClick={handleDismiss}
-            className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-blue-700 transition-all focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-slate-900 py-6 text-sm font-bold uppercase tracking-widest text-white transition-all active:scale-95"
           >
-            Get Started
+            <span className="relative z-10">Enter Workspace</span>
+            <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
+            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-amber-500/20 to-transparent transition-transform group-hover:translate-x-0" />
           </button>
-        </div>
+          
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
+            Crafted for Productivity
+          </p>
+        </motion.div>
 
+        {/* Quote Accent */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          transition={{ delay: 1.5, duration: 1.5 }}
+          className="absolute bottom-12 font-serif text-sm italic text-slate-400"
+        >
+          &quot;The only thing that you absolutely have to know, is the location of the library.&quot;
+        </motion.div>
       </div>
     </div>
   );
