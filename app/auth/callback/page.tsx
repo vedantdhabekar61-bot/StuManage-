@@ -9,9 +9,15 @@ export default function AuthCallbackPage() {
 
   useEffect(() => {
     const handleCallback = async () => {
-      const { error } = await supabase.auth.exchangeCodeForSession(window.location.search);
-      if (error) {
-        console.error('Error exchanging code for session:', error.message);
+      // 1. Extract the specific 'code' parameter from the URL
+      const code = new URLSearchParams(window.location.search).get('code');
+      
+      if (code) {
+        // 2. Pass only the raw code to Supabase
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          console.error('Error exchanging code for session:', error.message);
+        }
       }
       router.push('/');
     };
