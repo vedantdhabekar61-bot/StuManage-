@@ -1,20 +1,31 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# DeskTrack
 
-# Run and deploy your AI Studio app
+DeskTrack is a simple web application designed to help manage library desks and student seat usage efficiently. It helps library managers track seat availability, manage student entries, and perform urgent actions quickly.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/e58ce3d3-3789-468d-9753-4c893f4c718a
+- Student seat management
+- Track seat usage
+- Urgent action list for quick management
+- WhatsApp message option for students
+- Payment tracking for seat fees
+- Mobile friendly interface
+- Progressive Web App (PWA) support
+- Installable on Android devices
 
-## Run Locally
+## Tech Stack
 
-**Prerequisites:**  Node.js
+- HTML
+- CSS
+- JavaScript
+- Vite
+- Supabase (Database & Authentication)
+- Vercel (Deployment)
+- PWA (Progressive Web App)
 
+## Installation
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Clone the repository
+
+```bash
+git clone https://github.com/vedantdhabekar61-bot/DeskTrack-.git
