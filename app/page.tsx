@@ -49,13 +49,13 @@ export default function Dashboard() {
     const expiryDate = new Date(student.expiryDate);
     const formattedDate = expiryDate.toLocaleDateString('en-GB', {
       day: '2-digit',
-      month: 'long',
+      month: '2-digit',
       year: 'numeric'
     });
     
     const message = `Hello ${student.name},
 Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– LibManager`;
+– MyStudents`;
     
     const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -171,7 +171,7 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                   <div className="flex flex-col">
                     <span className="font-semibold text-slate-900">{student.name}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Desk {student.deskNumber} • {student.paymentStatus === 'Overdue' ? 'Payment Overdue' : `Expires on ${student.expiryDate}`}
+                      Desk {student.deskNumber} • {student.paymentStatus === 'Overdue' ? 'Payment Overdue' : `Fees Due Date: ${new Date(student.expiryDate).toLocaleDateString('en-GB')}`}
                     </span>
                   </div>
                 </div>

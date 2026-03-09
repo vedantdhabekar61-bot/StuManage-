@@ -89,7 +89,7 @@ export default function LoginPage() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="mt-2 text-sm text-slate-500"
           >
-            Log in to your LibManager account.
+            Log in to your MyStudents account.
           </motion.p>
         </div>
 

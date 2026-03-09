@@ -10,7 +10,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: 'LibManager - Smart Library Management',
+  title: 'MyStudents - Smart Library Management',
   description: 'Manage your reading room and study library efficiently.',
   manifest: '/manifest.json',
 };
@@ -41,16 +41,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </SubscriptionGuard>
           </AuthGuard>
         </AuthProvider>
-
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js')
-              }
-            `,
-          }}
-        />
       </body>
     </html>
   );

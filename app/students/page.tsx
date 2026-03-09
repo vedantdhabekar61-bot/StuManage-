@@ -28,13 +28,13 @@ export default function StudentsPage() {
     const expiryDate = new Date(student.expiryDate);
     const formattedDate = expiryDate.toLocaleDateString('en-GB', {
       day: '2-digit',
-      month: 'long',
+      month: '2-digit',
       year: 'numeric'
     });
     
     const message = `Hello ${student.name},
 Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– LibManager`;
+– MyStudents`;
     
     const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -123,8 +123,8 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
 
             <div className="flex items-center justify-between border-t border-slate-50 pt-4">
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Expires On</span>
-                <span className="text-xs font-semibold text-slate-700">{student.expiryDate}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fees Due Date</span>
+                <span className="text-xs font-semibold text-slate-700">{new Date(student.expiryDate).toLocaleDateString('en-GB')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button 

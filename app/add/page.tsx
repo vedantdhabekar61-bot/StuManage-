@@ -256,7 +256,7 @@ export default function AddStudentPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium text-slate-500">Expiry Date</span>
+                <span className="text-xs font-medium text-slate-500">Fees Due Date</span>
                 <div className="relative">
                   <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input 
@@ -271,8 +271,8 @@ export default function AddStudentPage() {
 
             <div className="flex flex-col gap-2">
               <span className="text-xs font-medium text-slate-500">Payment Method</span>
-              <div className="grid grid-cols-3 gap-2">
-                {['UPI', 'Cash', 'Bank Transfer'].map((method) => (
+              <div className="grid grid-cols-2 gap-2">
+                {['UPI', 'Cash'].map((method) => (
                   <button
                     key={method}
                     type="button"

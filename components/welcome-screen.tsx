@@ -10,69 +10,74 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-[#fdfcf8] p-6">
-      <div className="relative flex h-full w-full max-w-md flex-col items-center justify-center gap-12 text-center">
-        {/* Background Accents */}
-        <div className="absolute top-1/4 left-1/2 -z-10 h-64 w-64 -translate-x-1/2 rounded-full bg-amber-100/30 blur-3xl" />
-        
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-50 p-6">
+      <div className="relative flex w-full max-w-md flex-col items-center gap-8 rounded-[2.5rem] bg-white p-10 shadow-2xl shadow-slate-200 text-center">
+        {/* Logo Section */}
         <motion.div
-          initial={{ scale: 0.8, opacity: 0, y: 20 }}
-          animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-6"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="flex flex-col items-center gap-4"
         >
-          <div className="relative">
-            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-amber-50 text-amber-600 shadow-inner">
-              <BookOpen className="h-12 w-12" />
-            </div>
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-              className="absolute -right-2 -top-2 text-amber-400"
-            >
-              <Sparkles className="h-8 w-8" />
-            </motion.div>
+          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
+            <BookOpen className="h-10 w-10" />
           </div>
-          
-          <div className="flex flex-col gap-3">
-            <h1 className="font-serif text-5xl font-light tracking-tight text-slate-900">
-              Welcome to <span className="font-medium italic">LibManager</span>
+          <div className="flex flex-col gap-1">
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+              MyStudents
             </h1>
-            <p className="mx-auto max-w-[280px] text-sm leading-relaxed text-slate-500">
-              A quiet space for focused minds. Manage your reading room with elegance and ease.
+            <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">
+              Library Manager
             </p>
           </div>
         </motion.div>
 
+        {/* Features List */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.8 }}
+          className="flex flex-col gap-4 w-full text-left"
+        >
+          <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900">Smart Tracking</span>
+              <span className="text-xs text-slate-500">Manage seats and fees effortlessly.</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+              <ArrowRight className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-bold text-slate-900">Quick Actions</span>
+              <span className="text-xs text-slate-500">WhatsApp reminders in one click.</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Action Button */}
         <motion.div
-          initial={{ y: 40, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.8, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="flex w-full flex-col gap-4"
+          transition={{ delay: 0.6, duration: 0.8 }}
+          className="w-full"
         >
           <button
             onClick={handleDismiss}
-            className="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-full bg-slate-900 py-6 text-sm font-bold uppercase tracking-widest text-white transition-all active:scale-95"
+            className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95"
           >
-            <span className="relative z-10">Enter Workspace</span>
-            <ArrowRight className="relative z-10 h-5 w-5 transition-transform group-hover:translate-x-1" />
-            <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-amber-500/20 to-transparent transition-transform group-hover:translate-x-0" />
+            <span>Get Started</span>
+            <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
           </button>
-          
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
-            Crafted for Productivity
-          </p>
         </motion.div>
 
-        {/* Quote Accent */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.4 }}
-          transition={{ delay: 1.5, duration: 1.5 }}
-          className="absolute bottom-12 font-serif text-sm italic text-slate-400"
-        >
-          &quot;The only thing that you absolutely have to know, is the location of the library.&quot;
-        </motion.div>
+        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-300">
+          Secure & Private Management
+        </p>
       </div>
     </div>
   );

@@ -94,7 +94,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
           </button>
           
           <p className="text-center text-xs text-slate-400">
-            Secure payment powered by LibManager Pay
+            Secure payment powered by MyStudents Pay
           </p>
         </motion.div>
       </main>
