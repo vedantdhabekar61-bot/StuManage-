@@ -45,7 +45,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
               <Clock className="h-10 w-10" />
             </div>
             <h1 className="mt-6 font-serif text-3xl font-bold text-slate-900">Trial Expired</h1>
-            <p className="mt-2 text-slate-500">Your 30-day free trial has ended. Please subscribe to continue managing your library.</p>
+            <p className="mt-2 text-slate-500">Your 30-day free trial has ended. Please subscribe to continue managing your students.</p>
           </div>
 
           <div className="space-y-4 rounded-2xl bg-slate-50 p-6">
@@ -96,6 +96,24 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
           <p className="text-center text-xs text-slate-400">
             Secure payment powered by MyStudents Pay
           </p>
+          
+          <div className="flex flex-col gap-2 pt-4">
+            <button 
+              onClick={() => updateSubscription(false)} // Reset to trial (for demo/testing if needed)
+              className="text-xs font-medium text-slate-400 hover:text-slate-600 transition-colors"
+            >
+              Need help? Contact Support
+            </button>
+            <button 
+              onClick={() => {
+                localStorage.removeItem('libmanager_user');
+                window.location.href = '/signup';
+              }}
+              className="text-xs font-medium text-indigo-600 hover:underline"
+            >
+              Sign up with a different account
+            </button>
+          </div>
         </motion.div>
       </main>
     );

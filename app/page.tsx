@@ -1,13 +1,13 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check } from 'lucide-react';
+import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from '@/hooks/use-settings';
 import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut } from 'lucide-react';
@@ -16,7 +16,16 @@ export default function Dashboard() {
   const { settings } = useSettings();
   const { students, isLoaded, updateStudent } = useStudents();
   const { logout, user } = useAuth();
+  const [showTrialInfo, setShowTrialInfo] = useState(false);
   
+  const trialStatus = useMemo(() => {
+    if (!user) return { daysLeft: 30 };
+    const createdAt = new Date(user.createdAt);
+    const now = new Date();
+    const diffTime = now.getTime() - createdAt.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    return { daysLeft: Math.max(0, 30 - diffDays) };
+  }, [user]);
   const metrics = useMemo(() => {
     const activeStudents = students.length;
     const availableSeats = settings.totalSeats - activeStudents;
@@ -100,9 +109,12 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                 Premium
               </span>
             ) : (
-              <span className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100">
+              <button 
+                onClick={() => setShowTrialInfo(true)}
+                className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 transition-colors hover:bg-indigo-100 active:scale-95"
+              >
                 Free Trial
-              </span>
+              </button>
             )}
           </div>
         </div>
@@ -229,6 +241,65 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
           </Link>
         </div>
       </section>
+
+      {/* Trial Info Modal */}
+      <AnimatePresence>
+        {showTrialInfo && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
+            >
+              <div className="flex flex-col items-center gap-6 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
+                  <Clock className="h-8 w-8" />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-xl font-bold text-slate-900">Free Trial Status</h3>
+                  <p className="text-sm text-slate-500">
+                    You are currently using the <span className="font-bold text-indigo-600">30-Day Free Trial</span>.
+                  </p>
+                </div>
+                
+                <div className="w-full space-y-4 rounded-2xl bg-slate-50 p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Days Remaining</span>
+                    <span className="text-lg font-bold text-indigo-600">{trialStatus.daysLeft} Days</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${(trialStatus.daysLeft / 30) * 100}%` }}
+                      className="h-full bg-indigo-600"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 w-full">
+                  <button 
+                    onClick={() => setShowTrialInfo(false)}
+                    className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95"
+                  >
+                    Continue Exploring
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setShowTrialInfo(false);
+                      // Redirect to payment or show payment modal
+                      // For now we just close it
+                    }}
+                    className="w-full rounded-2xl bg-white border border-slate-100 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 transition-all hover:text-slate-600"
+                  >
+                    Upgrade to Premium
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
