@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'motion/react';
-import { User, Mail, Lock, ArrowRight, BookOpen } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight, Activity } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SignUpPage() {
@@ -86,7 +86,7 @@ export default function SignUpPage() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"
           >
-            <BookOpen className="h-8 w-8" />
+            <Activity className="h-8 w-8" />
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
@@ -94,7 +94,7 @@ export default function SignUpPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="mt-6 font-serif text-3xl font-bold text-slate-900"
           >
-            Create Account
+            Smart Tracking
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
@@ -102,7 +102,7 @@ export default function SignUpPage() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="mt-2 text-sm text-slate-500"
           >
-            Join MyStudents to start managing your workspace.
+            Join Smart Tracking to start managing your workspace.
           </motion.p>
         </div>
 

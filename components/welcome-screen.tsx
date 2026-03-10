@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { BookOpen, ArrowRight, Sparkles } from 'lucide-react';
+import { Activity, ArrowRight, Sparkles } from 'lucide-react';
 
 export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
   const handleDismiss = () => {
@@ -16,18 +16,18 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="flex flex-col items-center gap-4"
         >
           <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-            <BookOpen className="h-10 w-10" />
+            <Activity className="h-10 w-10" />
           </div>
           <div className="flex flex-col gap-1">
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              MyStudents
+              Smart Tracking
             </h1>
             <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">
-              Library Manager
+              Welcome to Version 1.0
             </p>
           </div>
         </motion.div>

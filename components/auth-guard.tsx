@@ -14,8 +14,16 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const seen = localStorage.getItem('hasSeenWelcome');
-    setTimeout(() => setHasSeenWelcome(!!seen), 0);
-  }, []);
+    // If user is already logged in, we can skip welcome screen for a faster experience
+    setTimeout(() => {
+      if (seen === 'true' || user) {
+        setHasSeenWelcome(true);
+        if (!seen && user) localStorage.setItem('hasSeenWelcome', 'true');
+      } else {
+        setHasSeenWelcome(false);
+      }
+    }, 0);
+  }, [user]);
 
   useEffect(() => {
     if (isLoaded && hasSeenWelcome === true) {
@@ -42,8 +50,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
         <motion.div
           key="welcome"
           initial={{ opacity: 1 }}
-          exit={{ opacity: 0, scale: 1.1, filter: 'blur(10px)' }}
-          transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
+          exit={{ opacity: 0, scale: 1.05, filter: 'blur(5px)' }}
+          transition={{ duration: 0.4, ease: 'easeOut' }}
           className="fixed inset-0 z-[300]"
         >
           <WelcomeScreen onDismiss={() => setHasSeenWelcome(true)} />
@@ -51,9 +59,9 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
       ) : (
         <motion.div
           key="content"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
           className="min-h-screen"
         >
           {children}

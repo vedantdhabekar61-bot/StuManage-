@@ -103,7 +103,7 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
           <div className="flex items-center gap-2">
-            <p className="text-sm text-slate-500">Welcome back, {user?.name || 'Library Manager'}</p>
+            <p className="text-sm text-slate-500">Welcome back, {user?.name || 'Smart Tracking'}</p>
             {user?.isSubscribed ? (
               <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 border border-amber-100">
                 Premium
