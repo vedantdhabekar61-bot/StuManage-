@@ -14,7 +14,7 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const isAuthPage = pathname === '/login' || pathname === '/signup';
+  const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/trial' || pathname === '/payment';
 
   if (isAuthPage) return null;
 

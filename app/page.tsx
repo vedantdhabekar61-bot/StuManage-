@@ -127,7 +127,7 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex flex-col gap-6 p-6">
+    <main className="flex flex-col gap-6 p-6 pb-24">
       <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>

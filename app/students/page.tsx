@@ -43,7 +43,7 @@ export default function StudentsPage() {
   }
 
   return (
-    <main className="flex flex-col gap-6 p-6">
+    <main className="flex flex-col gap-6 p-6 pb-24">
       <header className="flex flex-col gap-4">
         <button 
           onClick={() => router.back()}
