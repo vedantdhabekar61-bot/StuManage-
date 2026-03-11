@@ -5,15 +5,8 @@ import { useRouter } from 'next/navigation';
 import { 
   ArrowLeft, 
   MessageCircle, 
-  Check, 
-  Clock, 
-  AlertCircle, 
   Search,
-  Filter,
-  ChevronRight,
-  Calendar,
   IndianRupee,
-  Send,
   Bell,
   Users
 } from 'lucide-react';
@@ -21,7 +14,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { Student } from '@/lib/types';
-import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 
 type FilterType = 'All' | 'Due Today' | 'Overdue' | 'Paid';
 
@@ -83,9 +75,29 @@ export default function RemindersPage() {
     };
   }, [students]);
 
-  const sendWhatsApp = (student: Student) => {
-    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
-    openWhatsApp(student, message);
+  // --- NEW WHATSAPP LOGIC ---
+  const generateWhatsAppLink = (student: Student) => {
+    // 1. Format the date to be easily readable (e.g., 15 October 2025)
+    const formattedDate = new Date(student.expiryDate).toLocaleDateString('en-GB', { 
+      day: '2-digit', 
+      month: 'long',
+      year: 'numeric'
+    });
+    
+    // 2. Build the exact message template you requested using template literals (\n creates a new line)
+    const message = `Namaste 🙏\n\nThis is a friendly reminder that the monthly fee of ₹${student.price} for ${student.name} is due on ${formattedDate}.\n\nKindly make the payment on time.\n\nThank you,\n${settings.libraryName || 'Management'}`;
+    
+    // 3. Encode the message so it's safe to put inside a URL
+    const encodedMessage = encodeURIComponent(message);
+    
+    // 4. Clean the phone number and add '91' if it's a standard 10-digit Indian number
+    let phone = student.phone.replace(/\D/g, ''); // Removes all non-numeric characters
+    if (phone.length === 10) {
+      phone = '91' + phone; 
+    }
+    
+    // 5. Return the final clickable WhatsApp link
+    return `https://wa.me/${phone}?text=${encodedMessage}`;
   };
 
   if (!isLoaded) {
@@ -220,7 +232,7 @@ export default function RemindersPage() {
 
                 {student.paymentStatus !== 'Paid' && (
                   <a 
-                    href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
+                    href={generateWhatsAppLink(student)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
