@@ -6,12 +6,15 @@ import { useRouter } from 'next/navigation';
 import { StatusTag } from '@/components/status-tag';
 import { Student, Shift } from '@/lib/types';
 import { useStudents } from '@/hooks/use-students';
+import { useSettings } from '@/hooks/use-settings';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMemo } from 'react';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 
 export default function StudentsPage() {
   const router = useRouter();
   const { students, isLoaded, updateStudent, deleteStudent } = useStudents();
+  const { settings } = useSettings();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Paid' | 'Pending' | 'Overdue'>('All');
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -27,19 +30,8 @@ export default function StudentsPage() {
   }, [students, search, filter]);
 
   const sendWhatsApp = (student: Student) => {
-    const expiryDate = new Date(student.expiryDate);
-    const formattedDate = expiryDate.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
-    const message = `Hello ${student.name},
-Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– Smart Tracking`;
-    
-    const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
+    openWhatsApp(student, message);
   };
 
   if (!isLoaded) {
@@ -135,12 +127,14 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                 <span className="text-xs font-semibold text-slate-700">{new Date(student.expiryDate).toLocaleDateString('en-GB')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => sendWhatsApp(student)}
+                <a 
+                  href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 active:scale-95"
                 >
                   <MessageCircle className="h-5 w-5" />
-                </button>
+                </a>
                 <div className="relative">
                   <button 
                     onClick={() => setActiveMenu(activeMenu === student.id ? null : student.id)}
@@ -272,26 +266,6 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                           <option value="Full Day">Full Day</option>
                         </select>
                       </div>
-                    </div>
-
-                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 border border-slate-100">
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-bold text-slate-900">Auto WhatsApp Reminder</span>
-                        <span className="text-[10px] font-medium text-slate-400">Send automatic fee alerts</span>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => setEditingStudent({ ...editingStudent, enableAutoReminder: !editingStudent.enableAutoReminder })}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
-                          editingStudent.enableAutoReminder ? 'bg-indigo-600' : 'bg-slate-200'
-                        }`}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                            editingStudent.enableAutoReminder ? 'translate-x-6' : 'translate-x-1'
-                          }`}
-                        />
-                      </button>
                     </div>
                   </div>
 

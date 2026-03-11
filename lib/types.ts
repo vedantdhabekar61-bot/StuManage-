@@ -15,7 +15,6 @@ export interface Student {
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
   lastPaymentDate?: string;
-  enableAutoReminder?: boolean;
 }
 
 export interface LibraryStats {

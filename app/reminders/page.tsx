@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { Student } from '@/lib/types';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 
 type FilterType = 'All' | 'Due Today' | 'Overdue' | 'Paid';
 
@@ -56,56 +57,35 @@ export default function RemindersPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const overdueCount = students.filter(s => s.paymentStatus === 'Overdue').length;
-    const dueTodayCount = students.filter(s => {
+    const overdueStudents = students.filter(s => {
+      const dueDate = new Date(s.expiryDate);
+      dueDate.setHours(0, 0, 0, 0);
+      return dueDate < today && s.paymentStatus !== 'Paid';
+    });
+
+    const dueTodayStudents = students.filter(s => {
       const dueDate = new Date(s.expiryDate);
       dueDate.setHours(0, 0, 0, 0);
       return dueDate.getTime() === today.getTime() && s.paymentStatus !== 'Paid';
-    }).length;
+    });
+
     const paidThisMonthCount = students.filter(s => s.paymentStatus === 'Paid').length;
     
     const totalPendingAmount = students
-      .filter(s => s.paymentStatus !== 'Paid')
-      .reduce((acc, s) => acc + s.price, 0);
+      .filter(s => s.paymentStatus !== 'Paid' || new Date(s.expiryDate) < today)
+      .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
-    return { overdueCount, dueTodayCount, paidThisMonthCount, totalPendingAmount };
+    return { 
+      overdueCount: overdueStudents.length, 
+      dueTodayCount: dueTodayStudents.length, 
+      paidThisMonthCount, 
+      totalPendingAmount 
+    };
   }, [students]);
 
-  const formatMessage = (student: Student) => {
-    let msg = settings.messageTemplate;
-    msg = msg.replace('[Amount]', student.price.toString());
-    msg = msg.replace('[Student Name]', student.name);
-    msg = msg.replace('[Due Date]', new Date(student.expiryDate).toLocaleDateString('en-GB'));
-    msg = msg.replace('[Library Name]', settings.libraryName || 'the Library');
-    return encodeURIComponent(msg);
-  };
-
   const sendWhatsApp = (student: Student) => {
-    const phone = student.phone.startsWith('91') ? student.phone : `91${student.phone}`;
-    const message = formatMessage(student);
-    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
-  };
-
-  const sendBulkReminders = () => {
-    const dueStudents = students.filter(s => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dueDate = new Date(s.expiryDate);
-      dueDate.setHours(0, 0, 0, 0);
-      return (dueDate.getTime() === today.getTime() || s.paymentStatus === 'Overdue') && s.paymentStatus !== 'Paid';
-    });
-
-    if (dueStudents.length === 0) return;
-
-    // In a real mobile app, we might use a more sophisticated bulk sending method
-    // For this web-based demo, we'll open the first one and alert the user
-    alert(`Opening WhatsApp for ${dueStudents.length} students one by one. Please allow popups.`);
-    
-    dueStudents.forEach((student, index) => {
-      setTimeout(() => {
-        sendWhatsApp(student);
-      }, index * 1500); // Small delay to prevent browser blocking
-    });
+    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
+    openWhatsApp(student, message);
   };
 
   if (!isLoaded) {
@@ -161,17 +141,6 @@ export default function RemindersPage() {
             </div>
           </div>
         </div>
-
-        {/* Bulk Action Button */}
-        {(stats.overdueCount > 0 || stats.dueTodayCount > 0) && (
-          <button 
-            onClick={sendBulkReminders}
-            className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
-          >
-            <Send className="h-4 w-4" />
-            Send Reminder to All Due
-          </button>
-        )}
 
         {/* Search & Filters */}
         <div className="flex flex-col gap-4">
@@ -240,7 +209,7 @@ export default function RemindersPage() {
                   <div className="flex flex-col">
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Due Date</span>
                     <span className="text-sm font-bold text-slate-700">
-                      {new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}
                     </span>
                   </div>
                   <div className="flex flex-col items-end">
@@ -250,13 +219,15 @@ export default function RemindersPage() {
                 </div>
 
                 {student.paymentStatus !== 'Paid' && (
-                  <button 
-                    onClick={() => sendWhatsApp(student)}
-                    className="flex items-center justify-center gap-2 w-full rounded-xl bg-emerald-50 py-3 text-xs font-bold uppercase tracking-widest text-emerald-600 transition-all active:scale-95"
+                  <a 
+                    href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
                   >
-                    <MessageCircle className="h-4 w-4" />
-                    Send WhatsApp Reminder
-                  </button>
+                    <MessageCircle className="h-5 w-5" />
+                    Send Reminder
+                  </a>
                 )}
               </motion.div>
             ))}

@@ -37,7 +37,7 @@ export default function TrialPage() {
       icon: <Zap className="h-5 w-5 text-amber-500" />
     },
     {
-      title: "Automatic Fee Reminders",
+      title: "Manual Fee Reminders",
       subtitle: "व्हाट्सएप पर रिमाइंडर भेजें",
       icon: <Bell className="h-5 w-5 text-indigo-500" />
     },

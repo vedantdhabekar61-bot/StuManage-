@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell, Settings as SettingsIcon } from 'lucide-react';
+import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,6 +9,7 @@ import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, RefreshCw } from 'lucide-react';
@@ -53,18 +54,30 @@ export default function Dashboard() {
     return { daysLeft: Math.max(0, 30 - diffDays) };
   }, [user]);
   const metrics = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const activeStudents = students.length;
     const availableSeats = settings.totalSeats - activeStudents;
-    const overdueStudents = students.filter(s => s.paymentStatus === 'Overdue');
-    const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? s.price : 0), 0);
+    
+    const overdueStudents = students.filter(s => {
+      const expiry = new Date(s.expiryDate);
+      expiry.setHours(0, 0, 0, 0);
+      return (expiry < today && s.paymentStatus !== 'Paid') || s.paymentStatus === 'Overdue';
+    });
+
+    const pendingFees = students
+      .filter(s => s.paymentStatus !== 'Paid' || new Date(s.expiryDate) < today)
+      .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
+
+    const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? (Number(s.price) || 0) : 0), 0);
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
     
     const urgentActions = students.filter(s => {
       const expiry = new Date(s.expiryDate);
-      const today = new Date();
       const diffTime = expiry.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 3 || s.paymentStatus === 'Overdue';
+      return diffDays <= 3 || s.paymentStatus === 'Overdue' || (expiry < today && s.paymentStatus !== 'Paid');
     });
 
     const currentMonth = new Date().toLocaleString('default', { month: 'short' });
@@ -73,6 +86,7 @@ export default function Dashboard() {
       activeStudents,
       availableSeats,
       overdueStudentsCount: overdueStudents.length,
+      pendingFees,
       revenueThisMonth,
       occupancyPercentage,
       urgentActions,
@@ -80,20 +94,9 @@ export default function Dashboard() {
     };
   }, [students, settings.totalSeats]);
 
-  const sendWhatsApp = (student: Student) => {
-    const expiryDate = new Date(student.expiryDate);
-    const formattedDate = expiryDate.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-    
-    const message = `Hello ${student.name},
-Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– Smart Tracking`;
-    
-    const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank');
+   const sendWhatsApp = (student: Student) => {
+    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
+    openWhatsApp(student, message);
   };
 
   const handleMarkAsPaid = (student: Student) => {
@@ -256,10 +259,11 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
           subtext={`${metrics.occupancyPercentage}% Full`}
         />
         <MetricsCard 
-          label="Overdue Fees" 
-          value={metrics.overdueStudentsCount} 
+          label="Pending Fees" 
+          value={`₹${metrics.pendingFees.toLocaleString('en-IN')}`} 
           icon={AlertCircle} 
           color="bg-rose-500" 
+          subtext={`${metrics.overdueStudentsCount} Overdue`}
         />
         <MetricsCard 
           label={`Revenue (${metrics.currentMonth})`} 
@@ -301,13 +305,15 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => sendWhatsApp(student)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 active:scale-95"
-                    title="Send WhatsApp"
+                  <a 
+                    href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
                   >
-                    <MessageCircle className="h-5 w-5" />
-                  </button>
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Send Reminder</span>
+                  </a>
                   <button 
                     onClick={() => handleMarkAsPaid(student)}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"
@@ -337,34 +343,27 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
       {/* Quick Actions */}
       <section className="flex flex-col gap-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <Link 
             href="/add" 
-            className="flex flex-col items-center gap-2 rounded-2xl bg-indigo-600 p-4 text-white shadow-lg shadow-indigo-200 transition-transform active:scale-95"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-indigo-600 p-3 text-white shadow-lg shadow-indigo-200 transition-transform active:scale-95"
           >
-            <PlusCircle className="h-6 w-6" />
-            <span className="text-xs font-bold uppercase tracking-wide">Add Student</span>
+            <PlusCircle className="h-5 w-5" />
+            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Add Student</span>
           </Link>
           <Link 
             href="/reminders" 
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white border border-slate-100 p-3 text-slate-900 shadow-sm transition-transform active:scale-95"
           >
-            <Bell className="h-6 w-6 text-amber-500" />
-            <span className="text-xs font-bold uppercase tracking-wide">Reminders</span>
+            <Bell className="h-5 w-5 text-amber-500" />
+            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Reminders</span>
           </Link>
           <Link 
             href="/seats" 
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
+            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white border border-slate-100 p-3 text-slate-900 shadow-sm transition-transform active:scale-95"
           >
-            <Armchair className="h-6 w-6 text-indigo-600" />
-            <span className="text-xs font-bold uppercase tracking-wide">Manage Seats</span>
-          </Link>
-          <Link 
-            href="/settings" 
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
-          >
-            <SettingsIcon className="h-6 w-6 text-slate-400" />
-            <span className="text-xs font-bold uppercase tracking-wide">Settings</span>
+            <Armchair className="h-5 w-5 text-indigo-600" />
+            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Seats</span>
           </Link>
         </div>
       </section>
