@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle } from 'lucide-react';
+import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
@@ -78,28 +78,42 @@ export default function AddStudentPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
     
-    addStudent({
-      ...formData,
-      deskNumber: parseInt(formData.deskNumber),
-    });
-    
-    // Simulate API call delay for UX
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsSubmitting(false);
-    setShowSuccess(true);
-    
-    setTimeout(() => {
-      router.push('/students');
-    }, 2000);
+    try {
+      await addStudent({
+        ...formData,
+        deskNumber: parseInt(formData.deskNumber),
+      });
+      
+      // Simulate API call delay for UX
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      setIsSubmitting(false);
+      setShowSuccess(true);
+      
+      setTimeout(() => {
+        router.push('/students');
+      }, 1500);
+    } catch (err: any) {
+      setError(err.message || 'Failed to register student. Please try again.');
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <main className="flex flex-col gap-6 p-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Add New Student</h1>
-        <p className="text-sm text-slate-500">Register a new student and assign a desk.</p>
+      <header className="flex flex-col gap-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 active:scale-95"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Add New Student</h1>
+          <p className="text-sm text-slate-500">Register a new student and assign a desk.</p>
+        </div>
       </header>
 
       {/* Error Message */}

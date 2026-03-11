@@ -1,22 +1,48 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck } from 'lucide-react';
+import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
 import { useSettings } from '@/hooks/use-settings';
 import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut } from 'lucide-react';
+import { LogOut, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
+  const router = useRouter();
   const { settings } = useSettings();
   const { students, isLoaded, updateStudent } = useStudents();
-  const { logout, user } = useAuth();
-  const [showTrialInfo, setShowTrialInfo] = useState(false);
+  const { logout, user, updateSubscription, isLoaded: authLoaded } = useAuth();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (authLoaded && !user) {
+      router.push('/login');
+    } else if (authLoaded && user && !user.isSubscribed) {
+      // Check if it's the first time (we can use a local storage flag for simplicity in this demo)
+      const hasSeenTrial = localStorage.getItem('has_seen_trial');
+      if (!hasSeenTrial) {
+        localStorage.setItem('has_seen_trial', 'true');
+        router.push('/trial');
+      }
+    }
+  }, [user, authLoaded, router]);
+  
+  const handleStartTrial = async () => {
+    await updateSubscription(true);
+  };
+
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+    setTimeout(() => {
+      window.location.reload();
+    }, 600);
+  };
   
   const trialStatus = useMemo(() => {
     if (!user) return { daysLeft: 30 };
@@ -64,7 +90,7 @@ export default function Dashboard() {
     
     const message = `Hello ${student.name},
 Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– MyStudents`;
+– Smart Tracking`;
     
     const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -110,7 +136,7 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
               </span>
             ) : (
               <button 
-                onClick={() => setShowTrialInfo(true)}
+                onClick={handleStartTrial}
                 className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 transition-colors hover:bg-indigo-100 active:scale-95"
               >
                 Free Trial
@@ -118,14 +144,101 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
             )}
           </div>
         </div>
-        <button 
-          onClick={logout}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-95"
-          title="Logout"
-        >
-          <LogOut className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleRefresh}
+            className={`flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all active:scale-95 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`}
+            title="Refresh"
+          >
+            <RefreshCw className="h-5 w-5" />
+          </button>
+          <button 
+            onClick={logout}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+            title="Logout"
+          >
+            <LogOut className="h-5 w-5" />
+          </button>
+        </div>
       </header>
+
+      {/* Trial Info Card */}
+      {user?.isSubscribed && (
+        <motion.div 
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm"
+        >
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-emerald-700 uppercase tracking-tight">Free Trial Active</span>
+              <span className="text-sm font-bold text-emerald-600">30 Days Remaining</span>
+            </div>
+          </div>
+          <Link 
+            href="/payment"
+            className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-white px-3 py-2 rounded-lg border border-emerald-100 shadow-sm active:scale-95"
+          >
+            Upgrade
+          </Link>
+        </motion.div>
+      )}
+
+      {/* Pro Upgrade Card - Inline on Dashboard */}
+      {!user?.isSubscribed && (
+        <motion.section 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-100"
+        >
+          {/* Decorative Background Elements */}
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-indigo-500/50 blur-2xl" />
+          
+          <div className="relative flex flex-col items-center text-center">
+            <h3 className="text-xl font-bold">DeskTracker Pro</h3>
+            <div className="mt-2 flex flex-col">
+              <span className="text-sm font-bold text-indigo-100">First Month Free</span>
+              <span className="text-xs opacity-60">Then ₹50 / month</span>
+            </div>
+
+            <div className="my-8 flex flex-col gap-3 self-start text-left">
+              {[
+                'Unlimited Students',
+                'Fee Tracking',
+                'WhatsApp Reminder',
+                'Reports'
+              ].map((feature) => (
+                <div key={feature} className="flex items-center gap-3">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white">
+                    <Check className="h-3 w-3 stroke-[3]" />
+                  </div>
+                  <span className="text-sm font-medium">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            <Link 
+              href="/payment"
+              className="w-full rounded-2xl bg-white py-4 text-sm font-bold uppercase tracking-widest text-indigo-600 shadow-lg transition-all active:scale-95 text-center"
+            >
+              Start Free Trial
+            </Link>
+            
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-tighter opacity-40">
+                Secure payment via
+              </p>
+              <p className="text-[10px] font-bold opacity-60">
+                UPI • Google Pay • PhonePe
+              </p>
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 gap-4">
@@ -241,65 +354,6 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
           </Link>
         </div>
       </section>
-
-      {/* Trial Info Modal */}
-      <AnimatePresence>
-        {showTrialInfo && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6">
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm overflow-hidden rounded-3xl bg-white p-6 shadow-2xl"
-            >
-              <div className="flex flex-col items-center gap-6 text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600">
-                  <Clock className="h-8 w-8" />
-                </div>
-                <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-slate-900">Free Trial Status</h3>
-                  <p className="text-sm text-slate-500">
-                    You are currently using the <span className="font-bold text-indigo-600">30-Day Free Trial</span>.
-                  </p>
-                </div>
-                
-                <div className="w-full space-y-4 rounded-2xl bg-slate-50 p-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Days Remaining</span>
-                    <span className="text-lg font-bold text-indigo-600">{trialStatus.daysLeft} Days</span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-200">
-                    <motion.div 
-                      initial={{ width: 0 }}
-                      animate={{ width: `${(trialStatus.daysLeft / 30) * 100}%` }}
-                      className="h-full bg-indigo-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3 w-full">
-                  <button 
-                    onClick={() => setShowTrialInfo(false)}
-                    className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95"
-                  >
-                    Continue Exploring
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowTrialInfo(false);
-                      // Redirect to payment or show payment modal
-                      // For now we just close it
-                    }}
-                    className="w-full rounded-2xl bg-white border border-slate-100 py-3 text-xs font-bold uppercase tracking-widest text-slate-400 transition-all hover:text-slate-600"
-                  >
-                    Upgrade to Premium
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

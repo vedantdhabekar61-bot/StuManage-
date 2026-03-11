@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Search, Filter, MessageCircle, MoreVertical, Phone, Users, Trash2, Edit2, X, CheckCircle2, User, Armchair, Clock, Calendar } from 'lucide-react';
+import { Search, Filter, MessageCircle, MoreVertical, Phone, Users, Trash2, Edit2, X, CheckCircle2, User, Armchair, Clock, Calendar, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { StatusTag } from '@/components/status-tag';
 import { Student, Shift } from '@/lib/types';
 import { useStudents } from '@/hooks/use-students';
@@ -9,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useMemo } from 'react';
 
 export default function StudentsPage() {
+  const router = useRouter();
   const { students, isLoaded, updateStudent, deleteStudent } = useStudents();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'All' | 'Paid' | 'Pending' | 'Overdue'>('All');
@@ -34,7 +36,7 @@ export default function StudentsPage() {
     
     const message = `Hello ${student.name},
 Your library seat fee ends on ${formattedDate}. Please pay the fee before this date to continue using your seat.
-– MyStudents`;
+– Smart Tracking`;
     
     const url = `https://wa.me/91${student.phone}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
@@ -51,6 +53,12 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
   return (
     <main className="flex flex-col gap-6 p-6">
       <header className="flex flex-col gap-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 active:scale-95"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">Student Roster</h1>
         
         {/* Search & Filter */}

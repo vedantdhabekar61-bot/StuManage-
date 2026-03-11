@@ -53,10 +53,27 @@ export function useStudents() {
   }, [user]);
 
   const addStudent = async (student: Omit<Student, 'id'>) => {
+    // Check if desk is already taken in the same shift
+    const isDeskTaken = students.some(s => 
+      s.deskNumber === student.deskNumber && 
+      (s.shift === student.shift || s.shift === 'Full Day' || student.shift === 'Full Day')
+    );
+
+    if (isDeskTaken) {
+      throw new Error(`Desk ${student.deskNumber} is already occupied for this shift.`);
+    }
+
     const newStudent = {
       ...student,
       id: crypto.randomUUID(),
     };
+
+    // Optimistic update
+    setStudents(prev => {
+      const updated = [...prev, newStudent];
+      localStorage.setItem(STUDENTS_KEY, JSON.stringify(updated));
+      return updated;
+    });
 
     if (user) {
       try {
@@ -64,17 +81,15 @@ export function useStudents() {
           .from('students')
           .insert([{ ...newStudent, user_id: user.id }]);
         
-        if (error) console.error('Supabase insert error:', error.message);
+        if (error) {
+          console.error('Supabase insert error:', error.message);
+          // Revert if critical, but for now we keep local as source of truth
+        }
       } catch (e) {
         console.error('Failed to add student to Supabase', e);
       }
     }
 
-    setStudents(prev => {
-      const updated = [...prev, newStudent];
-      localStorage.setItem(STUDENTS_KEY, JSON.stringify(updated));
-      return updated;
-    });
     return newStudent;
   };
 

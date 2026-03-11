@@ -5,10 +5,12 @@ import { Desk } from '@/components/desk';
 import { Shift } from '@/lib/types';
 import { useSettings } from '@/hooks/use-settings';
 import { useStudents } from '@/hooks/use-students';
-import { Settings as SettingsIcon, Check, X } from 'lucide-react';
+import { Settings as SettingsIcon, Check, X, ArrowLeft } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function SeatsPage() {
+  const router = useRouter();
   const [activeShift, setActiveShift] = useState<Shift>('Morning');
   const { settings, updateSettings } = useSettings();
   const { students } = useStudents();
@@ -34,6 +36,12 @@ export default function SeatsPage() {
   return (
     <main className="flex flex-col gap-6 p-6">
       <header className="flex flex-col gap-4">
+        <button 
+          onClick={() => router.back()}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 active:scale-95"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Seat Layout</h1>
           <div className="flex items-center gap-2">
