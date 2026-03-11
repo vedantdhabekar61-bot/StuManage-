@@ -273,6 +273,26 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
                         </select>
                       </div>
                     </div>
+
+                    <div className="flex items-center justify-between rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-bold text-slate-900">Auto WhatsApp Reminder</span>
+                        <span className="text-[10px] font-medium text-slate-400">Send automatic fee alerts</span>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setEditingStudent({ ...editingStudent, enableAutoReminder: !editingStudent.enableAutoReminder })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                          editingStudent.enableAutoReminder ? 'bg-indigo-600' : 'bg-slate-200'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            editingStudent.enableAutoReminder ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
                   </div>
 
                   <button 

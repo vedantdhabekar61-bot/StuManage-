@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight } from 'lucide-react';
+import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell, Settings as SettingsIcon } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -346,11 +346,25 @@ Your library seat fee ends on ${formattedDate}. Please pay the fee before this d
             <span className="text-xs font-bold uppercase tracking-wide">Add Student</span>
           </Link>
           <Link 
+            href="/reminders" 
+            className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
+          >
+            <Bell className="h-6 w-6 text-amber-500" />
+            <span className="text-xs font-bold uppercase tracking-wide">Reminders</span>
+          </Link>
+          <Link 
             href="/seats" 
             className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
           >
             <Armchair className="h-6 w-6 text-indigo-600" />
             <span className="text-xs font-bold uppercase tracking-wide">Manage Seats</span>
+          </Link>
+          <Link 
+            href="/settings" 
+            className="flex flex-col items-center gap-2 rounded-2xl bg-white border border-slate-100 p-4 text-slate-900 shadow-sm transition-transform active:scale-95"
+          >
+            <SettingsIcon className="h-6 w-6 text-slate-400" />
+            <span className="text-xs font-bold uppercase tracking-wide">Settings</span>
           </Link>
         </div>
       </section>

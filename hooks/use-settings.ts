@@ -8,10 +8,31 @@ const SETTINGS_KEY = 'libmanager_settings';
 
 interface Settings {
   totalSeats: number;
+  messageTemplate: string;
+  reminderTiming: {
+    twoDaysBefore: boolean;
+    onDueDate: boolean;
+    threeDaysAfter: boolean;
+  };
+  libraryName: string;
 }
 
 const DEFAULT_SETTINGS: Settings = {
   totalSeats: 50,
+  libraryName: 'My Library',
+  messageTemplate: `Namaste 🙏
+
+This is a friendly reminder that the monthly fee of ₹[Amount] for [Student Name] is due on [Due Date].
+
+Kindly make the payment on time.
+
+Thank you,
+[Library Name]`,
+  reminderTiming: {
+    twoDaysBefore: true,
+    onDueDate: true,
+    threeDaysAfter: true,
+  },
 };
 
 export function useSettings() {

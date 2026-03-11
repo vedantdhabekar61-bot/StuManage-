@@ -32,6 +32,7 @@ export default function AddStudentPage() {
       expiryDate: expiry.toISOString().split('T')[0],
       paymentStatus: 'Paid' as PaymentStatus,
       paymentMethod: 'UPI' as PaymentMethod,
+      enableAutoReminder: true,
     };
   });
 
@@ -304,6 +305,26 @@ export default function AddStudentPage() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl bg-white p-4 border border-slate-100 shadow-sm">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-bold text-slate-900">Auto WhatsApp Reminder</span>
+                <span className="text-[10px] font-medium text-slate-400">Send automatic fee alerts</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setFormData(prev => ({ ...prev, enableAutoReminder: !prev.enableAutoReminder }))}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${
+                  formData.enableAutoReminder ? 'bg-indigo-600' : 'bg-slate-200'
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    formData.enableAutoReminder ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
             </div>
           </div>
         </section>
