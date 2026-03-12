@@ -1,8 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'motion/react';
 import { User, Mail, Lock, ArrowRight, Activity } from 'lucide-react';
@@ -15,8 +13,6 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
-  const router = useRouter();
 
   const handleGoogleSignUp = async () => {
     setIsGoogleLoading(true);
@@ -42,7 +38,7 @@ export default function SignUpPage() {
     setError(null);
     
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -52,18 +48,12 @@ export default function SignUpPage() {
         },
       });
 
+      // ✅ FIX 1: Throw error if it exists
       if (error) throw error;
 
-      if (data.user) {
-        // If email confirmation is disabled, user is logged in
-        // If enabled, they need to check email
-        if (data.session) {
-          router.push('/');
-        } else {
-          alert('Registration successful! Please check your email for confirmation.');
-          router.push('/login');
-        }
-      }
+      // ✅ FIX 2: No manual redirects here! Let the AuthProvider handle the navigation.
+      alert('Registration successful! If email confirmation is enabled, check your email.');
+      
     } catch (error: any) {
       setError(error.message);
     } finally {
