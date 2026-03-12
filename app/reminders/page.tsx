@@ -8,14 +8,18 @@ import {
   Search,
   IndianRupee,
   Bell,
-  Users
+  Users,
+  Send
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { Student } from '@/lib/types';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
+import { BulkReminderSheet } from '@/components/bulk-reminder-sheet';
 
-type FilterType = 'All' | 'Due Today' | 'Overdue' | 'Paid';
+type FilterType = 'All' | 'Overdue' | 'Paid';
 
 export default function RemindersPage() {
   const router = useRouter();
@@ -23,6 +27,7 @@ export default function RemindersPage() {
   const { settings } = useSettings();
   const [activeFilter, setActiveFilter] = useState<FilterType>('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [isBulkOpen, setIsBulkOpen] = useState(false);
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
@@ -34,11 +39,9 @@ export default function RemindersPage() {
       const dueDate = new Date(student.expiryDate);
       dueDate.setHours(0, 0, 0, 0);
 
-      const isDueToday = dueDate.getTime() === today.getTime() && student.paymentStatus !== 'Paid';
       const isOverdue = student.paymentStatus === 'Overdue';
       const isPaid = student.paymentStatus === 'Paid';
 
-      if (activeFilter === 'Due Today') return matchesSearch && isDueToday;
       if (activeFilter === 'Overdue') return matchesSearch && isOverdue;
       if (activeFilter === 'Paid') return matchesSearch && isPaid;
       return matchesSearch;
@@ -55,12 +58,6 @@ export default function RemindersPage() {
       return dueDate < today && s.paymentStatus !== 'Paid';
     });
 
-    const dueTodayStudents = students.filter(s => {
-      const dueDate = new Date(s.expiryDate);
-      dueDate.setHours(0, 0, 0, 0);
-      return dueDate.getTime() === today.getTime() && s.paymentStatus !== 'Paid';
-    });
-
     const paidThisMonthCount = students.filter(s => s.paymentStatus === 'Paid').length;
     
     const totalPendingAmount = students
@@ -69,35 +66,14 @@ export default function RemindersPage() {
 
     return { 
       overdueCount: overdueStudents.length, 
-      dueTodayCount: dueTodayStudents.length, 
       paidThisMonthCount, 
       totalPendingAmount 
     };
   }, [students]);
 
-  // --- NEW WHATSAPP LOGIC ---
-  const generateWhatsAppLink = (student: Student) => {
-    // 1. Format the date to be easily readable (e.g., 15 October 2025)
-    const formattedDate = new Date(student.expiryDate).toLocaleDateString('en-GB', { 
-      day: '2-digit', 
-      month: 'long',
-      year: 'numeric'
-    });
-    
-    // 2. Build the exact message template you requested using template literals (\n creates a new line)
-    const message = `Namaste 🙏\n\nThis is a friendly reminder that the monthly fee of ₹${student.price} for ${student.name} is due on ${formattedDate}.\n\nKindly make the payment on time.\n\nThank you,\n${settings.libraryName || 'Management'}`;
-    
-    // 3. Encode the message so it's safe to put inside a URL
-    const encodedMessage = encodeURIComponent(message);
-    
-    // 4. Clean the phone number and add '91' if it's a standard 10-digit Indian number
-    let phone = student.phone.replace(/\D/g, ''); // Removes all non-numeric characters
-    if (phone.length === 10) {
-      phone = '91' + phone; 
-    }
-    
-    // 5. Return the final clickable WhatsApp link
-    return `https://wa.me/${phone}?text=${encodedMessage}`;
+  const sendWhatsApp = (student: Student) => {
+    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
+    openWhatsApp(student, message);
   };
 
   if (!isLoaded) {
@@ -121,18 +97,21 @@ export default function RemindersPage() {
           </button>
           <h1 className="text-xl font-bold text-slate-900">Fee Reminders</h1>
         </div>
+        <button
+          onClick={() => setIsBulkOpen(true)}
+          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all active:scale-95"
+        >
+          <Send className="h-4 w-4" />
+          <span>Bulk Send</span>
+        </button>
       </header>
 
       <div className="p-6 flex flex-col gap-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 shadow-sm border border-rose-50">
             <span className="text-2xl font-black text-rose-600">{stats.overdueCount}</span>
             <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Overdue</span>
-          </div>
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 shadow-sm border border-amber-50">
-            <span className="text-2xl font-black text-amber-600">{stats.dueTodayCount}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-400">Due Today</span>
           </div>
           <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 shadow-sm border border-emerald-50">
             <span className="text-2xl font-black text-emerald-600">{stats.paidThisMonthCount}</span>
@@ -168,7 +147,7 @@ export default function RemindersPage() {
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            {(['All', 'Due Today', 'Overdue', 'Paid'] as FilterType[]).map((filter) => (
+            {(['All', 'Overdue', 'Paid'] as FilterType[]).map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
@@ -231,19 +210,20 @@ export default function RemindersPage() {
                 </div>
 
                 {student.paymentStatus !== 'Paid' && (
-                  <a 
-                    href={generateWhatsAppLink(student)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    Send Reminder
-                  </a>
+                  <WhatsAppReminderButton
+                    student={student}
+                    className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                  />
                 )}
               </motion.div>
             ))}
           </AnimatePresence>
+
+          <BulkReminderSheet 
+            students={students}
+            isOpen={isBulkOpen}
+            onClose={() => setIsBulkOpen(false)}
+          />
 
           {filteredStudents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">

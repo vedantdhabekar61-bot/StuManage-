@@ -36,9 +36,14 @@ export function getWhatsAppUrl(student: Student, message: string): string {
   return `https://wa.me/${phone}?text=${message}`;
 }
 
-export function openWhatsApp(student: Student, message: string) {
+export function openWhatsApp(student: Student, message: string): boolean {
   const url = getWhatsAppUrl(student, message);
   if (url !== '#') {
-    window.open(url, '_blank');
+    const win = window.open(url, '_blank');
+    if (!win || win.closed || typeof win.closed === 'undefined') {
+      return false;
+    }
+    return true;
   }
+  return false;
 }

@@ -10,6 +10,7 @@ import { Student } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, RefreshCw } from 'lucide-react';
@@ -190,59 +191,6 @@ export default function Dashboard() {
         </motion.div>
       )}
 
-      {/* Pro Upgrade Card - Inline on Dashboard */}
-      {!user?.isSubscribed && (
-        <motion.section 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-[2.5rem] bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-100"
-        >
-          {/* Decorative Background Elements */}
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -left-8 -bottom-8 h-32 w-32 rounded-full bg-indigo-500/50 blur-2xl" />
-          
-          <div className="relative flex flex-col items-center text-center">
-            <h3 className="text-xl font-bold">DeskTracker Pro</h3>
-            <div className="mt-2 flex flex-col">
-              <span className="text-sm font-bold text-indigo-100">First Month Free</span>
-              <span className="text-xs opacity-60">Then ₹50 / month</span>
-            </div>
-
-            <div className="my-8 flex flex-col gap-3 self-start text-left">
-              {[
-                'Unlimited Students',
-                'Fee Tracking',
-                'WhatsApp Reminder',
-                'Reports'
-              ].map((feature) => (
-                <div key={feature} className="flex items-center gap-3">
-                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-white">
-                    <Check className="h-3 w-3 stroke-[3]" />
-                  </div>
-                  <span className="text-sm font-medium">{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            <Link 
-              href="/payment"
-              className="w-full rounded-2xl bg-white py-4 text-sm font-bold uppercase tracking-widest text-indigo-600 shadow-lg transition-all active:scale-95 text-center"
-            >
-              Start Free Trial
-            </Link>
-            
-            <div className="mt-6 flex flex-col items-center gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-tighter opacity-40">
-                Secure payment via
-              </p>
-              <p className="text-[10px] font-bold opacity-60">
-                UPI • Google Pay • PhonePe
-              </p>
-            </div>
-          </div>
-        </motion.section>
-      )}
-
       {/* Metrics Grid */}
       <div className="grid grid-cols-2 gap-4">
         <MetricsCard 
@@ -305,15 +253,10 @@ export default function Dashboard() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <a 
-                    href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    <span>Send Reminder</span>
-                  </a>
+                  <WhatsAppReminderButton
+                    student={student}
+                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                  />
                   <button 
                     onClick={() => handleMarkAsPaid(student)}
                     className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"

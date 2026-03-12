@@ -10,6 +10,7 @@ import { useSettings } from '@/hooks/use-settings';
 import { motion, AnimatePresence } from 'motion/react';
 import { useMemo } from 'react';
 import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 
 export default function StudentsPage() {
   const router = useRouter();
@@ -127,14 +128,11 @@ export default function StudentsPage() {
                 <span className="text-xs font-semibold text-slate-700">{new Date(student.expiryDate).toLocaleDateString('en-GB')}</span>
               </div>
               <div className="flex items-center gap-2">
-                <a 
-                  href={getWhatsAppUrl(student, formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName))}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 active:scale-95"
-                >
-                  <MessageCircle className="h-5 w-5" />
-                </a>
+                <WhatsAppReminderButton
+                  student={student}
+                  showText={false}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 active:scale-95 disabled:opacity-50"
+                />
                 <div className="relative">
                   <button 
                     onClick={() => setActiveMenu(activeMenu === student.id ? null : student.id)}
