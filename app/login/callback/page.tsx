@@ -12,7 +12,12 @@ export default function AuthCallbackPage() {
       const { error } = await supabase.auth.exchangeCodeForSession(window.location.search);
       if (error) {
         console.error('Error exchanging code for session:', error.message);
+        router.push('/login'); // Redirect back to login on failure so the user isn't stuck
+        return;
       }
+      
+      // Force Next.js to re-evaluate the layout with the new session
+      router.refresh(); 
       router.push('/');
     };
 
