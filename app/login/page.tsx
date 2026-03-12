@@ -17,12 +17,28 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
+  // ✅ FIX 1: Listen for auth state changes to handle the redirect safely
+  useEffect(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) {
+          router.push('/');
+        }
+      }
+    );
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, [router]);
+
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
+          // This routes to your callback page (Fix 3)
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
@@ -41,20 +57,19 @@ export default function LoginPage() {
     setError(null);
     
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) throw error;
 
-      if (data.user) {
-        router.push('/');
-      }
+      // ❌ Removed manual router.push('/') here!
+      // The useEffect listener above will catch the session and redirect automatically.
+      
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Only stop loading on error, let the redirect handle success state
     }
   };
 
