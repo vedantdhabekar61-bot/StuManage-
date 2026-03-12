@@ -51,7 +51,11 @@ export function useSettings() {
           .single();
 
         if (error) {
-          console.warn('Supabase settings fetch error:', error.message);
+          if (error.message.includes('schema cache')) {
+            console.warn('Supabase settings table missing. Using local storage.');
+          } else {
+            console.warn('Supabase settings fetch error:', error.message);
+          }
           const saved = localStorage.getItem(SETTINGS_KEY);
           if (saved) setSettings(JSON.parse(saved));
         } else if (data) {
@@ -76,7 +80,13 @@ export function useSettings() {
           .from('settings')
           .upsert({ ...updated, user_id: user.id }, { onConflict: 'user_id' });
         
-        if (error) console.error('Supabase settings upsert error:', error.message);
+        if (error) {
+          if (error.message.includes('schema cache')) {
+            console.warn('Supabase settings table missing. Settings saved locally only.');
+          } else {
+            console.error('Supabase settings upsert error:', error.message);
+          }
+        }
       } catch (e) {
         console.error('Failed to update settings in Supabase', e);
       }

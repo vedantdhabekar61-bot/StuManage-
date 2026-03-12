@@ -36,7 +36,11 @@ export function useStudents() {
 
         if (error) {
           // If table doesn't exist or other error, fallback to local storage
-          console.warn('Supabase fetch error, falling back to local storage:', error.message);
+          if (error.code === 'PGRST116' || error.message.includes('schema cache')) {
+            console.warn('Supabase table missing. Please run the SQL schema in your Supabase dashboard.');
+          } else {
+            console.warn('Supabase fetch error, falling back to local storage:', error.message);
+          }
           const saved = localStorage.getItem(STUDENTS_KEY);
           if (saved) setStudents(JSON.parse(saved));
         } else if (data) {
@@ -82,7 +86,11 @@ export function useStudents() {
           .insert([{ ...newStudent, user_id: user.id }]);
         
         if (error) {
-          console.error('Supabase insert error:', error.message);
+          if (error.message.includes('schema cache')) {
+            console.warn('Supabase table missing. Student saved locally only.');
+          } else {
+            console.error('Supabase insert error:', error.message);
+          }
           // Revert if critical, but for now we keep local as source of truth
         }
       } catch (e) {
@@ -102,7 +110,13 @@ export function useStudents() {
           .eq('id', id)
           .eq('user_id', user.id);
         
-        if (error) console.error('Supabase update error:', error.message);
+        if (error) {
+          if (error.message.includes('schema cache')) {
+            console.warn('Supabase table missing. Student updated locally only.');
+          } else {
+            console.error('Supabase update error:', error.message);
+          }
+        }
       } catch (e) {
         console.error('Failed to update student in Supabase', e);
       }
@@ -124,7 +138,13 @@ export function useStudents() {
           .eq('id', id)
           .eq('user_id', user.id);
         
-        if (error) console.error('Supabase delete error:', error.message);
+        if (error) {
+          if (error.message.includes('schema cache')) {
+            console.warn('Supabase table missing. Student deleted locally only.');
+          } else {
+            console.error('Supabase delete error:', error.message);
+          }
+        }
       } catch (e) {
         console.error('Failed to delete student from Supabase', e);
       }
