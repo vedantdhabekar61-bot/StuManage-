@@ -41,8 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .single();
 
         if (error) {
-          console.error('Error fetching profile:', error);
-          return {
+          // PGRST116 is "no rows found", but we also check for missing table
+          const isTableMissing = error.message?.includes('public.profiles') && error.message?.includes('not found');
+          
+          if (isTableMissing) {
+            console.warn('⚠️ Supabase "profiles" table is missing. Please run the SQL schema in your Supabase dashboard to enable cloud sync.');
+          } else if (error.code !== 'PGRST116') {
+            console.error('Supabase profile fetch error:', error.message || error);
+          }
+          
+          const defaultProfile = {
             id: uid,
             email: email,
             name: metadata.full_name || email.split('@')[0],
@@ -51,6 +59,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             trialEndDate: new Date(new Date(createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
             proExpiryDate: null
           };
+
+          // If profile doesn't exist, try to create it
+          if (error.code === 'PGRST116') {
+            supabase.from('profiles').insert([{
+              id: uid,
+              is_pro: false,
+              trial_end_date: defaultProfile.trialEndDate,
+              pro_expiry_date: null
+            }]).then(({ error: insertError }) => {
+              if (insertError) console.warn('Could not auto-create profile record:', insertError.message);
+            });
+          }
+
+          return defaultProfile;
         }
 
         return {
