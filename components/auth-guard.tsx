@@ -10,23 +10,20 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean | null>(null);
+  const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hasSeenWelcome') === 'true';
+    }
+    return false;
+  });
+
+  const handleDismissWelcome = () => {
+    setHasSeenWelcome(true);
+    localStorage.setItem('hasSeenWelcome', 'true');
+  };
 
   useEffect(() => {
-    const seen = localStorage.getItem('hasSeenWelcome');
-    // If user is already logged in, we can skip welcome screen for a faster experience
-    setTimeout(() => {
-      if (seen === 'true' || user) {
-        setHasSeenWelcome(true);
-        if (!seen && user) localStorage.setItem('hasSeenWelcome', 'true');
-      } else {
-        setHasSeenWelcome(false);
-      }
-    }, 0);
-  }, [user]);
-
-  useEffect(() => {
-    if (isLoaded && hasSeenWelcome === true) {
+    if (isLoaded && (hasSeenWelcome || user)) {
       const isAuthPage = pathname === '/login' || pathname === '/signup';
       if (!user && !isAuthPage) {
         router.push('/signup');
@@ -36,7 +33,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoaded, pathname, router, hasSeenWelcome]);
 
-  if (isLoaded === false || hasSeenWelcome === null) {
+  if (isLoaded === false) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
@@ -44,9 +41,11 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const showWelcome = !hasSeenWelcome && !user;
+
   return (
     <AnimatePresence mode="wait">
-      {!hasSeenWelcome ? (
+      {showWelcome ? (
         <motion.div
           key="welcome"
           initial={{ opacity: 1 }}
@@ -54,7 +53,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           transition={{ duration: 0.4, ease: 'easeOut' }}
           className="fixed inset-0 z-[300]"
         >
-          <WelcomeScreen onDismiss={() => setHasSeenWelcome(true)} />
+          <WelcomeScreen onDismiss={handleDismissWelcome} />
         </motion.div>
       ) : (
         <motion.div

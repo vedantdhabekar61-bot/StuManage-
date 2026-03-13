@@ -9,13 +9,16 @@ interface User {
   email: string;
   name: string;
   createdAt: string;
-  isSubscribed: boolean;
+  isPro: boolean;
+  trialEndDate: string;
+  proExpiryDate: string | null;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, name: string) => void; // Legacy/Demo login
   logout: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
   updateSubscription: (status: boolean) => Promise<void>;
   isLoaded: boolean;
   supabaseUser: SupabaseUser | null;
@@ -29,57 +32,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    // Check active sessions and subscribe to auth changes
+    const fetchProfile = async (uid: string, email: string, createdAt: string, metadata: any) => {
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', uid)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return {
+            id: uid,
+            email: email,
+            name: metadata.full_name || email.split('@')[0],
+            createdAt: createdAt,
+            isPro: false,
+            trialEndDate: new Date(new Date(createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            proExpiryDate: null
+          };
+        }
+
+        return {
+          id: uid,
+          email: email,
+          name: metadata.full_name || email.split('@')[0],
+          createdAt: createdAt,
+          isPro: profile.is_pro,
+          trialEndDate: profile.trial_end_date,
+          proExpiryDate: profile.pro_expiry_date
+        };
+      } catch (e) {
+        console.error('Failed to fetch profile', e);
+        return null;
+      }
+    };
+
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSupabaseUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch profile from public.profiles table if it exists
-        // For now, we'll still use localStorage for the extended profile data 
-        // until we set up the database tables
-        const savedUser = localStorage.getItem('libmanager_user');
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser);
-            setUser(parsed);
-          } catch (e) {
-            console.error('Failed to parse user', e);
-          }
-        } else {
-          // Create a default profile if none exists
-          const newUser: User = {
-            id: session.user.id,
-            email: session.user.email!,
-            name: session.user.user_metadata.full_name || session.user.email!.split('@')[0],
-            createdAt: session.user.created_at,
-            isSubscribed: false
-          };
-          setUser(newUser);
-          localStorage.setItem('libmanager_user', JSON.stringify(newUser));
-        }
+        const profile = await fetchProfile(
+          session.user.id, 
+          session.user.email!, 
+          session.user.created_at,
+          session.user.user_metadata
+        );
+        setUser(profile);
       } else {
-        // Fallback to legacy local-only user if no supabase session
-        const savedUser = localStorage.getItem('libmanager_user');
-        if (savedUser) {
-          try {
-            const parsed = JSON.parse(savedUser);
-            setUser(parsed);
-          } catch (e) {
-            console.error('Failed to parse user', e);
-          }
-        }
+        setUser(null);
       }
       setIsLoaded(true);
     };
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSupabaseUser(session?.user ?? null);
-      if (!session) {
+      if (session?.user) {
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          const profile = await fetchProfile(
+            session.user.id, 
+            session.user.email!, 
+            session.user.created_at,
+            session.user.user_metadata
+          );
+          setUser(profile);
+        }
+      } else {
         setUser(null);
-        localStorage.removeItem('libmanager_user');
       }
     });
 
@@ -92,31 +114,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email, 
       name, 
       createdAt: new Date().toISOString(),
-      isSubscribed: false 
+      isPro: false,
+      trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      proExpiryDate: null
     };
     setUser(newUser);
-    localStorage.setItem('libmanager_user', JSON.stringify(newUser));
   };
 
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('libmanager_user');
+  };
+
+  const refreshProfile = async () => {
+    if (supabaseUser) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', supabaseUser.id)
+        .single();
+      
+      if (profile) {
+        setUser({
+          id: supabaseUser.id,
+          email: supabaseUser.email!,
+          name: supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
+          createdAt: supabaseUser.created_at,
+          isPro: profile.is_pro,
+          trialEndDate: profile.trial_end_date,
+          proExpiryDate: profile.pro_expiry_date
+        });
+      }
+    }
   };
 
   const updateSubscription = async (status: boolean) => {
-    if (user) {
-      const updatedUser = { ...user, isSubscribed: status };
-      setUser(updatedUser);
-      localStorage.setItem('libmanager_user', JSON.stringify(updatedUser));
+    if (supabaseUser) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ is_pro: status })
+        .eq('id', supabaseUser.id);
       
-      // If we had a profiles table, we'd update it here:
-      // await supabase.from('profiles').update({ is_subscribed: status }).eq('id', user.id);
+      if (!error) {
+        await refreshProfile();
+      }
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateSubscription, isLoaded, supabaseUser }}>
+    <AuthContext.Provider value={{ user, login, logout, refreshProfile, updateSubscription, isLoaded, supabaseUser }}>
       {children}
     </AuthContext.Provider>
   );

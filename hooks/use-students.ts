@@ -5,12 +5,15 @@ import { Student } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
 
+import { useSubscription } from '@/hooks/use-subscription';
+
 const STUDENTS_KEY = 'libmanager_students';
 
 export function useStudents() {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const { user } = useAuth();
+  const { isActive, profile } = useSubscription();
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -57,6 +60,12 @@ export function useStudents() {
   }, [user]);
 
   const addStudent = async (student: Omit<Student, 'id'>) => {
+    // Check student limit for free users
+    const isPro = profile?.is_pro || false;
+    if (!isPro && students.length >= 20) {
+      throw new Error('Free limit reached (20 students). Please upgrade to Pro for unlimited students.');
+    }
+
     // Check if desk is already taken in the same shift
     const isDeskTaken = students.some(s => 
       s.deskNumber === student.deskNumber && 

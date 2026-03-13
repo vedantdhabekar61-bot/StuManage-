@@ -11,6 +11,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
+import { SubscriptionBanner } from '@/components/subscription-banner';
 
 import { useAuth } from '@/hooks/use-auth';
 import { LogOut, RefreshCw } from 'lucide-react';
@@ -25,7 +26,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (authLoaded && !user) {
       router.push('/login');
-    } else if (authLoaded && user && !user.isSubscribed) {
+    } else if (authLoaded && user && !user.isPro) {
       // Check if it's the first time (we can use a local storage flag for simplicity in this demo)
       const hasSeenTrial = localStorage.getItem('has_seen_trial');
       if (!hasSeenTrial) {
@@ -48,11 +49,11 @@ export default function Dashboard() {
   
   const trialStatus = useMemo(() => {
     if (!user) return { daysLeft: 30 };
-    const createdAt = new Date(user.createdAt);
+    const trialEnd = new Date(user.trialEndDate);
     const now = new Date();
-    const diffTime = now.getTime() - createdAt.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return { daysLeft: Math.max(0, 30 - diffDays) };
+    const diffTime = trialEnd.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return { daysLeft: Math.max(0, diffDays) };
   }, [user]);
   const metrics = useMemo(() => {
     const today = new Date();
@@ -128,13 +129,15 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex flex-col gap-6 p-6 pb-24">
-      <header className="flex items-center justify-between">
+    <main className="flex flex-col gap-6 pb-24">
+      <SubscriptionBanner />
+      <div className="px-6 flex flex-col gap-6">
+        <header className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
           <div className="flex items-center gap-2">
             <p className="text-sm text-slate-500">Welcome back, {user?.name || 'Smart Tracking'}</p>
-            {user?.isSubscribed ? (
+            {user?.isPro ? (
               <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 border border-amber-100">
                 Premium
               </span>
@@ -167,7 +170,7 @@ export default function Dashboard() {
       </header>
 
       {/* Trial Info Card */}
-      {user?.isSubscribed && (
+      {!user?.isPro && trialStatus.daysLeft > 0 && (
         <motion.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -179,11 +182,11 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col">
               <span className="text-xs font-bold text-emerald-700 uppercase tracking-tight">Free Trial Active</span>
-              <span className="text-sm font-bold text-emerald-600">30 Days Remaining</span>
+              <span className="text-sm font-bold text-emerald-600">{trialStatus.daysLeft} Days Remaining</span>
             </div>
           </div>
           <Link 
-            href="/payment"
+            href="/billing"
             className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-white px-3 py-2 rounded-lg border border-emerald-100 shadow-sm active:scale-95"
           >
             Upgrade
@@ -310,6 +313,7 @@ export default function Dashboard() {
           </Link>
         </div>
       </section>
+      </div>
     </main>
   );
 }
