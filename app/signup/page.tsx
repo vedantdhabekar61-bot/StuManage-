@@ -1,220 +1,240 @@
-'use client';
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
-import { supabase } from '@/lib/supabase';
-import { motion } from 'motion/react';
-import { User, Mail, Lock, ArrowRight, Activity } from 'lucide-react';
-import Link from 'next/link';
+@Composable
+fun SignUpScreen(
+    onSignUpClick: (String, String, String) -> Unit,
+    onGoogleSignUpClick: () -> Unit,
+    onLoginClick: () -> Unit,
+    isLoading: Boolean,
+    isGoogleLoading: Boolean,
+    errorMessage: String?
+) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
-export default function SignUpPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
-  const router = useRouter();
+    // Simulating Framer Motion entrance delay
+    var isVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { isVisible = true }
 
-  const handleGoogleSignUp = async () => {
-    setIsGoogleLoading(true);
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Google Sign-In error:', error);
-      setError(error.message);
-    } finally {
-      setIsGoogleLoading(false);
-    }
-  };
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        AnimatedVisibility(
+            visible = isVisible,
+            enter = fadeIn(tween(800)) + slideInVertically(tween(800), initialOffsetY = { 50 })
+        ) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Logo & Header
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .background(Color(0xFFEEF2FF), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MonitorHeart, // Closest standard icon to Activity
+                        contentDescription = "Logo",
+                        tint = Color(0xFF4F46E5),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
-      });
+                Spacer(modifier = Modifier.height(24.dp))
 
-      if (error) throw error;
+                Text(
+                    text = "Smart Tracking",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF0F172A),
+                    fontFamily = FontFamily.Serif
+                )
+                
+                Text(
+                    text = "Join Smart Tracking to start managing your workspace.",
+                    fontSize = 14.sp,
+                    color = Color(0xFF64748B),
+                    modifier = Modifier.padding(top = 8.dp)
+                )
 
-      if (data.user) {
-        // If email confirmation is disabled, user is logged in
-        // If enabled, they need to check email
-        if (data.session) {
-          router.push('/');
-        } else {
-          alert('Registration successful! Please check your email for confirmation.');
-          router.push('/login');
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Error Banner
+                if (!errorMessage.isNullOrEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color(0xFFFFF1F2), RoundedCornerShape(16.dp))
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = errorMessage,
+                            color = Color(0xFFE11D48),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                // Input Fields
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    AuthTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        placeholder = "Full Name",
+                        icon = Icons.Default.Person
+                    )
+                    AuthTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = "Email Address",
+                        icon = Icons.Default.Email,
+                        keyboardType = KeyboardType.Email
+                    )
+                    AuthTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        placeholder = "Password",
+                        icon = Icons.Default.Lock,
+                        keyboardType = KeyboardType.Password,
+                        isPassword = true
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Buttons Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Main Sign Up Button
+                    Button(
+                        onClick = { onSignUpClick(name, email, password) },
+                        enabled = !isLoading && !isGoogleLoading && name.isNotBlank() && email.isNotBlank() && password.isNotBlank(),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4F46E5),
+                            disabledContainerColor = Color(0xFF4F46E5).copy(alpha = 0.5f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        } else {
+                            Text("SIGN UP", fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+                            Spacer(Modifier.width(8.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(20.dp))
+                        }
+                    }
+
+                    // Google Sign Up Button
+                    Surface(
+                        onClick = onGoogleSignUpClick,
+                        enabled = !isLoading && !isGoogleLoading,
+                        modifier = Modifier
+                            .height(56.dp)
+                            .width(80.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        color = Color.White
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            if (isGoogleLoading) {
+                                CircularProgressIndicator(color = Color(0xFF4F46E5), modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                            } else {
+                                // Usually you'd use painterResource(id = R.drawable.ic_google) here
+                                Text("G", color = Color.Black, fontSize = 24.sp, fontWeight = FontWeight.Black) 
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Bottom Login Link
+                Text(
+                    text = buildAnnotatedString {
+                        append("Already have an account? ")
+                        withStyle(style = SpanStyle(color = Color(0xFF4F46E5), fontWeight = FontWeight.Bold)) {
+                            append("Log In")
+                        }
+                    },
+                    fontSize = 14.sp,
+                    color = Color(0xFF64748B),
+                    modifier = Modifier.clickable { onLoginClick() }
+                )
+            }
         }
-      }
-    } catch (error: any) {
-      setError(error.message);
-    } finally {
-      setIsLoading(false);
     }
-  };
+}
 
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-sm space-y-8"
-      >
-        <div className="flex flex-col items-center text-center">
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"
-          >
-            <Activity className="h-8 w-8" />
-          </motion.div>
-          <motion.h1 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.6 }}
-            className="mt-6 font-serif text-3xl font-bold text-slate-900"
-          >
-            Smart Tracking
-          </motion.h1>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-2 text-sm text-slate-500"
-          >
-            Join Smart Tracking to start managing your workspace.
-          </motion.p>
-        </div>
-
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-medium text-rose-600"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        <motion.form 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
-          onSubmit={handleSubmit} 
-          className="mt-8 space-y-4"
-        >
-          <div className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                required
-                type="text"
-                placeholder="Full Name"
-                className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                required
-                type="email"
-                placeholder="Email Address"
-                className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input
-                required
-                type="password"
-                placeholder="Password"
-                className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              disabled={isLoading || isGoogleLoading}
-              type="submit"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                <>
-                  <span>Sign Up</span>
-                  <ArrowRight className="h-5 w-5" />
-                </>
-              )}
-            </button>
-
-            <button
-              disabled={isLoading || isGoogleLoading}
-              type="button"
-              onClick={handleGoogleSignUp}
-              className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
-              title="Sign up with Google"
-            >
-              {isGoogleLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
-              ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
-                  <path
-                    fill="#4285F4"
-                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                  />
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-        </motion.form>
-
-        <p className="text-center text-sm text-slate-500">
-          Already have an account?{' '}
-          <Link href="/login" className="font-bold text-indigo-600 hover:underline">
-            Log In
-          </Link>
-        </p>
-      </motion.div>
-    </main>
-  );
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AuthTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    icon: ImageVector,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    isPassword: Boolean = false
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        placeholder = { Text(placeholder, color = Color(0xFF94A3B8), fontSize = 14.sp) },
+        leadingIcon = { Icon(icon, contentDescription = null, tint = Color(0xFF94A3B8), modifier = Modifier.size(20.dp)) },
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        visualTransformation = if (isPassword) PasswordVisualTransformation() else androidx.compose.ui.text.input.VisualTransformation.None,
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = TextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFFF8FAFC),
+            unfocusedContainerColor = Color(0xFFF8FAFC),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            cursorColor = Color(0xFF4F46E5)
+        ),
+        singleLine = true
+    )
 }
