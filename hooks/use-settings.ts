@@ -59,7 +59,11 @@ export function useSettings() {
           const saved = localStorage.getItem(SETTINGS_KEY);
           if (saved) setSettings(JSON.parse(saved));
         } else if (data) {
-          setSettings(data as Settings);
+          setSettings({
+            totalSeats: data.total_seats,
+            libraryName: data.library_name,
+            messageTemplate: data.message_template,
+          });
         }
       } catch (e) {
         console.error('Failed to fetch settings from Supabase', e);
@@ -76,9 +80,16 @@ export function useSettings() {
 
     if (user) {
       try {
+        const dbSettings = {
+          user_id: user.id,
+          total_seats: updated.totalSeats,
+          library_name: updated.libraryName,
+          message_template: updated.messageTemplate,
+        };
+
         const { error } = await supabase
           .from('settings')
-          .upsert({ ...updated, user_id: user.id }, { onConflict: 'user_id' });
+          .upsert(dbSettings, { onConflict: 'user_id' });
         
         if (error) {
           if (error.message.includes('schema cache')) {

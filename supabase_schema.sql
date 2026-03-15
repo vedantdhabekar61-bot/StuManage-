@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS public.students (
     start_date DATE,
     expiry_date DATE,
     last_payment_date DATE,
+    plan TEXT DEFAULT 'Custom Plan',
+    payment_method TEXT DEFAULT 'UPI',
     created_at TIMESTAMPTZ DEFAULT now()
 );
 

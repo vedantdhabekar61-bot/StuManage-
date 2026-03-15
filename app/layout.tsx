@@ -22,6 +22,7 @@ export const viewport = {
 import { BottomNav } from '@/components/bottom-nav';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/hooks/use-auth';
+import { StudentProvider } from '@/hooks/use-students';
 import { AuthGuard } from '@/components/auth-guard';
 import { SubscriptionGuard } from '@/components/subscription-guard';
 
@@ -30,16 +31,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="bg-slate-50 text-slate-900 antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
-          <AuthGuard>
-            <SubscriptionGuard>
-              <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
-                <PageTransition>
-                  {children}
-                </PageTransition>
-                <BottomNav />
-              </div>
-            </SubscriptionGuard>
-          </AuthGuard>
+          <StudentProvider>
+            <AuthGuard>
+              <SubscriptionGuard>
+                <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
+                  <BottomNav />
+                </div>
+              </SubscriptionGuard>
+            </AuthGuard>
+          </StudentProvider>
         </AuthProvider>
       </body>
     </html>
