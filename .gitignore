@@ -1,7 +1,12 @@
-node_modules/
-.next/
-coverage/
-.DS_Store
-*.log
-.env*
-!.env.example
+# Local security keys
+local.properties
+local.defaults.properties
+
+# Build artifacts
+.gradle/
+build/
+app/build/
+
+# Signing keys (Never push these!)
+*.jks
+*.keystore
