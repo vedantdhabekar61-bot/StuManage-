@@ -1,0 +1,38 @@
+name: Android CI - Generate APK
+
+on:
+  push:
+    branches: [ "main" ] # Runs every time you push to main
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew assembleRelease
+      env:
+        # These map your GitHub Secrets to the build environment
+        SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: SmartLibrary-Release-APK
+        path: app/build/outputs/apk/release/app-release-unsigned.apk
