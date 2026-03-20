@@ -1,20 +1,34 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# DeskTracker 📚
 
-# Run and deploy your AI Studio app
+DeskTracker is a smart desk and student management application for libraries, coaching classes, hostels, and study rooms.
 
-This contains everything you need to run your app locally.
+## 🚀 Features
 
-View your app in AI Studio: https://ai.studio/apps/e58ce3d3-3789-468d-9753-4c893f4c718a
+- Desk allocation management
+- Student tracking
+- Payment status monitoring
+- Shift management
+- Simple admin dashboard
 
-## Run Locally
+## 📱 Android Build
 
-**Prerequisites:**  Node.js
+This project uses Capacitor to generate Android APK.
 
+### Steps to generate Android project
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+npm install  
+npm run build  
+npx cap add android  
+npx cap sync  
+
+## ⚙️ GitHub Actions
+
+Android APK is generated automatically using GitHub Actions workflow.
+
+## 🛠 Current Status
+
+Android build workflow is under improvement and errors are being fixed.
+
+## 👨‍💻 Developer
+
+Vedant Dhabekar
