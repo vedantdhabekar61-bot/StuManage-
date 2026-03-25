@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, Grid3X3, PlusCircle } from 'lucide-react';
+import { Home, Users, LayoutGrid, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Home', icon: LayoutDashboard, href: '/' },
-  { label: 'Students', icon: Users, href: '/students' },
-  { label: 'Seats', icon: Grid3X3, href: '/seats' },
-  { label: 'Add', icon: PlusCircle, href: '/add' },
+  { label: 'Home', icon: Home, href: '/' },
+  { label: 'Roster', icon: Users, href: '/students' },
+  { label: 'Seats', icon: LayoutGrid, href: '/seats' },
+  { label: 'Settings', icon: Settings, href: '/settings' },
 ];
 
 export function BottomNav() {
@@ -19,7 +19,7 @@ export function BottomNav() {
   if (isAuthPage) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-slate-100 bg-white/80 backdrop-blur-md">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 mx-auto max-w-md border-t border-slate-100 bg-white/90 backdrop-blur-md">
       <div className="flex items-center justify-around py-3">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -28,12 +28,12 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex flex-col items-center gap-1 transition-colors',
-                isActive ? 'text-indigo-600' : 'text-slate-400 hover:text-slate-600'
+                'flex flex-col items-center gap-1 transition-all',
+                isActive ? 'text-teal-500' : 'text-slate-400 hover:text-slate-600'
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">{item.label}</span>
+              <item.icon className={cn("h-6 w-6", isActive && "scale-110")} />
+              <span className="text-[11px] font-medium">{item.label}</span>
             </Link>
           );
         })}

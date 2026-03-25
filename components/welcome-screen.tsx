@@ -11,22 +11,22 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-50 p-6">
-      <div className="relative flex w-full max-w-md flex-col items-center gap-8 rounded-[2.5rem] bg-white p-10 shadow-2xl shadow-slate-200 text-center">
+      <div className="relative flex w-full max-w-md flex-col items-center gap-8 rounded-[3rem] bg-white p-10 shadow-2xl shadow-slate-200 text-center border border-white">
         {/* Logo Section */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col items-center gap-6"
         >
-          <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-indigo-600 text-white shadow-lg shadow-indigo-200">
-            <Activity className="h-10 w-10" />
+          <div className="flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-teal-500 text-white shadow-2xl shadow-teal-100">
+            <Activity className="h-12 w-12" />
           </div>
-          <div className="flex flex-col gap-1">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
-              Smart Tracking
+          <div className="flex flex-col gap-2">
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+              SmartLibrary <span className="text-teal-500">Pro</span>
             </h1>
-            <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">
+            <p className="text-xs font-bold text-slate-300 uppercase tracking-[0.3em]">
               Welcome to Version 1.0
             </p>
           </div>
@@ -39,22 +39,22 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="flex flex-col gap-4 w-full text-left"
         >
-          <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
-              <Sparkles className="h-5 w-5" />
+          <div className="flex items-center gap-5 rounded-3xl bg-slate-50 p-5 border border-slate-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-teal-50 text-teal-500 border border-teal-100">
+              <Sparkles className="h-6 w-6" />
             </div>
             <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-900">Smart Tracking</span>
-              <span className="text-xs text-slate-500">Manage seats and fees effortlessly.</span>
+              <span className="text-sm font-bold text-slate-900">Smart Management</span>
+              <span className="text-xs font-medium text-slate-400">Manage seats and fees effortlessly.</span>
             </div>
           </div>
-          <div className="flex items-center gap-4 rounded-2xl bg-slate-50 p-4 border border-slate-100">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
-              <ArrowRight className="h-5 w-5" />
+          <div className="flex items-center gap-5 rounded-3xl bg-slate-50 p-5 border border-slate-100">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 border border-emerald-100">
+              <ArrowRight className="h-6 w-6" />
             </div>
             <div className="flex flex-col">
               <span className="text-sm font-bold text-slate-900">Quick Actions</span>
-              <span className="text-xs text-slate-500">WhatsApp reminders in one click.</span>
+              <span className="text-xs font-medium text-slate-400">WhatsApp reminders in one click.</span>
             </div>
           </div>
         </motion.div>
@@ -68,7 +68,7 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
         >
           <button
             onClick={handleDismiss}
-            className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-indigo-600 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all hover:bg-indigo-700 active:scale-95"
+            className="group flex w-full items-center justify-center gap-3 rounded-[2rem] bg-teal-500 py-6 text-sm font-bold uppercase tracking-widest text-white shadow-xl shadow-teal-100 transition-all hover:bg-teal-600 active:scale-95"
           >
             <span>Get Started</span>
             <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />

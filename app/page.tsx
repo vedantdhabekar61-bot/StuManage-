@@ -129,191 +129,131 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex flex-col gap-6 pb-24">
+    <main className="flex min-h-screen flex-col bg-slate-50 pb-24">
       <SubscriptionBanner />
-      <div className="px-6 flex flex-col gap-6">
-        <header className="flex items-center justify-between">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-slate-500">Welcome back, {user?.name || 'Smart Tracking'}</p>
-            {user?.isPro ? (
-              <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-amber-600 border border-amber-100">
-                Premium
-              </span>
-            ) : (
-              <button 
-                onClick={handleStartTrial}
-                className="inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-600 border border-indigo-100 transition-colors hover:bg-indigo-100 active:scale-95"
-              >
-                Free Trial
-              </button>
-            )}
+      
+      {/* Header */}
+      <header className="flex items-center justify-between px-6 pt-8 pb-4">
+        <div className="flex items-center gap-3">
+          <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
+            <img 
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} 
+              alt="Profile" 
+              className="h-full w-full object-cover"
+            />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium text-slate-400">Good morning,</span>
+            <span className="text-lg font-bold text-slate-900">{user?.name || 'Admin'}</span>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={handleRefresh}
-            className={`flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-all active:scale-95 ${isRefreshing ? 'animate-spin text-indigo-600' : ''}`}
-            title="Refresh"
-          >
-            <RefreshCw className="h-5 w-5" />
+        <div className="flex items-center gap-3">
+          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition-all active:scale-95">
+            <Bell className="h-5 w-5 text-slate-600" />
+            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 border-2 border-white"></span>
           </button>
           <button 
             onClick={logout}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-600 active:scale-95"
-            title="Logout"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-slate-600 transition-colors hover:text-rose-600 active:scale-95"
           >
             <LogOut className="h-5 w-5" />
           </button>
         </div>
       </header>
 
-      {/* Trial Info Card */}
-      {!user?.isPro && trialStatus.daysLeft > 0 && (
-        <motion.div 
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between shadow-sm"
-        >
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <Calendar className="h-5 w-5" />
+      <div className="flex flex-col gap-8 px-6">
+        {/* Metrics Grid */}
+        <section className="grid grid-cols-2 gap-4">
+          <MetricsCard 
+            label="Active Students" 
+            value={metrics.activeStudents} 
+            icon={Users} 
+          />
+          <MetricsCard 
+            label="Available Seats" 
+            value={metrics.availableSeats} 
+            icon={Armchair} 
+          />
+          <div className="col-span-2 soft-card p-5 flex items-center justify-between bg-teal-500 text-white border-none transition-all hover:scale-[1.01]">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium opacity-80">Total Revenue ({metrics.currentMonth})</span>
+              <span className="text-3xl font-bold">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold text-emerald-700 uppercase tracking-tight">Free Trial Active</span>
-              <span className="text-sm font-bold text-emerald-600">{trialStatus.daysLeft} Days Remaining</span>
+            <div className="rounded-2xl bg-white/20 p-3">
+              <IndianRupee className="h-8 w-8" />
             </div>
           </div>
-          <Link 
-            href="/billing"
-            className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 bg-white px-3 py-2 rounded-lg border border-emerald-100 shadow-sm active:scale-95"
-          >
-            Upgrade
-          </Link>
-        </motion.div>
-      )}
+        </section>
 
-      {/* Metrics Grid */}
-      <div className="grid grid-cols-2 gap-4">
-        <MetricsCard 
-          label="Active Students" 
-          value={metrics.activeStudents} 
-          icon={Users} 
-          color="bg-indigo-500" 
-        />
-        <MetricsCard 
-          label="Available Seats" 
-          value={metrics.availableSeats} 
-          icon={Armchair} 
-          color="bg-emerald-500" 
-          subtext={`${metrics.occupancyPercentage}% Full`}
-        />
-        <MetricsCard 
-          label="Pending Fees" 
-          value={`₹${metrics.pendingFees.toLocaleString('en-IN')}`} 
-          icon={AlertCircle} 
-          color="bg-rose-500" 
-          subtext={`${metrics.overdueStudentsCount} Overdue`}
-        />
-        <MetricsCard 
-          label={`Revenue (${metrics.currentMonth})`} 
-          value={`₹${metrics.revenueThisMonth}`} 
-          icon={IndianRupee} 
-          color="bg-amber-500" 
-        />
-      </div>
-
-      {/* Urgent Action List */}
-      <section className="flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Urgent Actions</h2>
-          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-bold text-rose-600 uppercase">
-            {metrics.urgentActions.length} Critical
-          </span>
-        </div>
-        
-        <div className="flex flex-col gap-3 min-h-[100px]">
-          <AnimatePresence mode="popLayout">
-            {metrics.urgentActions.map((student) => (
-              <motion.div 
-                key={student.id} 
-                layout
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.95, x: 20 }}
-                className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${student.paymentStatus === 'Overdue' ? 'bg-rose-100 text-rose-600' : 'bg-amber-100 text-amber-600'}`}>
-                    <Clock className="h-5 w-5" />
+        {/* Action Alerts */}
+        <section className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-bold text-slate-900">Action Alerts</h2>
+            <Link href="/reminders" className="text-sm font-semibold text-teal-600">View All</Link>
+          </div>
+          
+          <div className="flex flex-col gap-4">
+            <AnimatePresence mode="popLayout">
+              {metrics.urgentActions.map((student) => (
+                <motion.div 
+                  key={student.id} 
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative overflow-hidden soft-card p-4 pl-6"
+                >
+                  <div className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1.5",
+                    student.paymentStatus === 'Overdue' ? "bg-rose-500" : "bg-amber-500"
+                  )} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-1">
+                      <span className="font-bold text-slate-900">{student.name}</span>
+                      <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5">Desk {student.deskNumber}</span>
+                        <span>•</span>
+                        <span className={student.paymentStatus === 'Overdue' ? "text-rose-600" : "text-amber-600"}>
+                          {student.paymentStatus === 'Overdue' ? 'Payment Overdue' : `Due: ${new Date(student.expiryDate).toLocaleDateString('en-GB')}`}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <WhatsAppReminderButton
+                        student={student}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-100 transition-all active:scale-95"
+                      />
+                      <button 
+                        onClick={() => handleMarkAsPaid(student)}
+                        className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-600 active:scale-95"
+                      >
+                        <Check className="h-5 w-5" />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-slate-900">{student.name}</span>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Desk {student.deskNumber} • {student.paymentStatus === 'Overdue' ? 'Payment Overdue' : `Fees Due Date: ${new Date(student.expiryDate).toLocaleDateString('en-GB')}`}
-                    </span>
-                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+            
+            {metrics.urgentActions.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-12 text-center soft-card border-dashed">
+                <div className="mb-3 rounded-full bg-slate-50 p-4 text-slate-300">
+                  <ShieldCheck className="h-8 w-8" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <WhatsAppReminderButton
-                    student={student}
-                    className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
-                  />
-                  <button 
-                    onClick={() => handleMarkAsPaid(student)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-50 text-indigo-600 transition-colors hover:bg-indigo-100 active:scale-95"
-                    title="Mark as Paid"
-                  >
-                    <Check className="h-5 w-5" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-          {metrics.urgentActions.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-8 text-center"
-            >
-              <div className="mb-2 rounded-full bg-slate-50 p-3 text-slate-300">
-                <AlertCircle className="h-6 w-6" />
+                <p className="font-medium text-slate-500">No urgent actions today!</p>
               </div>
-              <p className="text-sm text-slate-400">All caught up! No urgent actions.</p>
-            </motion.div>
-          )}
-        </div>
-      </section>
-
-      {/* Quick Actions */}
-      <section className="flex flex-col gap-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400">Quick Actions</h2>
-        <div className="grid grid-cols-3 gap-2">
-          <Link 
-            href="/add" 
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-indigo-600 p-3 text-white shadow-lg shadow-indigo-200 transition-transform active:scale-95"
-          >
-            <PlusCircle className="h-5 w-5" />
-            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Add Student</span>
-          </Link>
-          <Link 
-            href="/reminders" 
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white border border-slate-100 p-3 text-slate-900 shadow-sm transition-transform active:scale-95"
-          >
-            <Bell className="h-5 w-5 text-amber-500" />
-            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Reminders</span>
-          </Link>
-          <Link 
-            href="/seats" 
-            className="flex flex-col items-center justify-center gap-2 rounded-2xl bg-white border border-slate-100 p-3 text-slate-900 shadow-sm transition-transform active:scale-95"
-          >
-            <Armchair className="h-5 w-5 text-indigo-600" />
-            <span className="text-[10px] font-bold uppercase tracking-tight text-center">Seats</span>
-          </Link>
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
       </div>
+
+      {/* Floating Action Button */}
+      <Link 
+        href="/add" 
+        className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-200 transition-all hover:scale-110 active:scale-95"
+      >
+        <PlusCircle className="h-8 w-8" />
+      </Link>
     </main>
   );
 }

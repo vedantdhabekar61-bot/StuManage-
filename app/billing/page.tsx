@@ -88,52 +88,60 @@ export default function BillingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6">
+    <div className="min-h-screen bg-slate-50 p-6 pb-24">
       <header className="mb-8 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="rounded-full bg-white p-2 text-slate-400 shadow-sm"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-bold text-slate-900">Subscription & Billing</h1>
+        <h1 className="text-xl font-bold text-slate-900">Subscription</h1>
       </header>
 
-      <div className="mx-auto max-w-lg">
+      <div className="mx-auto max-w-lg flex flex-col gap-6">
         {/* Status Card */}
-        <div className="mb-6 rounded-3xl bg-white p-6 shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-4">
-            <span className="text-sm font-medium text-slate-500">Current Status</span>
-            <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${
-              isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-            }`}>
+        <div className="soft-card p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Status</span>
+            <div className={cn(
+              "status-pill",
+              isActive ? "bg-teal-100 text-teal-700" : "bg-rose-100 text-rose-700"
+            )}>
               {isActive ? 'Active' : 'Expired'}
-            </span>
+            </div>
           </div>
-          <div className="flex items-end gap-2">
-            <span className="text-3xl font-bold text-slate-900">{daysLeft}</span>
-            <span className="text-sm font-medium text-slate-500 mb-1">days remaining</span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-4xl font-bold text-slate-900">{daysLeft}</span>
+            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">days remaining</span>
           </div>
         </div>
 
         {/* Pricing Card */}
-        <div className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[2.5rem] bg-slate-900 p-8 text-white shadow-2xl relative overflow-hidden"
+        >
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Zap className="h-32 w-32" />
           </div>
           
           <div className="relative z-10">
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold">Pro Plan</h2>
-              <p className="text-slate-400 text-sm">Unlimited students & full features</p>
+            <div className="mb-8">
+              <div className="inline-flex rounded-full bg-teal-500/20 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-teal-400 mb-4">
+                Recommended
+              </div>
+              <h2 className="text-3xl font-bold">Pro Plan</h2>
+              <p className="text-slate-400 text-sm mt-1">Unlimited students & full features</p>
             </div>
 
             <div className="mb-8 flex items-baseline gap-1">
-              <span className="text-4xl font-bold">₹50</span>
-              <span className="text-slate-400">/month</span>
+              <span className="text-5xl font-bold">₹50</span>
+              <span className="text-slate-400 font-medium">/month</span>
             </div>
 
-            <ul className="mb-8 space-y-4">
+            <ul className="mb-10 space-y-5">
               {[
                 'Unlimited Student Records',
                 'Bulk WhatsApp Reminders',
@@ -141,11 +149,11 @@ export default function BillingPage() {
                 'Priority Support',
                 'Cloud Sync & Backup'
               ].map((feature) => (
-                <li key={feature} className="flex items-center gap-3 text-sm text-slate-300">
-                  <div className="rounded-full bg-emerald-500/20 p-1">
-                    <Check className="h-3 w-3 text-emerald-400" />
+                <li key={feature} className="flex items-center gap-4 text-sm text-slate-300">
+                  <div className="rounded-full bg-teal-500/20 p-1">
+                    <Check className="h-4 w-4 text-teal-400" />
                   </div>
-                  {feature}
+                  <span className="font-medium">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -153,11 +161,11 @@ export default function BillingPage() {
             <button
               onClick={handlePayment}
               disabled={loading}
-              className="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-500/20 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full rounded-2xl bg-teal-500 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Loader2 className="h-5 w-5 animate-spin" />
                   <span>Processing...</span>
                 </div>
               ) : (
@@ -165,18 +173,18 @@ export default function BillingPage() {
               )}
             </button>
 
-            <div className="mt-6 flex items-center justify-center gap-4 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-              <div className="flex items-center gap-1">
-                <ShieldCheck className="h-3 w-3" />
-                Secure Payment
+            <div className="mt-8 flex items-center justify-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4" />
+                Secure
               </div>
-              <div className="flex items-center gap-1">
-                <CreditCard className="h-3 w-3" />
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
                 Razorpay
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

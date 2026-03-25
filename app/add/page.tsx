@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft } from 'lucide-react';
+import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
@@ -102,17 +102,17 @@ export default function AddStudentPage() {
   };
 
   return (
-    <main className="flex flex-col gap-6 p-6">
-      <header className="flex flex-col gap-4">
+    <main className="flex min-h-screen flex-col bg-slate-50 p-6 pb-24">
+      <header className="flex flex-col gap-6 pt-4 pb-8">
         <button 
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">Add New Student</h1>
-          <p className="text-sm text-slate-500">Register a new student and assign a desk.</p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add Student</h1>
+          <p className="text-sm font-medium text-slate-400">Register a new member to your library.</p>
         </div>
       </header>
 
@@ -123,7 +123,7 @@ export default function AddStudentPage() {
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className="rounded-2xl bg-rose-50 p-4 text-sm font-medium text-rose-600 border border-rose-100"
+            className="mb-6 rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-600 border border-rose-100"
           >
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
@@ -133,18 +133,18 @@ export default function AddStudentPage() {
         )}
       </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
         {/* Basic Info */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Student Details</h2>
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Student Details</h2>
           <div className="flex flex-col gap-3">
             <div className="relative">
-              <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input 
                 required
                 type="text" 
                 placeholder="Full Name" 
-                className="w-full rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={formData.name}
                 onFocus={() => setError(null)}
                 onChange={(e) => {
@@ -154,12 +154,12 @@ export default function AddStudentPage() {
               />
             </div>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input 
                 required
                 type="tel" 
                 placeholder="Phone Number" 
-                className="w-full rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={formData.phone}
                 onFocus={() => setError(null)}
                 onChange={(e) => {
@@ -173,15 +173,15 @@ export default function AddStudentPage() {
 
         {/* Desk & Shift */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Desk & Shift</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Desk & Shift</h2>
+          <div className="grid grid-cols-2 gap-4">
             <div className="relative">
-              <Armchair className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Armchair className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input 
                 required
                 type="number" 
                 placeholder="Desk No." 
-                className="w-full rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={formData.deskNumber}
                 onFocus={() => setError(null)}
                 onChange={(e) => {
@@ -191,9 +191,9 @@ export default function AddStudentPage() {
               />
             </div>
             <div className="relative">
-              <Clock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <select 
-                className="w-full appearance-none rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full appearance-none rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={formData.shift}
                 onFocus={() => setError(null)}
                 onChange={(e) => {
@@ -211,18 +211,18 @@ export default function AddStudentPage() {
 
         {/* Plan & Payment */}
         <section className="flex flex-col gap-4">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">Plan & Billing</h2>
-          <div className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
+          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Plan & Billing</h2>
+          <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium text-slate-500">Amount (₹)</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Amount (₹)</span>
                 <div className="relative">
-                  <IndianRupee className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <IndianRupee className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input 
                     required
                     type="number" 
                     placeholder="0.00" 
-                    className="w-full rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-2xl border-none bg-white py-4 pl-10 pr-4 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                     value={formData.price === 0 && formData.price !== undefined ? '' : formData.price}
                     onFocus={() => setError(null)}
                     onChange={(e) => {
@@ -233,18 +233,18 @@ export default function AddStudentPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium text-slate-500">Duration</span>
-                <div className="flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Duration</span>
+                <div className="flex items-center gap-2">
                   <input 
                     required
                     type="number" 
                     min="1"
-                    className="w-16 rounded-2xl border border-slate-100 bg-white py-3 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                    className="w-16 rounded-2xl border-none bg-white py-4 px-3 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                     value={duration}
                     onChange={(e) => handleDurationChange(e.target.value)}
                   />
                   <select 
-                    className="flex-1 rounded-2xl border border-slate-100 bg-white py-3 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                    className="flex-1 rounded-2xl border-none bg-white py-4 px-3 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                     value={durationUnit}
                     onChange={(e) => handleUnitChange(e.target.value as 'Month' | 'Year')}
                   >
@@ -255,14 +255,14 @@ export default function AddStudentPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium text-slate-500">Start Date</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Start Date</span>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input 
                     type="date" 
-                    className="w-full rounded-2xl border border-slate-100 bg-white py-3 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
+                    className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                     value={formData.startDate}
                     onFocus={() => setError(null)}
                     onChange={(e) => handleStartDateChange(e.target.value)}
@@ -270,22 +270,22 @@ export default function AddStudentPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-xs font-medium text-slate-500">Fees Due Date</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Expiry Date</span>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
                   <input 
                     disabled
                     type="date" 
-                    className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-3 pl-10 pr-4 text-sm shadow-sm"
+                    className="w-full rounded-2xl border-none bg-slate-100 py-4 pl-12 pr-4 text-sm font-bold text-slate-400 shadow-inner"
                     value={formData.expiryDate}
                   />
                 </div>
               </div>
             </div>
 
-            <div className="flex flex-col gap-2">
-              <span className="text-xs font-medium text-slate-500">Payment Method</span>
-              <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-3">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Payment Method</span>
+              <div className="grid grid-cols-2 gap-3">
                 {['UPI', 'Cash'].map((method) => (
                   <button
                     key={method}
@@ -294,11 +294,12 @@ export default function AddStudentPage() {
                       setError(null);
                       setFormData(prev => ({ ...prev, paymentMethod: method as PaymentMethod }));
                     }}
-                    className={`rounded-2xl border py-2 text-[10px] font-bold uppercase tracking-wider transition-all ${
+                    className={cn(
+                      "rounded-2xl py-4 text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-sm",
                       formData.paymentMethod === method 
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-600' 
-                        : 'border-slate-100 bg-white text-slate-500'
-                    }`}
+                        ? "bg-teal-500 text-white shadow-lg shadow-teal-100" 
+                        : "bg-white text-slate-500"
+                    )}
                   >
                     {method}
                   </button>
@@ -311,13 +312,13 @@ export default function AddStudentPage() {
         <button 
           disabled={isSubmitting}
           type="submit" 
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+          className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl bg-teal-500 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-xl shadow-teal-100 transition-all active:scale-95 disabled:opacity-50"
         >
           {isSubmitting ? (
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <Loader2 className="h-6 w-6 animate-spin" />
           ) : (
             <>
-              <CheckCircle2 className="h-5 w-5" />
+              <CheckCircle2 className="h-6 w-6" />
               <span>Register Student</span>
             </>
           )}
@@ -327,20 +328,24 @@ export default function AddStudentPage() {
       <AnimatePresence>
         {showSuccess && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-white/80 backdrop-blur-sm p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-6"
           >
-            <div className="flex flex-col items-center gap-4 rounded-3xl bg-white p-8 text-center shadow-2xl">
-              <div className="rounded-full bg-emerald-100 p-4 text-emerald-600">
-                <CheckCircle2 className="h-12 w-12" />
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="soft-card p-10 flex flex-col items-center gap-6 text-center max-w-xs w-full"
+            >
+              <div className="h-20 w-20 rounded-full bg-teal-50 flex items-center justify-center text-teal-500 shadow-inner">
+                <CheckCircle2 className="h-10 w-10" />
               </div>
-              <div className="flex flex-col gap-1">
-                <h3 className="text-xl font-bold text-slate-900">Registration Successful!</h3>
-                <p className="text-sm text-slate-500">Redirecting to student list...</p>
+              <div className="flex flex-col gap-2">
+                <h3 className="text-2xl font-bold text-slate-900">Success!</h3>
+                <p className="text-sm font-medium text-slate-400">Student has been registered successfully.</p>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

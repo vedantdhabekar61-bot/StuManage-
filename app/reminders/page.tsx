@@ -85,145 +85,146 @@ export default function RemindersPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-24">
+    <main className="flex min-h-screen flex-col bg-slate-50 pb-24">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-white px-6 py-4 shadow-sm">
-        <div className="flex items-center gap-4">
+      <header className="flex flex-col gap-6 px-6 pt-8 pb-4">
+        <div className="flex items-center justify-between">
           <button 
             onClick={() => router.back()}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-50 text-slate-500 transition-colors hover:bg-slate-100"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-slate-500 transition-all active:scale-95"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-xl font-bold text-slate-900">Fee Reminders</h1>
+          <button
+            onClick={() => setIsBulkOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-100 transition-all active:scale-95"
+            title="Bulk Send"
+          >
+            <Send className="h-5 w-5" />
+          </button>
         </div>
-        <button
-          onClick={() => setIsBulkOpen(true)}
-          className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-100 transition-all active:scale-95"
-        >
-          <Send className="h-4 w-4" />
-          <span>Bulk Send</span>
-        </button>
-      </header>
 
-      <div className="p-6 flex flex-col gap-6">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 shadow-sm border border-rose-50">
-            <span className="text-2xl font-black text-rose-600">{stats.overdueCount}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-rose-400">Overdue</span>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="soft-card p-4 flex flex-col items-center gap-1 border-rose-100 bg-rose-50/30">
+            <span className="text-2xl font-bold text-rose-600">{stats.overdueCount}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Overdue</span>
           </div>
-          <div className="flex flex-col items-center gap-1 rounded-2xl bg-white p-3 shadow-sm border border-emerald-50">
-            <span className="text-2xl font-black text-emerald-600">{stats.paidThisMonthCount}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Paid</span>
+          <div className="soft-card p-4 flex flex-col items-center gap-1 border-teal-100 bg-teal-50/30">
+            <span className="text-2xl font-bold text-teal-600">{stats.paidThisMonthCount}</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-teal-400">Paid</span>
           </div>
         </div>
 
         {/* Pending Amount Banner */}
-        <div className="relative overflow-hidden rounded-2xl bg-indigo-600 p-5 text-white shadow-lg shadow-indigo-100">
-          <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-xl" />
-          <div className="relative flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-xs font-bold uppercase tracking-widest text-indigo-100">Total Pending Fees</span>
-              <span className="text-2xl font-black">₹{stats.totalPendingAmount.toLocaleString('en-IN')}</span>
-            </div>
-            <div className="h-12 w-12 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center">
-              <IndianRupee className="h-6 w-6" />
-            </div>
+        <div className="soft-card p-6 flex items-center justify-between bg-teal-500 text-white border-none shadow-xl shadow-teal-100">
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-medium opacity-80 uppercase tracking-widest">Total Pending Fees</span>
+            <span className="text-3xl font-bold">₹{stats.totalPendingAmount.toLocaleString('en-IN')}</span>
+          </div>
+          <div className="rounded-2xl bg-white/20 p-3">
+            <IndianRupee className="h-8 w-8" />
           </div>
         </div>
 
         {/* Search & Filters */}
         <div className="flex flex-col gap-4">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
             <input 
               type="text"
-              placeholder="Search student or phone..."
+              placeholder="Search students..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm shadow-sm focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {(['All', 'Overdue', 'Paid'] as FilterType[]).map((filter) => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
-                className={`whitespace-nowrap rounded-full px-5 py-2.5 text-xs font-bold transition-all ${
+                className={cn(
+                  "rounded-full px-6 py-2 text-xs font-bold transition-all active:scale-95 whitespace-nowrap",
                   activeFilter === filter 
-                    ? 'bg-indigo-600 text-white shadow-md' 
-                    : 'bg-white text-slate-500 shadow-sm'
-                }`}
+                    ? "bg-teal-500 text-white shadow-lg shadow-teal-100" 
+                    : "bg-white text-slate-500 shadow-sm"
+                )}
               >
                 {filter}
               </button>
             ))}
           </div>
         </div>
+      </header>
 
-        {/* Student List */}
-        <div className="flex flex-col gap-3">
-          <AnimatePresence mode="popLayout">
-            {filteredStudents.map((student) => (
-              <motion.div 
-                key={student.id}
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="flex flex-col gap-4 rounded-3xl border border-slate-100 bg-white p-5 shadow-sm"
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 text-slate-400">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-slate-900">{student.name}</span>
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Desk {student.deskNumber} • {student.phone}
-                      </span>
-                    </div>
+      {/* Student List */}
+      <div className="flex flex-col gap-4 px-6 min-h-[200px]">
+        <AnimatePresence mode="popLayout">
+          {filteredStudents.map((student) => (
+            <motion.div 
+              key={student.id}
+              layout
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="soft-card p-5 flex flex-col gap-4 transition-all hover:scale-[1.01]"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "h-14 w-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-sm",
+                    student.paymentStatus === 'Paid' ? "bg-teal-50 text-teal-600" : "bg-rose-50 text-rose-600"
+                  )}>
+                    {student.name.charAt(0)}
                   </div>
-                  <div className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${
-                    student.paymentStatus === 'Paid' ? 'bg-emerald-50 text-emerald-600' :
-                    student.paymentStatus === 'Overdue' ? 'bg-rose-50 text-rose-600' :
-                    'bg-amber-50 text-amber-600'
-                  }`}>
-                    {student.paymentStatus}
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between border-t border-slate-50 pt-4">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Due Date</span>
-                    <span className="text-sm font-bold text-slate-700">
-                      {new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-bold text-slate-900">{student.name}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Desk {student.deskNumber} • {student.phone}
                     </span>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Fee Amount</span>
-                    <span className="text-sm font-black text-indigo-600">₹{student.price}</span>
-                  </div>
                 </div>
+                <div className={cn(
+                  "status-pill",
+                  student.paymentStatus === 'Paid' ? "bg-teal-100 text-teal-700" : 
+                  student.paymentStatus === 'Overdue' ? "bg-rose-100 text-rose-700" : 
+                  "bg-amber-100 text-amber-700"
+                )}>
+                  {student.paymentStatus}
+                </div>
+              </div>
 
-                {student.paymentStatus !== 'Paid' && (
-                  <WhatsAppReminderButton
-                    student={student}
-                    className="flex items-center justify-center gap-2 w-full rounded-2xl bg-emerald-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
-                  />
-                )}
-              </motion.div>
-            ))}
-          </AnimatePresence>
+              <div className="flex items-center justify-between border-t border-slate-50 pt-4">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Due Date</span>
+                  <span className="text-sm font-bold text-slate-700">
+                    {new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' })}
+                  </span>
+                </div>
+                <div className="flex flex-col items-end">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Fee Amount</span>
+                  <span className="text-lg font-bold text-teal-600">₹{student.price}</span>
+                </div>
+              </div>
 
-          <BulkReminderSheet 
-            students={students}
-            isOpen={isBulkOpen}
-            onClose={() => setIsBulkOpen(false)}
-          />
+              {student.paymentStatus !== 'Paid' && (
+                <WhatsAppReminderButton
+                  student={student}
+                  className="flex items-center justify-center gap-3 w-full rounded-2xl bg-teal-500 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-100 transition-all active:scale-95 disabled:opacity-50"
+                />
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        <BulkReminderSheet 
+          students={students}
+          isOpen={isBulkOpen}
+          onClose={() => setIsBulkOpen(false)}
+        />
 
           {filteredStudents.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -234,7 +235,6 @@ export default function RemindersPage() {
             </div>
           )}
         </div>
-      </div>
     </main>
   );
 }

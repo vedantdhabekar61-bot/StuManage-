@@ -59,37 +59,37 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-white p-6">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-slate-50 p-6">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        className="w-full max-w-sm space-y-8"
+        className="w-full max-w-sm space-y-10"
       >
         <div className="flex flex-col items-center text-center">
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-indigo-50 text-indigo-600"
+            className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-teal-500 text-white shadow-xl shadow-teal-100"
           >
-            <Activity className="h-8 w-8" />
+            <Activity className="h-10 w-10" />
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="mt-6 font-serif text-3xl font-bold text-slate-900"
+            className="mt-8 text-4xl font-bold tracking-tight text-slate-900"
           >
-            Smart Tracking
+            SmartLibrary <span className="text-teal-500">Pro</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            className="mt-2 text-sm text-slate-500"
+            className="mt-3 text-sm font-medium text-slate-400"
           >
-            Log in to your Smart Tracking account.
+            Manage your study center with ease.
           </motion.p>
         </div>
 
@@ -97,7 +97,7 @@ export default function LoginPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-medium text-rose-600"
+            className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-bold text-rose-600 border border-rose-100"
           >
             {error}
           </motion.div>
@@ -108,38 +108,38 @@ export default function LoginPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.6 }}
           onSubmit={handleSubmit} 
-          className="mt-8 space-y-4"
+          className="space-y-4"
         >
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 required
                 type="email"
                 placeholder="Email Address"
-                className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+              <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
               <input
                 required
                 type="password"
                 placeholder="Password"
-                className="w-full rounded-2xl border border-slate-100 bg-slate-50 py-4 pl-10 pr-4 text-sm focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 pt-2">
             <button
               disabled={isLoading || isGoogleLoading}
               type="submit"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-indigo-600 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50"
+              className="flex flex-1 items-center justify-center gap-3 rounded-2xl bg-teal-500 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-100 transition-all active:scale-95 disabled:opacity-50"
             >
               {isLoading ? (
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -155,13 +155,13 @@ export default function LoginPage() {
               disabled={isLoading || isGoogleLoading}
               type="button"
               onClick={handleGoogleLogin}
-              className="flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-4 transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+              className="flex items-center justify-center rounded-2xl bg-white px-6 py-4 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
               title="Log in with Google"
             >
               {isGoogleLoading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-teal-500 border-t-transparent" />
               ) : (
-                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <svg className="h-6 w-6" viewBox="0 0 24 24">
                   <path
                     fill="#4285F4"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -184,9 +184,9 @@ export default function LoginPage() {
           </div>
         </motion.form>
 
-        <p className="text-center text-sm text-slate-500">
+        <p className="text-center text-sm font-medium text-slate-400">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-bold text-indigo-600 hover:underline">
+          <Link href="/signup" className="font-bold text-teal-600 hover:underline">
             Sign Up
           </Link>
         </p>

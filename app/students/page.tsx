@@ -44,44 +44,43 @@ export default function StudentsPage() {
   }
 
   return (
-    <main className="flex flex-col gap-6 p-6 pb-24">
-      <header className="flex flex-col gap-4">
-        <button 
-          onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-500 transition-colors hover:bg-slate-200 active:scale-95"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">Student Roster</h1>
-        
-        {/* Search & Filter */}
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder="Search name or phone..." 
-              className="w-full rounded-2xl border border-slate-100 bg-white py-2 pl-10 pr-4 text-sm shadow-sm focus:border-indigo-500 focus:outline-none"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
-          <button className="rounded-2xl border border-slate-100 bg-white p-2 text-slate-400 shadow-sm transition-colors hover:text-indigo-600">
-            <Filter className="h-5 w-5" />
+    <main className="flex min-h-screen flex-col bg-slate-50 pb-24">
+      <header className="flex flex-col gap-6 px-6 pt-8 pb-4">
+        <div className="flex items-center justify-between">
+          <button 
+            onClick={() => router.back()}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-slate-500 transition-all active:scale-95"
+          >
+            <ArrowLeft className="h-5 w-5" />
           </button>
+          <h1 className="text-xl font-bold text-slate-900">Student Roster</h1>
+          <div className="w-10" /> {/* Spacer */}
+        </div>
+        
+        {/* Search Bar */}
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <input 
+            type="text" 
+            placeholder="Search students..." 
+            className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
 
         {/* Filter Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {['All', 'Paid', 'Pending', 'Overdue'].map((f) => (
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-hide">
+          {['All', 'Paid', 'Overdue'].map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f as any)}
-              className={`rounded-full px-4 py-1 text-xs font-bold uppercase tracking-wider transition-all ${
+              className={cn(
+                "rounded-full px-6 py-2 text-xs font-bold transition-all active:scale-95",
                 filter === f 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200' 
-                  : 'bg-white text-slate-400 border border-slate-100'
-              }`}
+                  ? "bg-teal-500 text-white shadow-lg shadow-teal-100" 
+                  : "bg-white text-slate-500 shadow-sm"
+              )}
             >
               {f}
             </button>
@@ -90,101 +89,57 @@ export default function StudentsPage() {
       </header>
 
       {/* Student List */}
-      <div className="flex flex-col gap-4 min-h-[200px]">
+      <div className="flex flex-col gap-4 px-6 min-h-[200px]">
         <AnimatePresence mode="popLayout">
           {filteredStudents.map((student) => (
             <motion.div 
               key={student.id} 
               layout
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
-              className="flex flex-col gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition-all hover:shadow-md"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="soft-card p-4 flex items-center justify-between transition-all hover:scale-[1.01]"
             >
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold text-lg">
+              <div className="flex items-center gap-4">
+                <div className={cn(
+                  "h-14 w-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-sm",
+                  student.paymentStatus === 'Paid' ? "bg-teal-50 text-teal-600" : "bg-rose-50 text-rose-600"
+                )}>
                   {student.name.charAt(0)}
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-0.5">
                   <span className="font-bold text-slate-900">{student.name}</span>
-                  <div className="flex items-center gap-1 text-xs text-slate-500">
-                    <Phone className="h-3 w-3" />
-                    <span>{student.phone}</span>
+                  <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                    <span className="rounded-md bg-slate-100 px-1.5 py-0.5">Desk {student.deskNumber}</span>
+                    <span>•</span>
+                    <span>₹{student.price}/mo</span>
                   </div>
                 </div>
               </div>
-              <div className="flex flex-col items-end gap-1">
-                <StatusTag status={student.paymentStatus} />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                  Desk {student.deskNumber} • {student.shift}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between border-t border-slate-50 pt-4">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Fees Due Date</span>
-                <span className="text-xs font-semibold text-slate-700">{new Date(student.expiryDate).toLocaleDateString('en-GB')}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <WhatsAppReminderButton
-                  student={student}
-                  showText={false}
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-50 text-emerald-600 transition-colors hover:bg-emerald-100 active:scale-95 disabled:opacity-50"
-                />
-                <div className="relative">
+              
+              <div className="flex flex-col items-end gap-3">
+                <div className={cn(
+                  "status-pill",
+                  student.paymentStatus === 'Paid' ? "bg-teal-100 text-teal-700" : "bg-rose-100 text-rose-700"
+                )}>
+                  {student.paymentStatus}
+                </div>
+                <div className="flex items-center gap-2">
+                  <WhatsAppReminderButton
+                    student={student}
+                    showText={false}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-100 transition-all active:scale-95"
+                  />
                   <button 
-                    onClick={() => setActiveMenu(activeMenu === student.id ? null : student.id)}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full transition-colors active:scale-95 ${
-                      activeMenu === student.id ? 'bg-indigo-50 text-indigo-600' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'
-                    }`}
+                    onClick={() => setEditingStudent(student)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-600 active:scale-95"
                   >
-                    <MoreVertical className="h-5 w-5" />
+                    <Edit2 className="h-4 w-4" />
                   </button>
-
-                  <AnimatePresence>
-                    {activeMenu === student.id && (
-                      <>
-                        <div 
-                          className="fixed inset-0 z-10" 
-                          onClick={() => setActiveMenu(null)}
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                          animate={{ opacity: 1, scale: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                          className="absolute right-0 top-10 z-20 w-36 overflow-hidden rounded-2xl border border-slate-100 bg-white shadow-xl"
-                        >
-                          <button 
-                            onClick={() => {
-                              setEditingStudent(student);
-                              setActiveMenu(null);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600"
-                          >
-                            <Edit2 className="h-4 w-4" />
-                            <span>Edit Profile</span>
-                          </button>
-                          <button 
-                            onClick={() => {
-                              setDeletingStudent(student);
-                              setActiveMenu(null);
-                            }}
-                            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            <span>Remove</span>
-                          </button>
-                        </motion.div>
-                      </>
-                    )}
-                  </AnimatePresence>
                 </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          ))}
         </AnimatePresence>
 
         {/* Edit Modal */}
