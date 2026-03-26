@@ -1,22 +1,21 @@
 import type { Metadata } from 'next';
-import { Inter, Cormorant_Garamond } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import '@/globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
-const cormorant = Cormorant_Garamond({ 
+const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-serif' 
+  variable: '--font-sans',
+  weight: ['400', '500', '600', '700', '800']
 });
 
 export const metadata: Metadata = {
-  title: 'MyStudents - Smart Library Management',
+  title: 'SmartLibrary Pro',
   description: 'Manage your reading room and study library efficiently.',
   manifest: '/manifest.json',
 };
 
 export const viewport = {
-  themeColor: '#2563eb',
+  themeColor: '#0ea495',
 };
 
 import { BottomNav } from '@/components/bottom-nav';
@@ -28,13 +27,13 @@ import { SubscriptionGuard } from '@/components/subscription-guard';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
-      <body className="bg-slate-50 text-slate-900 antialiased font-sans" suppressHydrationWarning>
+    <html lang="en" className={`${jakarta.variable}`}>
+      <body className="bg-[#FDFBF7] text-[#1C1917] antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
           <StudentProvider>
             <AuthGuard>
               <SubscriptionGuard>
-                <div className="mx-auto min-h-screen max-w-md bg-white shadow-xl pb-20">
+                <div className="mx-auto min-h-screen max-w-md bg-[#FDFBF7] pb-20">
                   <PageTransition>
                     {children}
                   </PageTransition>

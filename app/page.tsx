@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
@@ -9,7 +10,7 @@ import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { SubscriptionBanner } from '@/components/subscription-banner';
 
@@ -133,28 +134,30 @@ export default function Dashboard() {
       <SubscriptionBanner />
       
       {/* Header */}
-      <header className="flex items-center justify-between px-6 pt-8 pb-4">
+      <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
-            <img 
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`} 
-              alt="Profile" 
-              className="h-full w-full object-cover"
+          <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
+            <Image
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`}
+              alt="Profile"
+              fill
+              className="object-cover"
+              referrerPolicy="no-referrer"
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-medium text-slate-400">Good morning,</span>
-            <span className="text-lg font-bold text-slate-900">{user?.name || 'Admin'}</span>
+            <span className="text-xs font-semibold text-[#78716C]">Good morning,</span>
+            <span className="text-xl font-extrabold text-[#1C1917] tracking-tight">{user?.name || 'Admin'}</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition-all active:scale-95">
-            <Bell className="h-5 w-5 text-slate-600" />
-            <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-rose-500 border-2 border-white"></span>
+          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] transition-all active:scale-95">
+            <Bell className="h-5 w-5 text-[#1C1917]" />
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-[#F59E0B]"></span>
           </button>
           <button 
             onClick={logout}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-slate-600 transition-colors hover:text-rose-600 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -168,31 +171,43 @@ export default function Dashboard() {
             label="Active Students" 
             value={metrics.activeStudents} 
             icon={Users} 
+            trend="+4 this week"
           />
           <MetricsCard 
             label="Available Seats" 
             value={metrics.availableSeats} 
             icon={Armchair} 
           />
-          <div className="col-span-2 soft-card p-5 flex items-center justify-between bg-teal-500 text-white border-none transition-all hover:scale-[1.01]">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium opacity-80">Total Revenue ({metrics.currentMonth})</span>
-              <span className="text-3xl font-bold">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</span>
+          <div className="col-span-2 bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-between transition-all hover:scale-[1.01]">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <IndianRupee className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#78716C]">Monthly Revenue</p>
+                <p className="text-2xl font-extrabold text-[#1C1917]">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
+              </div>
             </div>
-            <div className="rounded-2xl bg-white/20 p-3">
-              <IndianRupee className="h-8 w-8" />
-            </div>
+            <button className="text-primary text-sm font-bold flex items-center gap-1 active:opacity-70">
+              Details
+              <ChevronRight className="h-4 w-4" />
+            </button>
           </div>
         </section>
 
         {/* Action Alerts */}
-        <section className="flex flex-col gap-4">
+        <section className="flex flex-col gap-4 mb-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-slate-900">Action Alerts</h2>
-            <Link href="/reminders" className="text-sm font-semibold text-teal-600">View All</Link>
+            <h2 className="text-lg font-extrabold text-[#1C1917] flex items-center gap-2">
+              Action Alerts
+              <span className="bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold px-2 py-0.5 rounded-full">
+                {metrics.urgentActions.length} Pending
+              </span>
+            </h2>
+            <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
           </div>
           
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <AnimatePresence mode="popLayout">
               {metrics.urgentActions.map((student) => (
                 <motion.div 
@@ -201,46 +216,47 @@ export default function Dashboard() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="relative overflow-hidden soft-card p-4 pl-6"
+                  className="bg-[#FFFBEB] border-l-4 border-[#F59E0B] rounded-2xl p-4 shadow-sm flex items-center justify-between active:bg-[#FFF8D6] transition-colors cursor-pointer"
                 >
-                  <div className={cn(
-                    "absolute left-0 top-0 bottom-0 w-1.5",
-                    student.paymentStatus === 'Overdue' ? "bg-rose-500" : "bg-amber-500"
-                  )} />
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-1">
-                      <span className="font-bold text-slate-900">{student.name}</span>
-                      <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5">Desk {student.deskNumber}</span>
-                        <span>•</span>
-                        <span className={student.paymentStatus === 'Overdue' ? "text-rose-600" : "text-amber-600"}>
-                          {student.paymentStatus === 'Overdue' ? 'Payment Overdue' : `Due: ${new Date(student.expiryDate).toLocaleDateString('en-GB')}`}
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#F59E0B] font-bold text-sm shrink-0">
+                      {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-bold text-[#1C1917] text-base leading-tight">{student.name}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[10px] font-bold text-[#78716C] bg-white px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
+                          Seat {student.deskNumber}
+                        </span>
+                        <span className="text-[10px] font-extrabold text-[#F59E0B] flex items-center gap-0.5 uppercase tracking-wider">
+                          <AlertCircle className="h-3 w-3" />
+                          ₹{student.price} Due
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <WhatsAppReminderButton
-                        student={student}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-500 text-white shadow-lg shadow-teal-100 transition-all active:scale-95"
-                      />
-                      <button 
-                        onClick={() => handleMarkAsPaid(student)}
-                        className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-colors hover:bg-teal-50 hover:text-teal-600 active:scale-95"
-                      >
-                        <Check className="h-5 w-5" />
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <WhatsAppReminderButton
+                      student={student}
+                      className="w-10 h-10 rounded-full bg-[#25D366] text-white shadow-md flex items-center justify-center active:scale-95 transition-transform shrink-0"
+                    />
+                    <button 
+                      onClick={() => handleMarkAsPaid(student)}
+                      className="w-10 h-10 rounded-full bg-white text-[#78716C] shadow-sm flex items-center justify-center transition-colors hover:text-primary active:scale-95"
+                    >
+                      <Check className="h-5 w-5" />
+                    </button>
                   </div>
                 </motion.div>
               ))}
             </AnimatePresence>
             
             {metrics.urgentActions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center soft-card border-dashed">
-                <div className="mb-3 rounded-full bg-slate-50 p-4 text-slate-300">
+              <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border-2 border-dashed border-[#dee4e1]">
+                <div className="mb-3 rounded-full bg-[#FDFBF7] p-4 text-[#dee4e1]">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
-                <p className="font-medium text-slate-500">No urgent actions today!</p>
+                <p className="font-bold text-[#78716C]">No urgent actions today!</p>
               </div>
             )}
           </div>
@@ -248,12 +264,13 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <Link 
-        href="/add" 
-        className="fixed bottom-24 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-teal-500 text-white shadow-xl shadow-teal-200 transition-all hover:scale-110 active:scale-95"
+      <button 
+        onClick={() => router.push('/add')}
+        className="fixed bottom-24 right-5 bg-primary text-white shadow-lg shadow-primary/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 z-20 active:scale-95 transition-transform font-bold tracking-wide"
       >
-        <PlusCircle className="h-8 w-8" />
-      </Link>
+        <PlusCircle className="h-6 w-6" />
+        Add Student
+      </button>
     </main>
   );
 }

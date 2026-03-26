@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { Student } from '@/lib/types';
-import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { BulkReminderSheet } from '@/components/bulk-reminder-sheet';
 

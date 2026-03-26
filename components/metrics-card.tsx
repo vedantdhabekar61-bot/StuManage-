@@ -8,18 +8,25 @@ interface MetricsCardProps {
   className?: string;
 }
 
-export function MetricsCard({ label, value, icon: Icon, className }: MetricsCardProps) {
+export function MetricsCard({ label, value, icon: Icon, className, trend }: MetricsCardProps & { trend?: string }) {
   return (
     <div className={cn(
-      "soft-card p-5 flex flex-col items-start gap-4 transition-all hover:scale-[1.02]",
+      "bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex flex-col justify-between h-[120px] transition-all hover:scale-[1.01]",
       className
     )}>
-      <div className="rounded-2xl bg-teal-50 p-3 text-teal-500">
-        <Icon className="h-6 w-6" />
+      <div className="flex items-center justify-between mb-2">
+        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        {trend && (
+          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">
+            {trend}
+          </span>
+        )}
       </div>
       <div>
-        <div className="text-2xl font-bold text-slate-900">{value}</div>
-        <div className="text-sm font-medium text-slate-500">{label}</div>
+        <div className="text-3xl font-extrabold text-[#1C1917] tracking-tight">{value}</div>
+        <div className="text-sm font-semibold text-[#78716C] mt-0.5">{label}</div>
       </div>
     </div>
   );

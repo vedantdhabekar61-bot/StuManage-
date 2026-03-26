@@ -1,22 +1,21 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
   
-  --color-primary: #14b8a6;
+  --color-primary: #0ea495;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #f1f5f9;
-  --color-secondary-foreground: #0f172a;
+  --color-secondary: #3c665f;
+  --color-secondary-foreground: #ffffff;
   --color-accent: #f59e0b;
   --color-accent-foreground: #ffffff;
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
+  --color-background: #FDFBF7;
+  --color-foreground: #1C1917;
+  --color-muted: #78716C;
+  --color-muted-foreground: #78716C;
   --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-border: #e2e8f0;
+  --color-card-foreground: #1C1917;
+  --color-border: #dee4e1;
 }
 
 @layer base {
@@ -27,14 +26,22 @@
 
 @layer components {
   .soft-card {
-    @apply rounded-3xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100/50;
+    @apply rounded-2xl bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] border border-slate-100/50;
   }
   
   .soft-shadow {
-    @apply shadow-[0_8px_30px_rgb(0,0,0,0.04)];
+    @apply shadow-[0_4px_14px_rgba(28,25,23,0.05)];
   }
   
   .status-pill {
     @apply rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-[#dee4e1]/50 rounded-xl text-[#1C1917] placeholder:text-[#78716C]/50 transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/10;
+  }
+
+  .btn-primary {
+    @apply w-full bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-bold text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98] flex items-center justify-center gap-2;
   }
 }

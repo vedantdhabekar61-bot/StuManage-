@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { WelcomeScreen } from './welcome-screen';
 import { AnimatePresence, motion } from 'motion/react';
+import { Activity } from 'lucide-react';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth();
@@ -35,8 +36,24 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (isLoaded === false) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-white">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
+          className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#0ea495] text-white shadow-2xl shadow-[#0ea495]/20"
+        >
+          <Activity className="h-10 w-10" />
+        </motion.div>
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-6 flex flex-col items-center gap-1"
+        >
+          <h2 className="text-lg font-bold text-[#1C1917]">SmartLibrary Pro</h2>
+          <p className="text-xs font-semibold text-[#78716C] uppercase tracking-widest">Loading your space...</p>
+        </motion.div>
       </div>
     );
   }

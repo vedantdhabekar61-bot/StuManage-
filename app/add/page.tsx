@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2, Camera } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 export default function AddStudentPage() {
   const router = useRouter();
@@ -13,21 +15,21 @@ export default function AddStudentPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [duration, setDuration] = useState<number | string>(1);
+  const [duration, setDuration] = useState<number | string>(3);
   const [durationUnit, setDurationUnit] = useState<'Month' | 'Year'>('Month');
 
   const [formData, setFormData] = useState(() => {
     const now = new Date();
     const expiry = new Date(now);
-    expiry.setMonth(expiry.getMonth() + 1);
+    expiry.setMonth(expiry.getMonth() + 3);
     
     return {
       name: '',
       phone: '',
       deskNumber: '',
-      shift: 'Morning' as Shift,
+      shift: 'Afternoon' as Shift,
       plan: 'Custom Plan',
-      price: 0,
+      price: 1200,
       startDate: now.toISOString().split('T')[0],
       expiryDate: expiry.toISOString().split('T')[0],
       paymentStatus: 'Paid' as PaymentStatus,
@@ -68,13 +70,6 @@ export default function AddStudentPage() {
     setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
   };
 
-  const handleUnitChange = (unit: 'Month' | 'Year') => {
-    const durNum = typeof duration === 'string' ? parseInt(duration) || 0 : duration;
-    const newExpiry = calculateExpiry(formData.startDate, durNum, unit);
-    setDurationUnit(unit);
-    setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -86,15 +81,13 @@ export default function AddStudentPage() {
         deskNumber: parseInt(formData.deskNumber),
       });
       
-      // Simulate API call delay for UX
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      // Removed artificial delay for faster performance
       setIsSubmitting(false);
       setShowSuccess(true);
       
       setTimeout(() => {
         router.push('/students');
-      }, 1500);
+      }, 1000);
     } catch (err: any) {
       setError(err.message || 'Failed to register student. Please try again.');
       setIsSubmitting(false);
@@ -102,228 +95,247 @@ export default function AddStudentPage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-50 p-6 pb-24">
-      <header className="flex flex-col gap-6 pt-4 pb-8">
+    <main className="flex min-h-screen flex-col bg-[#FAFAFA] pb-24 font-sans">
+      {/* Header */}
+      <header className="flex items-center gap-6 px-6 pt-8 pb-4 bg-white sticky top-0 z-10">
         <button 
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full text-[#1C1917] transition-all active:scale-95"
         >
-          <ArrowLeft className="h-5 w-5" />
+          <ArrowLeft className="h-6 w-6" />
         </button>
-        <div className="flex flex-col gap-1">
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900">Add Student</h1>
-          <p className="text-sm font-medium text-slate-400">Register a new member to your library.</p>
-        </div>
+        <h1 className="text-[20px] font-bold text-[#1C1917]">Add New Student</h1>
       </header>
 
-      {/* Error Message */}
-      <AnimatePresence>
-        {error && (
-          <motion.div 
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="mb-6 rounded-2xl bg-rose-50 p-4 text-sm font-bold text-rose-600 border border-rose-100"
-          >
-            <div className="flex items-center gap-2">
+      <div className="px-6 py-8 flex flex-col items-center">
+        {/* Profile Photo Section */}
+        <div className="flex flex-col items-center gap-3 mb-10">
+          <div className="relative h-28 w-28">
+            <div className="h-full w-full overflow-hidden rounded-full border-4 border-white shadow-sm bg-slate-100 relative">
+              <Image 
+                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
+                alt="Profile Placeholder"
+                fill
+                className="object-cover"
+                referrerPolicy="no-referrer"
+              />
+            </div>
+            <button className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-[#0ea495] border-2 border-white flex items-center justify-center text-white shadow-sm">
+              <Camera className="h-5 w-5" />
+            </button>
+          </div>
+          <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-widest">Upload Profile Photo</span>
+        </div>
+
+        {/* Error Message */}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="w-full mb-6 rounded-2xl bg-rose-50 p-4 text-[14px] font-bold text-rose-600 border border-rose-100 flex items-center gap-2"
+            >
               <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-8">
-        {/* Basic Info */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Student Details</h2>
-          <div className="flex flex-col gap-3">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input 
-                required
-                type="text" 
-                placeholder="Full Name" 
-                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                value={formData.name}
-                onFocus={() => setError(null)}
-                onChange={(e) => {
-                  setError(null);
-                  setFormData(prev => ({ ...prev, name: e.target.value }));
-                }}
-              />
+        <form onSubmit={handleSubmit} className="w-full space-y-10">
+          {/* Student Identity */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-[#0ea495]">
+              <User className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Student Identity</h2>
             </div>
-            <div className="relative">
-              <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input 
-                required
-                type="tel" 
-                placeholder="Phone Number" 
-                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                value={formData.phone}
-                onFocus={() => setError(null)}
-                onChange={(e) => {
-                  setError(null);
-                  setFormData(prev => ({ ...prev, phone: e.target.value }));
-                }}
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* Desk & Shift */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Desk & Shift</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
-              <Armchair className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <input 
-                required
-                type="number" 
-                placeholder="Desk No." 
-                className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                value={formData.deskNumber}
-                onFocus={() => setError(null)}
-                onChange={(e) => {
-                  setError(null);
-                  setFormData(prev => ({ ...prev, deskNumber: e.target.value }));
-                }}
-              />
-            </div>
-            <div className="relative">
-              <Clock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-              <select 
-                className="w-full appearance-none rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-medium shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                value={formData.shift}
-                onFocus={() => setError(null)}
-                onChange={(e) => {
-                  setError(null);
-                  setFormData(prev => ({ ...prev, shift: e.target.value as Shift }));
-                }}
-              >
-                <option value="Morning">Morning</option>
-                <option value="Evening">Evening</option>
-                <option value="Full Day">Full Day</option>
-              </select>
-            </div>
-          </div>
-        </section>
-
-        {/* Plan & Payment */}
-        <section className="flex flex-col gap-4">
-          <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-teal-600/60">Plan & Billing</h2>
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Amount (₹)</span>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-[#1C1917] ml-1">Full Name</label>
+                <input 
+                  required
+                  type="text" 
+                  placeholder="e.g. Rahul Sharma" 
+                  className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[15px] font-medium placeholder:text-[#78716C]/40 focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-[#1C1917] ml-1">Phone Number</label>
                 <div className="relative">
-                  <IndianRupee className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[15px] font-bold text-[#78716C]">+91</span>
+                  <input 
+                    required
+                    type="tel" 
+                    placeholder="98765 43210" 
+                    className="w-full bg-white border border-gray-200 rounded-3xl py-4 pl-16 pr-6 text-[15px] font-medium placeholder:text-[#78716C]/40 focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                    value={formData.phone}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                  />
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Allocation */}
+          <section className="bg-white rounded-[32px] p-6 shadow-[0_4px_20px_rgba(0,0,0,0.03)] space-y-6">
+            <div className="flex items-center gap-2 text-[#0ea495]">
+              <Armchair className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Allocation</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-[#1C1917] ml-1">Desk No.</label>
+                <input 
+                  required
+                  type="number" 
+                  placeholder="Enter assigned desk number" 
+                  className="w-full bg-[#F5F7F9] border-none rounded-2xl py-4 px-6 text-[15px] font-medium placeholder:text-[#78716C]/50 focus:ring-2 focus:ring-[#0ea495]/20 focus:outline-none transition-all"
+                  value={formData.deskNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deskNumber: e.target.value }))}
+                />
+                <div className="flex items-center gap-2 mt-2">
+                  <AlertCircle className="h-3 w-3 text-orange-500" />
+                  <span className="text-[11px] font-medium text-orange-500">Desk 42 is currently occupied until 05:00 PM</span>
+                </div>
+              </div>
+              <div className="space-y-4">
+                <label className="text-[13px] font-bold text-[#1C1917] ml-1">Preferred Shift</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['Morning', 'Afternoon', 'Evening', 'Full Day'] as Shift[]).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, shift: s }))}
+                      className={cn(
+                        "py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 border",
+                        formData.shift === s 
+                          ? "bg-[#0ea495] text-white border-[#0ea495] shadow-lg shadow-[#0ea495]/20" 
+                          : "bg-white text-[#1C1917] border-gray-100"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Plan & Billing */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-[#0ea495]">
+              <CreditCard className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Plan & Billing</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-[#1C1917] ml-1">Amount (₹)</label>
                   <input 
                     required
                     type="number" 
-                    placeholder="0.00" 
-                    className="w-full rounded-2xl border-none bg-white py-4 pl-10 pr-4 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                    value={formData.price === 0 && formData.price !== undefined ? '' : formData.price}
-                    onFocus={() => setError(null)}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setFormData(prev => ({ ...prev, price: val === '' ? 0 : parseInt(val) || 0 }));
-                    }}
+                    className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[18px] font-bold text-[#1C1917] focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Duration</span>
-                <div className="flex items-center gap-2">
-                  <input 
-                    required
-                    type="number" 
-                    min="1"
-                    className="w-16 rounded-2xl border-none bg-white py-4 px-3 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                    value={duration}
-                    onChange={(e) => handleDurationChange(e.target.value)}
-                  />
-                  <select 
-                    className="flex-1 rounded-2xl border-none bg-white py-4 px-3 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                    value={durationUnit}
-                    onChange={(e) => handleUnitChange(e.target.value as 'Month' | 'Year')}
-                  >
-                    <option value="Month">Month(s)</option>
-                    <option value="Year">Year(s)</option>
-                  </select>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-[#1C1917] ml-1">Duration</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[15px] font-bold text-[#1C1917] appearance-none focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                      value={duration}
+                      onChange={(e) => handleDurationChange(e.target.value)}
+                    >
+                      <option value={1}>1 Month</option>
+                      <option value={3}>3 Months</option>
+                      <option value={6}>6 Months</option>
+                      <option value={12}>1 Year</option>
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="h-5 w-5 text-[#78716C]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Start Date</span>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    type="date" 
-                    className="w-full rounded-2xl border-none bg-white py-4 pl-12 pr-4 text-sm font-bold shadow-sm focus:ring-2 focus:ring-teal-500/20 focus:outline-none"
-                    value={formData.startDate}
-                    onFocus={() => setError(null)}
-                    onChange={(e) => handleStartDateChange(e.target.value)}
-                  />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-[#1C1917] ml-1">Start Date</label>
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[14px] font-bold text-[#1C1917] focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                      value={formData.startDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-[#1C1917] ml-1">Fees Due Date</label>
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[14px] font-bold text-[#1C1917] focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
+                      value={formData.expiryDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Expiry Date</span>
-                <div className="relative">
-                  <Calendar className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
-                  <input 
-                    disabled
-                    type="date" 
-                    className="w-full rounded-2xl border-none bg-slate-100 py-4 pl-12 pr-4 text-sm font-bold text-slate-400 shadow-inner"
-                    value={formData.expiryDate}
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="flex flex-col gap-3">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Payment Method</span>
-              <div className="grid grid-cols-2 gap-3">
-                {['UPI', 'Cash'].map((method) => (
+              <div className="space-y-3">
+                <label className="text-[13px] font-bold text-[#1C1917] ml-1">Payment Method</label>
+                <div className="flex bg-[#F5F7F9] p-1.5 rounded-2xl">
                   <button
-                    key={method}
                     type="button"
-                    onClick={() => {
-                      setError(null);
-                      setFormData(prev => ({ ...prev, paymentMethod: method as PaymentMethod }));
-                    }}
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'UPI' }))}
                     className={cn(
-                      "rounded-2xl py-4 text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-sm",
-                      formData.paymentMethod === method 
-                        ? "bg-teal-500 text-white shadow-lg shadow-teal-100" 
-                        : "bg-white text-slate-500"
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentMethod === 'UPI' ? "bg-white text-[#0ea495] shadow-sm" : "text-[#78716C]"
                     )}
                   >
-                    {method}
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
+                    </svg>
+                    UPI
                   </button>
-                ))}
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Cash' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentMethod === 'Cash' ? "bg-white text-[#0ea495] shadow-sm" : "text-[#78716C]"
+                    )}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Cash
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        <button 
-          disabled={isSubmitting}
-          type="submit" 
-          className="mt-4 flex w-full items-center justify-center gap-3 rounded-2xl bg-teal-500 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-xl shadow-teal-100 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {isSubmitting ? (
-            <Loader2 className="h-6 w-6 animate-spin" />
-          ) : (
-            <>
-              <CheckCircle2 className="h-6 w-6" />
-              <span>Register Student</span>
-            </>
-          )}
-        </button>
-      </form>
+          <button 
+            disabled={isSubmitting}
+            type="submit" 
+            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-[#0ea495] py-5 text-[16px] font-bold text-white shadow-xl shadow-[#0ea495]/20 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <>
+                <User className="h-5 w-5" />
+                <span>Register Student</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
 
       <AnimatePresence>
         {showSuccess && (
@@ -331,19 +343,19 @@ export default function AddStudentPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-md p-6"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-[#1C1917]/40 backdrop-blur-md p-6"
           >
             <motion.div 
               initial={{ scale: 0.9, y: 20 }}
               animate={{ scale: 1, y: 0 }}
-              className="soft-card p-10 flex flex-col items-center gap-6 text-center max-w-xs w-full"
+              className="bg-white rounded-[40px] p-10 flex flex-col items-center gap-6 text-center max-w-xs w-full shadow-2xl"
             >
-              <div className="h-20 w-20 rounded-full bg-teal-50 flex items-center justify-center text-teal-500 shadow-inner">
+              <div className="h-20 w-20 rounded-full bg-[#0ea495]/10 flex items-center justify-center text-[#0ea495]">
                 <CheckCircle2 className="h-10 w-10" />
               </div>
-              <div className="flex flex-col gap-2">
-                <h3 className="text-2xl font-bold text-slate-900">Success!</h3>
-                <p className="text-sm font-medium text-slate-400">Student has been registered successfully.</p>
+              <div className="space-y-2">
+                <h3 className="text-[24px] font-extrabold text-[#1C1917]">Success!</h3>
+                <p className="text-[15px] font-semibold text-[#78716C]">Student has been registered successfully.</p>
               </div>
             </motion.div>
           </motion.div>

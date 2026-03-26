@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
 import { Check, CreditCard, ShieldCheck, Zap, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { cn } from '@/lib/utils';
 
 declare global {
   interface Window {

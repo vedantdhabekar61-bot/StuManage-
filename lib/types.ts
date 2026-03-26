@@ -1,4 +1,4 @@
-export type Shift = 'Morning' | 'Evening' | 'Full Day';
+export type Shift = 'Morning' | 'Afternoon' | 'Evening' | 'Full Day';
 export type PaymentStatus = 'Paid' | 'Pending' | 'Overdue';
 export type PaymentMethod = 'UPI' | 'Cash' | 'Bank Transfer';
 
