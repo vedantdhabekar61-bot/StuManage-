@@ -21,7 +21,6 @@ export default function Dashboard() {
   const { settings } = useSettings();
   const { students, isLoaded, updateStudent } = useStudents();
   const { logout, user, updateSubscription, isLoaded: authLoaded } = useAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
   useEffect(() => {
     if (authLoaded && !user) {
@@ -38,13 +37,6 @@ export default function Dashboard() {
   
   const handleStartTrial = async () => {
     await updateSubscription(true);
-  };
-
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-    setTimeout(() => {
-      window.location.reload();
-    }, 600);
   };
   
   const trialStatus = useMemo(() => {
@@ -95,11 +87,6 @@ export default function Dashboard() {
       currentMonth
     };
   }, [students, settings.totalSeats]);
-
-   const sendWhatsApp = (student: Student) => {
-    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
-    openWhatsApp(student, message);
-  };
 
   const handleMarkAsPaid = (student: Student) => {
     const now = new Date();
@@ -200,53 +187,69 @@ export default function Dashboard() {
             <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
           </div>
           
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4">
             <AnimatePresence mode="popLayout">
-              {metrics.urgentActions.map((student) => (
-                <motion.div 
-                  key={student.id} 
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-[#FFFBEB] border-l-4 border-[#F59E0B] rounded-2xl p-4 shadow-sm flex items-center justify-between active:bg-[#FFF8D6] transition-colors cursor-pointer"
-                >
-                  <div className="flex items-start gap-3">
-                    <div className={cn(
-                      "w-10 h-10 rounded-full shadow-sm flex items-center justify-center font-bold text-sm shrink-0",
-                      student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-100 text-primary" : 
-                      student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-100 text-orange-600" : 
-                      "bg-blue-100 text-blue-600"
-                    )}>
-                      {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-bold text-[#1C1917] text-base leading-tight">{student.name}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] font-bold text-[#78716C] bg-white px-1.5 py-0.5 rounded shadow-sm uppercase tracking-wider">
-                          Seat {student.deskNumber}
-                        </span>
-                        <span className="text-[10px] font-extrabold text-[#F59E0B] flex items-center gap-0.5 uppercase tracking-wider">
-                          <AlertCircle className="h-3 w-3" />
-                          ₹{student.price} Due
-                        </span>
+              {metrics.urgentActions.map((student) => {
+                const daysLeft = Math.ceil((new Date(student.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                const isOverdue = daysLeft < 0;
+                
+                return (
+                  <motion.div 
+                    key={student.id} 
+                    layout
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-white rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgba(245,158,11,0.08)] border border-[#F59E0B]/10 flex flex-col gap-6 transition-all hover:scale-[1.01]"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className={cn(
+                          "w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center font-black text-xl shrink-0",
+                          student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-50 text-primary" : 
+                          student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-50 text-orange-600" : 
+                          "bg-blue-50 text-blue-600"
+                        )}>
+                          {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-black text-[#1C1917] text-xl leading-tight">{student.name}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-[10px] font-bold text-[#78716C] bg-[#FDFBF7] px-2 py-0.5 rounded-lg border border-[#78716C]/10 uppercase tracking-wider">
+                              Seat {student.deskNumber}
+                            </span>
+                            <span className={cn(
+                              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg",
+                              isOverdue ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
+                            )}>
+                              {isOverdue ? `Overdue by ${Math.abs(daysLeft)}d` : `Due in ${daysLeft}d`}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] font-black text-[#78716C] uppercase tracking-widest mb-0.5">Fees Due</p>
+                        <p className="text-2xl font-black text-[#1C1917]">₹{student.price}</p>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <WhatsAppReminderButton
-                      student={student}
-                      className="w-10 h-10 rounded-full bg-[#25D366] text-white shadow-md flex items-center justify-center active:scale-95 transition-transform shrink-0"
-                    />
-                    <button 
-                      onClick={() => handleMarkAsPaid(student)}
-                      className="w-10 h-10 rounded-full bg-white text-[#78716C] shadow-sm flex items-center justify-center transition-colors hover:text-primary active:scale-95"
-                    >
-                      <Check className="h-5 w-5" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
+
+                    <div className="flex items-center gap-3">
+                      <WhatsAppReminderButton
+                        student={student}
+                        showText={true}
+                        className="flex-[2] h-14 rounded-2xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest active:scale-[0.98] transition-all"
+                      />
+                      <button 
+                        onClick={() => handleMarkAsPaid(student)}
+                        className="flex-1 h-14 rounded-2xl bg-[#FDFBF7] text-[#78716C] border border-[#78716C]/10 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all hover:text-primary hover:bg-primary/5 active:scale-95"
+                      >
+                        <Check className="h-5 w-5" />
+                        Paid
+                      </button>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
             
             {metrics.urgentActions.length === 0 && (

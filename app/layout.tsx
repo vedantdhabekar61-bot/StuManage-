@@ -9,7 +9,7 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'SmartLibrary Pro',
+  title: 'StuManage app',
   description: 'Manage your reading room and study library efficiently.',
   manifest: '/manifest.json',
 };

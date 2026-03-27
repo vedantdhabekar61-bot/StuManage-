@@ -16,7 +16,6 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, name: string) => void; // Legacy/Demo login
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   updateSubscription: (status: boolean) => Promise<void>;
@@ -130,19 +129,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const login = (email: string, name: string) => {
-    const newUser: User = { 
-      id: Math.random().toString(36).substr(2, 9),
-      email, 
-      name, 
-      createdAt: new Date().toISOString(),
-      isPro: false,
-      trialEndDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      proExpiryDate: null
-    };
-    setUser(newUser);
-  };
-
   const logout = async () => {
     await supabase.auth.signOut();
     setUser(null);
@@ -184,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, refreshProfile, updateSubscription, isLoaded, supabaseUser }}>
+    <AuthContext.Provider value={{ user, logout, refreshProfile, updateSubscription, isLoaded, supabaseUser }}>
       {children}
     </AuthContext.Provider>
   );

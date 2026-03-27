@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 export default function AddStudentPage() {
   const router = useRouter();
-  const { addStudent } = useStudents();
+  const { addStudent, students } = useStudents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -175,10 +175,34 @@ export default function AddStudentPage() {
                   value={formData.deskNumber}
                   onChange={(e) => setFormData(prev => ({ ...prev, deskNumber: e.target.value }))}
                 />
-                <div className="flex items-center gap-2 mt-2">
-                  <AlertCircle className="h-3 w-3 text-orange-500" />
-                  <span className="text-[11px] font-medium text-orange-500">Desk 42 is currently occupied until 05:00 PM</span>
-                </div>
+                {formData.deskNumber && (
+                  <div className="flex items-center gap-2 mt-2">
+                    {(() => {
+                      const deskNum = parseInt(formData.deskNumber);
+                      const occupiedBy = students.find(s => 
+                        s.deskNumber === deskNum && 
+                        (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
+                      );
+                      
+                      if (occupiedBy) {
+                        return (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-rose-500" />
+                            <span className="text-[11px] font-medium text-rose-500">
+                              Desk {deskNum} is occupied by {occupiedBy.name} ({occupiedBy.shift})
+                            </span>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 text-[#0ea495]" />
+                          <span className="text-[11px] font-medium text-[#0ea495]">Desk {deskNum} is available for this shift</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
               </div>
               <div className="space-y-4">
                 <label className="text-[13px] font-bold text-[#1C1917] ml-1">Preferred Shift</label>

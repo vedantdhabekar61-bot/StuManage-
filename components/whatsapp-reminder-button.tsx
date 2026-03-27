@@ -5,7 +5,7 @@ import { MessageCircle, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Student } from '@/lib/types';
 import { useSettings } from '@/hooks/use-settings';
-import { formatWhatsAppMessage, openWhatsApp } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, cn } from '@/lib/utils';
 
 interface WhatsAppReminderButtonProps {
   student: Student;
@@ -19,7 +19,8 @@ export function WhatsAppReminderButton({ student, className, showText = true }: 
   const [showToast, setShowToast] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSend = () => {
+  const handleSend = (e: React.MouseEvent) => {
+    e.stopPropagation();
     if (isOpening) return;
 
     setIsOpening(true);
@@ -49,14 +50,17 @@ export function WhatsAppReminderButton({ student, className, showText = true }: 
       <button
         onClick={handleSend}
         disabled={isOpening}
-        className={className}
+        className={cn(
+          "transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed",
+          className
+        )}
       >
         {isOpening ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-5 w-5 animate-spin" />
         ) : (
-          <MessageCircle className="h-4 w-4" />
+          <MessageCircle className="h-5 w-5 fill-current" />
         )}
-        {showText && <span>{isOpening ? 'Opening...' : 'Send Reminder'}</span>}
+        {showText && <span className="font-black tracking-widest">{isOpening ? 'Opening...' : 'Send Reminder'}</span>}
       </button>
 
       {/* Toast Notification */}
@@ -66,10 +70,10 @@ export function WhatsAppReminderButton({ student, className, showText = true }: 
             initial={{ opacity: 0, y: 50, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 50, x: '-50%' }}
-            className="fixed bottom-24 left-1/2 z-[100] rounded-2xl bg-slate-900 px-6 py-4 text-sm font-bold text-white shadow-2xl border border-slate-800 flex items-center gap-3"
+            className="fixed bottom-24 left-1/2 z-[100] rounded-[2rem] bg-[#1C1917] px-8 py-5 text-sm font-black text-white shadow-2xl border border-white/10 flex items-center gap-4 min-w-[280px] justify-center"
           >
-            <div className="h-2 w-2 rounded-full bg-teal-500 animate-pulse" />
-            Opening WhatsApp...
+            <div className="h-3 w-3 rounded-full bg-[#25D366] animate-pulse shadow-[0_0_10px_#25D366]" />
+            <span className="uppercase tracking-[0.2em]">Opening WhatsApp</span>
           </motion.div>
         )}
       </AnimatePresence>

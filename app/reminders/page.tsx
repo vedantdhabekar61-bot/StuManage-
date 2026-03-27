@@ -71,11 +71,6 @@ export default function RemindersPage() {
     };
   }, [students]);
 
-  const sendWhatsApp = (student: Student) => {
-    const message = formatWhatsAppMessage(settings.messageTemplate, student, settings.libraryName);
-    openWhatsApp(student, message);
-  };
-
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -213,7 +208,7 @@ export default function RemindersPage() {
               {student.paymentStatus !== 'Paid' && (
                 <WhatsAppReminderButton
                   student={student}
-                  className="flex items-center justify-center gap-3 w-full rounded-2xl bg-teal-500 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-100 transition-all active:scale-95 disabled:opacity-50"
+                  className="flex items-center justify-center gap-3 w-full rounded-2xl bg-[#25D366] py-4 text-sm font-black uppercase tracking-widest text-white shadow-lg shadow-[#25D366]/20 transition-all active:scale-95 disabled:opacity-50"
                 />
               )}
             </motion.div>

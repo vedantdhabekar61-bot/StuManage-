@@ -74,7 +74,7 @@ export function BulkReminderSheet({ students, isOpen, onClose }: BulkReminderShe
                     <WhatsAppReminderButton
                       student={student}
                       showText={false}
-                      className="flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg shadow-emerald-100 transition-all active:scale-95 disabled:opacity-50"
+                      className="flex items-center justify-center h-10 w-10 rounded-xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20 transition-all active:scale-95 disabled:opacity-50"
                     />
                   </div>
                 ))}

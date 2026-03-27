@@ -142,6 +142,25 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   };
 
   const updateStudent = async (id: string, updates: Partial<Student>) => {
+    // Check for desk occupancy conflict if desk or shift is changing
+    if (updates.deskNumber !== undefined || updates.shift !== undefined) {
+      const studentToUpdate = students.find(s => s.id === id);
+      if (studentToUpdate) {
+        const newDesk = updates.deskNumber ?? studentToUpdate.deskNumber;
+        const newShift = updates.shift ?? studentToUpdate.shift;
+        
+        const isDeskTaken = students.some(s => 
+          s.id !== id && // Don't check against self
+          s.deskNumber === newDesk && 
+          (s.shift === newShift || s.shift === 'Full Day' || newShift === 'Full Day')
+        );
+
+        if (isDeskTaken) {
+          throw new Error(`Desk ${newDesk} is already occupied for the ${newShift} shift.`);
+        }
+      }
+    }
+
     // Optimistic update
     setStudents(prev => {
       const updated = prev.map(s => s.id === id ? { ...s, ...updates } : s);

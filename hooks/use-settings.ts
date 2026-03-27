@@ -14,7 +14,7 @@ interface Settings {
 
 const DEFAULT_SETTINGS: Settings = {
   totalSeats: 50,
-  libraryName: 'My Library',
+  libraryName: 'StuManage app',
   messageTemplate: `Namaste 🙏
 
 This is a friendly reminder that the monthly fee of ₹[Amount] for [Student Name] is due on [Due Date].

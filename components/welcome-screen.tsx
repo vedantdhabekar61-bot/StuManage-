@@ -24,7 +24,7 @@ export function WelcomeScreen({ onDismiss }: { onDismiss?: () => void }) {
           </div>
           <div className="flex flex-col gap-2">
             <h1 className="text-4xl font-bold tracking-tight text-slate-900">
-              SmartLibrary <span className="text-teal-500">Pro</span>
+              StuManage <span className="text-teal-500">app</span>
             </h1>
             <p className="text-xs font-bold text-slate-300 uppercase tracking-[0.3em]">
               Welcome to Version 1.0

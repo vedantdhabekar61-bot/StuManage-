@@ -51,7 +51,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           transition={{ delay: 0.3 }}
           className="mt-6 flex flex-col items-center gap-1"
         >
-          <h2 className="text-lg font-bold text-[#1C1917]">SmartLibrary Pro</h2>
+          <h2 className="text-lg font-bold text-[#1C1917]">StuManage app</h2>
           <p className="text-xs font-semibold text-[#78716C] uppercase tracking-widest">Loading your space...</p>
         </motion.div>
       </div>

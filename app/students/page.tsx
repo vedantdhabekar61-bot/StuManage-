@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Search, PlusCircle, Users, Edit2, Trash2, X, CheckCircle2, User, Phone, Armchair, Clock, ArrowLeft, ChevronRight } from 'lucide-react';
+import { Search, PlusCircle, Users, Edit2, Trash2, X, CheckCircle2, User, Phone, Armchair, Clock, ArrowLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StatusTag } from '@/components/status-tag';
 import { Student, Shift } from '@/lib/types';
@@ -19,6 +19,7 @@ export default function StudentsPage() {
   const [filter, setFilter] = useState<'All' | 'Paid' | 'Pending' | 'Overdue'>('All');
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [deletingStudent, setDeletingStudent] = useState<Student | null>(null);
+  const [editError, setEditError] = useState<string | null>(null);
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
@@ -112,7 +113,7 @@ export default function StudentsPage() {
               className="relative group"
             >
               <div 
-                onClick={() => router.push(`/students/${student.id}`)}
+                onClick={() => setEditingStudent(student)}
                 className="relative z-10 bg-white min-h-[80px] w-full rounded-2xl shadow-[0_4px_14px_rgba(28,25,23,0.05)] p-4 flex items-center justify-between active:bg-gray-50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-4">
@@ -133,7 +134,18 @@ export default function StudentsPage() {
                   </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
-                  <StatusTag status={student.paymentStatus} />
+                  <div className="flex items-center gap-2">
+                    <StatusTag status={student.paymentStatus} />
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeletingStudent(student);
+                      }}
+                      className="h-6 w-6 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center active:scale-95 transition-transform"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
                   <span className="text-[11px] font-bold text-[#78716C]">₹{student.price}/mo</span>
                 </div>
               </div>
@@ -208,7 +220,10 @@ export default function StudentsPage() {
               <div className="flex items-center justify-between p-6 pb-2">
                 <h3 className="text-[20px] font-extrabold text-[#1C1917]">Edit Student</h3>
                 <button 
-                  onClick={() => setEditingStudent(null)}
+                  onClick={() => {
+                    setEditingStudent(null);
+                    setEditError(null);
+                  }}
                   className="rounded-full bg-[#FDFBF7] p-2 text-[#78716C] hover:bg-gray-100"
                 >
                   <X className="h-5 w-5" />
@@ -216,15 +231,26 @@ export default function StudentsPage() {
               </div>
               
               <form 
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (editingStudent) {
-                    updateStudent(editingStudent.id, editingStudent);
-                    setEditingStudent(null);
+                    try {
+                      setEditError(null);
+                      await updateStudent(editingStudent.id, editingStudent);
+                      setEditingStudent(null);
+                    } catch (err: any) {
+                      setEditError(err.message || 'Failed to update student');
+                    }
                   }
                 }}
                 className="p-6 pt-2 space-y-4"
               >
+                {editError && (
+                  <div className="bg-rose-50 text-rose-600 p-3 rounded-xl text-xs font-bold flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    {editError}
+                  </div>
+                )}
                 <div className="space-y-3">
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#78716C]/50" />
@@ -257,7 +283,7 @@ export default function StudentsPage() {
                         placeholder="Seat" 
                         className="w-full bg-[#FDFBF7] border-none rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-semibold focus:ring-2 focus:ring-primary focus:outline-none"
                         value={editingStudent.deskNumber}
-                        onChange={(e) => setEditingStudent({ ...editingStudent, deskNumber: parseInt(e.target.value) })}
+                        onChange={(e) => setEditingStudent({ ...editingStudent, deskNumber: parseInt(e.target.value) || 0 })}
                       />
                     </div>
                     <div className="relative">
@@ -273,6 +299,35 @@ export default function StudentsPage() {
                         <option value="Full Day">Full Day</option>
                       </select>
                     </div>
+                  </div>
+                  
+                  {/* Dynamic Occupancy Check */}
+                  <div className="px-1">
+                    {(() => {
+                      const deskNum = editingStudent.deskNumber;
+                      const occupiedBy = students.find(s => 
+                        s.id !== editingStudent.id &&
+                        s.deskNumber === deskNum && 
+                        (s.shift === editingStudent.shift || s.shift === 'Full Day' || editingStudent.shift === 'Full Day')
+                      );
+                      
+                      if (occupiedBy) {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-3 w-3 text-rose-500" />
+                            <span className="text-[11px] font-medium text-rose-500">
+                              Desk {deskNum} is taken by {occupiedBy.name}
+                            </span>
+                          </div>
+                        );
+                      }
+                      return (
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-3 w-3 text-primary" />
+                          <span className="text-[11px] font-medium text-primary">Desk {deskNum} is available</span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

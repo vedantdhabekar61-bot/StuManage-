@@ -70,7 +70,7 @@ export default function TrialPage() {
           <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-white/20 backdrop-blur-md shadow-2xl border border-white/30">
             <ShieldCheck className="h-12 w-12 text-white" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">SmartLibrary <span className="text-teal-100">Pro</span></h1>
+          <h1 className="text-4xl font-bold tracking-tight">StuManage <span className="text-teal-100">app</span></h1>
           <p className="text-teal-50 font-medium mt-2 opacity-80">Smart Student Management</p>
         </motion.div>
       </div>
@@ -157,7 +157,7 @@ export default function TrialPage() {
             )}
           </button>
           <p className="text-center text-[10px] text-slate-400 mt-5 font-bold uppercase tracking-widest">
-            1000+ Teachers already using SmartLibrary Pro
+            1000+ Teachers already using StuManage app
           </p>
         </div>
       </div>

@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { login } = useAuth();
   const router = useRouter();
 
   const handleGoogleLogin = async () => {
@@ -81,7 +80,7 @@ export default function LoginPage() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="mt-8 text-4xl font-bold tracking-tight text-slate-900"
           >
-            SmartLibrary <span className="text-teal-500">Pro</span>
+            StuManage <span className="text-teal-500">app</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
