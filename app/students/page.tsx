@@ -83,13 +83,13 @@ export default function StudentsPage() {
                 className={cn(
                   "whitespace-nowrap px-5 py-2 rounded-full text-[13px] font-bold tracking-wide transition-all active:scale-95 flex-shrink-0",
                   filter === f 
-                    ? "bg-primary text-white shadow-sm" 
-                    : "bg-white text-[#78716C] shadow-[0_4px_14px_rgba(28,25,23,0.05)]"
+                    ? "bg-primary/10 text-primary" 
+                    : "bg-transparent text-[#78716C] border border-[#dee4e1]/30"
                 )}
               >
                 {f}
                 {count > 0 && (
-                  <span className="ml-1 bg-[#F59E0B]/20 text-[#F59E0B] px-1.5 py-0.5 rounded-full text-[10px]">
+                  <span className="ml-1.5 bg-[#F59E0B]/10 text-[#F59E0B] px-1.5 py-0.5 rounded-full text-[10px]">
                     {count}
                   </span>
                 )}
@@ -117,8 +117,11 @@ export default function StudentsPage() {
               >
                 <div className="flex items-center gap-4">
                   <div className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center font-bold text-[16px]",
-                    student.paymentStatus === 'Overdue' ? "bg-orange-100 text-[#F59E0B]" : "bg-teal-100 text-primary"
+                    "w-12 h-12 rounded-full flex items-center justify-center font-bold text-[16px] shadow-sm",
+                    student.id.charCodeAt(0) % 4 === 0 ? "bg-teal-100 text-primary" : 
+                    student.id.charCodeAt(0) % 4 === 1 ? "bg-orange-100 text-orange-600" : 
+                    student.id.charCodeAt(0) % 4 === 2 ? "bg-blue-100 text-blue-600" :
+                    "bg-purple-100 text-purple-600"
                   )}>
                     {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
@@ -137,17 +140,39 @@ export default function StudentsPage() {
 
               {/* Quick Actions (Visible on hover or swipe - simplified for now) */}
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none group-hover:pointer-events-auto">
+                {student.paymentStatus !== 'Paid' && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const now = new Date();
+                      const currentExpiry = new Date(student.expiryDate);
+                      const baseDate = currentExpiry > now ? currentExpiry : now;
+                      const newExpiry = new Date(baseDate);
+                      newExpiry.setMonth(newExpiry.getMonth() + 1);
+                      updateStudent(student.id, {
+                        paymentStatus: 'Paid',
+                        startDate: now.toISOString().split('T')[0],
+                        expiryDate: newExpiry.toISOString().split('T')[0],
+                        lastPaymentDate: now.toISOString().split('T')[0],
+                      });
+                    }}
+                    className="h-8 w-8 rounded-full bg-primary text-white shadow-md flex items-center justify-center active:scale-95 transition-transform"
+                    title="Mark as Paid"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </button>
+                )}
                 <WhatsAppReminderButton
                   student={student}
                   showText={false}
-                  className="h-8 w-8 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-sm active:scale-95 transition-transform"
+                  className="h-8 w-8 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-md active:scale-95 transition-transform"
                 />
                 <button 
                   onClick={(e) => {
                     e.stopPropagation();
                     setEditingStudent(student);
                   }}
-                  className="h-8 w-8 rounded-full bg-white shadow-sm flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
+                  className="h-8 w-8 rounded-full bg-white shadow-md flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
                 >
                   <Edit2 className="h-4 w-4" />
                 </button>

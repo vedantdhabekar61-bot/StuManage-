@@ -1,48 +1,43 @@
 'use client';
 
 import { useSubscription } from '@/hooks/use-subscription';
-import { AlertCircle, ChevronRight } from 'lucide-react';
+import { Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 
 export function SubscriptionBanner() {
   const { isActive, daysLeft, isTrial, loading } = useSubscription();
 
-  if (loading || !isActive || daysLeft > 7) return null;
+  if (loading || !isActive || !isTrial) return null;
 
   return (
     <AnimatePresence>
       <motion.div
-        initial={{ height: 0, opacity: 0 }}
-        animate={{ height: 'auto', opacity: 1 }}
-        exit={{ height: 0, opacity: 0 }}
-        className="bg-indigo-600 text-white"
+        initial={{ height: 0, opacity: 0, y: -20 }}
+        animate={{ height: 'auto', opacity: 1, y: 0 }}
+        exit={{ height: 0, opacity: 0, y: -20 }}
+        className="px-6 pt-4"
       >
-        <div className="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-          <div className="flex flex-wrap items-center justify-between">
-            <div className="flex w-0 flex-1 items-center">
-              <span className="flex rounded-lg bg-indigo-800 p-2">
-                <AlertCircle className="h-5 w-5 text-white" aria-hidden="true" />
-              </span>
-              <p className="ml-3 truncate font-medium text-white">
-                <span className="md:hidden">
-                  {isTrial ? 'Trial' : 'Pro'} ends in {daysLeft} days
-                </span>
-                <span className="hidden md:inline">
-                  Your {isTrial ? 'free trial' : 'subscription'} will expire in {daysLeft} days. Pay ₹50 to continue.
-                </span>
-              </p>
+        <div className="flex items-center justify-between rounded-[24px] bg-[#E6F6F4] p-4 shadow-sm border border-[#CCECE8]/50">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#CCECE8] text-[#0ea495]">
+              <Calendar className="h-6 w-6" />
             </div>
-            <div className="order-3 mt-2 w-full flex-shrink-0 sm:order-2 sm:mt-0 sm:w-auto">
-              <Link
-                href="/billing"
-                className="flex items-center justify-center rounded-md border border-transparent bg-white px-4 py-2 text-sm font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
-              >
-                Renew Now
-                <ChevronRight className="ml-2 h-4 w-4" />
-              </Link>
+            <div className="flex flex-col">
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#0ea495]/70">
+                {isTrial ? 'Free Trial Active' : 'Subscription Active'}
+              </span>
+              <span className="text-[16px] font-extrabold text-[#0ea495]">
+                {daysLeft} Days Remaining
+              </span>
             </div>
           </div>
+          <Link
+            href="/billing"
+            className="rounded-xl bg-white px-5 py-2.5 text-[12px] font-extrabold uppercase tracking-wider text-[#0ea495] shadow-sm active:scale-95 transition-transform"
+          >
+            Upgrade
+          </Link>
         </div>
       </motion.div>
     </AnimatePresence>

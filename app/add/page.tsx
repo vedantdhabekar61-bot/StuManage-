@@ -2,12 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2, Camera } from 'lucide-react';
+import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 
 export default function AddStudentPage() {
   const router = useRouter();
@@ -108,25 +107,6 @@ export default function AddStudentPage() {
       </header>
 
       <div className="px-6 py-8 flex flex-col items-center">
-        {/* Profile Photo Section */}
-        <div className="flex flex-col items-center gap-3 mb-10">
-          <div className="relative h-28 w-28">
-            <div className="h-full w-full overflow-hidden rounded-full border-4 border-white shadow-sm bg-slate-100 relative">
-              <Image 
-                src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" 
-                alt="Profile Placeholder"
-                fill
-                className="object-cover"
-                referrerPolicy="no-referrer"
-              />
-            </div>
-            <button className="absolute bottom-0 right-0 h-9 w-9 rounded-full bg-[#0ea495] border-2 border-white flex items-center justify-center text-white shadow-sm">
-              <Camera className="h-5 w-5" />
-            </button>
-          </div>
-          <span className="text-[11px] font-bold text-[#78716C] uppercase tracking-widest">Upload Profile Photo</span>
-        </div>
-
         {/* Error Message */}
         <AnimatePresence>
           {error && (

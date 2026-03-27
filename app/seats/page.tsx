@@ -71,8 +71,8 @@ export default function SeatsPage() {
               className={cn(
                 "whitespace-nowrap px-5 py-2 rounded-full text-[13px] font-bold tracking-wide transition-all active:scale-95 flex-shrink-0",
                 activeShift === s 
-                  ? "bg-primary text-white shadow-sm" 
-                  : "bg-white text-[#78716C] shadow-[0_4px_14px_rgba(28,25,23,0.05)]"
+                  ? "bg-primary/10 text-primary" 
+                  : "bg-transparent text-[#78716C] border border-[#dee4e1]/30"
               )}
             >
               {s}

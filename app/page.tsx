@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
@@ -130,21 +129,10 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-slate-50 pb-24">
-      <SubscriptionBanner />
-      
+    <main className="flex min-h-screen flex-col bg-[#FDFBF7] pb-24">
       {/* Header */}
       <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="relative h-12 w-12 overflow-hidden rounded-full border-2 border-white shadow-sm">
-            <Image
-              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'admin'}`}
-              alt="Profile"
-              fill
-              className="object-cover"
-              referrerPolicy="no-referrer"
-            />
-          </div>
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-[#78716C]">Good morning,</span>
             <span className="text-xl font-extrabold text-[#1C1917] tracking-tight">{user?.name || 'Admin'}</span>
@@ -164,8 +152,28 @@ export default function Dashboard() {
         </div>
       </header>
 
+      <SubscriptionBanner />
+
       <div className="flex flex-col gap-8 px-6">
-        {/* Metrics Grid */}
+        {/* Primary Metric: Revenue */}
+        <section>
+          <div className="bg-white rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgba(14,164,149,0.08)] border border-primary/5 flex items-center justify-between transition-all hover:scale-[1.01]">
+            <div className="flex items-center gap-5">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+                <IndianRupee className="h-8 w-8" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-[#78716C] uppercase tracking-widest">Monthly Revenue</p>
+                <p className="text-3xl font-black text-[#1C1917] tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+            <Link href="/reminders" className="w-10 h-10 rounded-full bg-[#FDFBF7] flex items-center justify-center text-primary active:scale-95 transition-transform">
+              <ChevronRight className="h-6 w-6" />
+            </Link>
+          </div>
+        </section>
+
+        {/* Secondary Metrics Grid */}
         <section className="grid grid-cols-2 gap-4">
           <MetricsCard 
             label="Active Students" 
@@ -178,21 +186,6 @@ export default function Dashboard() {
             value={metrics.availableSeats} 
             icon={Armchair} 
           />
-          <div className="col-span-2 bg-white rounded-2xl p-5 shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-between transition-all hover:scale-[1.01]">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <IndianRupee className="h-6 w-6" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#78716C]">Monthly Revenue</p>
-                <p className="text-2xl font-extrabold text-[#1C1917]">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
-              </div>
-            </div>
-            <button className="text-primary text-sm font-bold flex items-center gap-1 active:opacity-70">
-              Details
-              <ChevronRight className="h-4 w-4" />
-            </button>
-          </div>
         </section>
 
         {/* Action Alerts */}
@@ -219,7 +212,12 @@ export default function Dashboard() {
                   className="bg-[#FFFBEB] border-l-4 border-[#F59E0B] rounded-2xl p-4 shadow-sm flex items-center justify-between active:bg-[#FFF8D6] transition-colors cursor-pointer"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center text-[#F59E0B] font-bold text-sm shrink-0">
+                    <div className={cn(
+                      "w-10 h-10 rounded-full shadow-sm flex items-center justify-center font-bold text-sm shrink-0",
+                      student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-100 text-primary" : 
+                      student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-100 text-orange-600" : 
+                      "bg-blue-100 text-blue-600"
+                    )}>
                       {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                     </div>
                     <div>
@@ -264,13 +262,15 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <button 
-        onClick={() => router.push('/add')}
-        className="fixed bottom-24 right-5 bg-primary text-white shadow-lg shadow-primary/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 z-20 active:scale-95 transition-transform font-bold tracking-wide"
-      >
-        <PlusCircle className="h-6 w-6" />
-        Add Student
-      </button>
+      <div className="fixed bottom-24 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-20">
+        <button 
+          onClick={() => router.push('/add')}
+          className="bg-primary text-white shadow-lg shadow-primary/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
+        >
+          <PlusCircle className="h-6 w-6" />
+          Add Student
+        </button>
+      </div>
     </main>
   );
 }
