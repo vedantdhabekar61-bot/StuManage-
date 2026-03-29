@@ -75,8 +75,8 @@ export default function TrialPage() {
         </motion.div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 -mt-10 relative z-20 bg-slate-50 rounded-t-[3rem] px-6 pt-12 pb-32 border-t border-white">
+      {/* Content Area - Increased pb-32 to pb-40 */}
+      <div className="flex-1 -mt-10 relative z-20 bg-slate-50 rounded-t-[3rem] px-6 pt-12 pb-40 border-t border-white">
         <div className="max-w-md mx-auto flex flex-col gap-10">
           {/* Heading Section */}
           <div className="text-center flex flex-col gap-3">
@@ -139,9 +139,9 @@ export default function TrialPage() {
         </div>
       </div>
 
-      {/* Sticky Bottom Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-12">
-        <div className="max-w-md mx-auto">
+      {/* Sticky Bottom Button - Added z-50, pb-8, and pointer-events classes */}
+      <div className="fixed bottom-0 left-0 right-0 p-6 pb-8 z-50 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-12 pointer-events-none">
+        <div className="max-w-md mx-auto pointer-events-auto">
           <button 
             onClick={handleStartTrial}
             disabled={isStarting}
@@ -156,7 +156,7 @@ export default function TrialPage() {
               </>
             )}
           </button>
-          <p className="text-center text-[10px] text-slate-400 mt-5 font-bold uppercase tracking-widest">
+          <p className="text-center text-[10px] text-slate-600 mt-5 font-bold uppercase tracking-widest drop-shadow-sm">
             1000+ Teachers already using StuManage app
           </p>
         </div>
