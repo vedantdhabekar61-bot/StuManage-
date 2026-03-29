@@ -47,7 +47,7 @@ export function useSettings() {
         const { data, error } = await supabase
           .from('settings')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('owner_id', user.id)
           .single();
 
         if (error) {
@@ -81,7 +81,7 @@ export function useSettings() {
     if (user) {
       try {
         const dbSettings = {
-          user_id: user.id,
+          owner_id: user.id,
           total_seats: updated.totalSeats,
           library_name: updated.libraryName,
           message_template: updated.messageTemplate,
@@ -89,7 +89,7 @@ export function useSettings() {
 
         const { error } = await supabase
           .from('settings')
-          .upsert(dbSettings, { onConflict: 'user_id' });
+          .upsert(dbSettings, { onConflict: 'owner_id' });
         
         if (error) {
           if (error.message.includes('schema cache')) {

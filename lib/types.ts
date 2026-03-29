@@ -4,17 +4,40 @@ export type PaymentMethod = 'UPI' | 'Cash' | 'Bank Transfer';
 
 export interface Student {
   id: string;
-  name: string;
-  phone: string;
+  studentName: string;
+  phoneNumber: string;
   deskNumber: number;
   shift: Shift;
   plan: string;
   price: number;
-  startDate: string;
+  joinDate: string;
   expiryDate: string;
   paymentStatus: PaymentStatus;
   paymentMethod?: PaymentMethod;
   lastPaymentDate?: string;
+}
+
+export interface Owner {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface Subscription {
+  id: string;
+  ownerId: string;
+  planPrice: number;
+  startDate: string;
+  expiryDate: string;
+  status: 'trial' | 'active' | 'expired';
+}
+
+export interface Settings {
+  totalSeats: number;
+  messageTemplate: string;
+  libraryName: string;
 }
 
 export interface LibraryStats {

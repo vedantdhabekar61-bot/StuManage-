@@ -23,13 +23,13 @@ export default function AddStudentPage() {
     expiry.setMonth(expiry.getMonth() + 3);
     
     return {
-      name: '',
-      phone: '',
+      studentName: '',
+      phoneNumber: '',
       deskNumber: '',
       shift: 'Afternoon' as Shift,
       plan: 'Custom Plan',
       price: 1200,
-      startDate: now.toISOString().split('T')[0],
+      joinDate: now.toISOString().split('T')[0],
       expiryDate: expiry.toISOString().split('T')[0],
       paymentStatus: 'Paid' as PaymentStatus,
       paymentMethod: 'UPI' as PaymentMethod,
@@ -56,7 +56,7 @@ export default function AddStudentPage() {
     const newExpiry = calculateExpiry(date, durNum, durationUnit);
     setFormData(prev => ({ 
       ...prev, 
-      startDate: date,
+      joinDate: date,
       expiryDate: newExpiry 
     }));
   };
@@ -64,7 +64,7 @@ export default function AddStudentPage() {
   const handleDurationChange = (val: string) => {
     const numVal = parseInt(val);
     const durNum = isNaN(numVal) ? 0 : numVal;
-    const newExpiry = calculateExpiry(formData.startDate, durNum, durationUnit);
+    const newExpiry = calculateExpiry(formData.joinDate, durNum, durationUnit);
     setDuration(val === '' ? '' : numVal);
     setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
   };
@@ -137,8 +137,8 @@ export default function AddStudentPage() {
                   type="text" 
                   placeholder="e.g. Rahul Sharma" 
                   className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[15px] font-medium placeholder:text-[#78716C]/40 focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  value={formData.studentName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, studentName: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
@@ -150,8 +150,8 @@ export default function AddStudentPage() {
                     type="tel" 
                     placeholder="98765 43210" 
                     className="w-full bg-white border border-gray-200 rounded-3xl py-4 pl-16 pr-6 text-[15px] font-medium placeholder:text-[#78716C]/40 focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
-                    value={formData.phone}
-                    onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   />
                 </div>
               </div>
@@ -189,7 +189,7 @@ export default function AddStudentPage() {
                           <>
                             <AlertCircle className="h-3 w-3 text-rose-500" />
                             <span className="text-[11px] font-medium text-rose-500">
-                              Desk {deskNum} is occupied by {occupiedBy.name} ({occupiedBy.shift})
+                              Desk {deskNum} is occupied by {occupiedBy.studentName} ({occupiedBy.shift})
                             </span>
                           </>
                         );
@@ -274,7 +274,7 @@ export default function AddStudentPage() {
                     <input 
                       type="date" 
                       className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[14px] font-bold text-[#1C1917] focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
-                      value={formData.startDate}
+                      value={formData.joinDate}
                       onChange={(e) => handleStartDateChange(e.target.value)}
                     />
                   </div>

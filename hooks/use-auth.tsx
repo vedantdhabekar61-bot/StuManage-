@@ -8,17 +8,20 @@ interface User {
   id: string;
   email: string;
   name: string;
+  phone: string;
   createdAt: string;
-  isPro: boolean;
-  trialEndDate: string;
-  proExpiryDate: string | null;
+  subscription: {
+    status: 'trial' | 'active' | 'expired';
+    expiryDate: string;
+    planPrice: number;
+  } | null;
 }
 
 interface AuthContextType {
   user: User | null;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
-  updateSubscription: (status: boolean) => Promise<void>;
+  updateSubscription: (status: string) => Promise<void>;
   isLoaded: boolean;
   supabaseUser: SupabaseUser | null;
 }
@@ -33,55 +36,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const fetchProfile = async (uid: string, email: string, createdAt: string, metadata: any) => {
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
+        // Fetch owner profile
+        const { data: owner, error: ownerError } = await supabase
+          .from('owners')
           .select('*')
           .eq('id', uid)
           .single();
 
-        if (error) {
-          // PGRST116 is "no rows found", but we also check for missing table
-          const isTableMissing = error.message?.includes('public.profiles') && error.message?.includes('not found');
-          
-          if (isTableMissing) {
-            console.warn('⚠️ Supabase "profiles" table is missing. Please run the SQL schema in your Supabase dashboard to enable cloud sync.');
-          } else if (error.code !== 'PGRST116') {
-            console.error('Supabase profile fetch error:', error.message || error);
-          }
-          
-          const defaultProfile = {
-            id: uid,
-            email: email,
-            name: metadata.full_name || email.split('@')[0],
-            createdAt: createdAt,
-            isPro: false,
-            trialEndDate: new Date(new Date(createdAt).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            proExpiryDate: null
-          };
-
-          // If profile doesn't exist, try to create it
-          if (error.code === 'PGRST116') {
-            supabase.from('profiles').insert([{
-              id: uid,
-              is_pro: false,
-              trial_end_date: defaultProfile.trialEndDate,
-              pro_expiry_date: null
-            }]).then(({ error: insertError }) => {
-              if (insertError) console.warn('Could not auto-create profile record:', insertError.message);
-            });
-          }
-
-          return defaultProfile;
+        if (ownerError) {
+          console.error('Supabase owner fetch error:', ownerError.message);
+          return null;
         }
+
+        // Fetch subscription
+        const { data: subscription, error: subError } = await supabase
+          .from('subscriptions')
+          .select('*')
+          .eq('owner_id', uid)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
 
         return {
           id: uid,
           email: email,
-          name: metadata.full_name || email.split('@')[0],
+          name: owner.name || metadata.full_name || email.split('@')[0],
+          phone: owner.phone || '',
           createdAt: createdAt,
-          isPro: profile.is_pro,
-          trialEndDate: profile.trial_end_date,
-          proExpiryDate: profile.pro_expiry_date
+          subscription: subscription ? {
+            status: subscription.status,
+            expiryDate: subscription.expiry_date,
+            planPrice: subscription.plan_price
+          } : null
         };
       } catch (e) {
         console.error('Failed to fetch profile', e);
@@ -136,32 +122,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (supabaseUser) {
-      const { data: profile } = await supabase
-        .from('profiles')
+      const { data: owner } = await supabase
+        .from('owners')
         .select('*')
         .eq('id', supabaseUser.id)
         .single();
       
-      if (profile) {
+      const { data: subscription } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('owner_id', supabaseUser.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+
+      if (owner) {
         setUser({
           id: supabaseUser.id,
           email: supabaseUser.email!,
-          name: supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
+          name: owner.name || supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
+          phone: owner.phone || '',
           createdAt: supabaseUser.created_at,
-          isPro: profile.is_pro,
-          trialEndDate: profile.trial_end_date,
-          proExpiryDate: profile.pro_expiry_date
+          subscription: subscription ? {
+            status: subscription.status,
+            expiryDate: subscription.expiry_date,
+            planPrice: subscription.plan_price
+          } : null
         });
       }
     }
   };
 
-  const updateSubscription = async (status: boolean) => {
+  const updateSubscription = async (status: string) => {
     if (supabaseUser) {
       const { error } = await supabase
-        .from('profiles')
-        .update({ is_pro: status })
-        .eq('id', supabaseUser.id);
+        .from('subscriptions')
+        .update({ status: status })
+        .eq('owner_id', supabaseUser.id);
       
       if (!error) {
         await refreshProfile();

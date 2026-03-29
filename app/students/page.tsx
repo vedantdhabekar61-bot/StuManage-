@@ -23,10 +23,10 @@ export default function StudentsPage() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
-      const matchesSearch = s.name.toLowerCase().includes(search.toLowerCase()) || s.phone.includes(search);
+      const matchesSearch = s.studentName.toLowerCase().includes(search.toLowerCase()) || s.phoneNumber.includes(search);
       const matchesFilter = filter === 'All' || s.paymentStatus === filter;
       return matchesSearch && matchesFilter;
-    }).sort((a, b) => a.name.localeCompare(b.name));
+    }).sort((a, b) => a.studentName.localeCompare(b.studentName));
   }, [students, search, filter]);
 
   if (!isLoaded) {
@@ -124,10 +124,10 @@ export default function StudentsPage() {
                     student.id.charCodeAt(0) % 4 === 2 ? "bg-blue-100 text-blue-600" :
                     "bg-purple-100 text-purple-600"
                   )}>
-                    {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {student.studentName.split(' ').map(n => n[0]).join('').toUpperCase()}
                   </div>
                   <div className="flex flex-col justify-center">
-                    <h3 className="text-[16px] font-extrabold text-[#1C1917] leading-tight">{student.name}</h3>
+                    <h3 className="text-[16px] font-extrabold text-[#1C1917] leading-tight">{student.studentName}</h3>
                     <p className="text-[13px] font-semibold text-[#78716C] mt-0.5">
                       Seat {student.deskNumber} • {student.shift}
                     </p>
@@ -163,7 +163,7 @@ export default function StudentsPage() {
                       newExpiry.setMonth(newExpiry.getMonth() + 1);
                       updateStudent(student.id, {
                         paymentStatus: 'Paid',
-                        startDate: now.toISOString().split('T')[0],
+                        joinDate: now.toISOString().split('T')[0],
                         expiryDate: newExpiry.toISOString().split('T')[0],
                         lastPaymentDate: now.toISOString().split('T')[0],
                       });
@@ -259,8 +259,8 @@ export default function StudentsPage() {
                       type="text" 
                       placeholder="Full Name" 
                       className="w-full bg-[#FDFBF7] border-none rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-semibold focus:ring-2 focus:ring-primary focus:outline-none"
-                      value={editingStudent.name}
-                      onChange={(e) => setEditingStudent({ ...editingStudent, name: e.target.value })}
+                      value={editingStudent.studentName}
+                      onChange={(e) => setEditingStudent({ ...editingStudent, studentName: e.target.value })}
                     />
                   </div>
                   <div className="relative">
@@ -270,8 +270,8 @@ export default function StudentsPage() {
                       type="tel" 
                       placeholder="Phone Number" 
                       className="w-full bg-[#FDFBF7] border-none rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-semibold focus:ring-2 focus:ring-primary focus:outline-none"
-                      value={editingStudent.phone}
-                      onChange={(e) => setEditingStudent({ ...editingStudent, phone: e.target.value })}
+                      value={editingStudent.phoneNumber}
+                      onChange={(e) => setEditingStudent({ ...editingStudent, phoneNumber: e.target.value })}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -316,7 +316,7 @@ export default function StudentsPage() {
                           <div className="flex items-center gap-2">
                             <AlertCircle className="h-3 w-3 text-rose-500" />
                             <span className="text-[11px] font-medium text-rose-500">
-                              Desk {deskNum} is taken by {occupiedBy.name}
+                              Desk {deskNum} is taken by {occupiedBy.studentName}
                             </span>
                           </div>
                         );
@@ -368,7 +368,7 @@ export default function StudentsPage() {
               </div>
               <h3 className="text-[20px] font-extrabold text-[#1C1917] mb-2">Delete Student?</h3>
               <p className="text-[#78716C] text-[15px] font-semibold mb-6">
-                Are you sure you want to remove <span className="text-[#1C1917] font-bold">{deletingStudent.name}</span>? This action cannot be undone.
+                Are you sure you want to remove <span className="text-[#1C1917] font-bold">{deletingStudent.studentName}</span>? This action cannot be undone.
               </p>
               <div className="flex gap-3">
                 <button 

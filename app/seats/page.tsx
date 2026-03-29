@@ -24,7 +24,7 @@ export default function SeatsPage() {
     return {
       number: deskNumber,
       status: student ? 'Booked' : 'Available',
-      studentName: student?.name,
+      studentName: student?.studentName,
       shift: student?.shift
     };
   });

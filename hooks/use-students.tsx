@@ -41,7 +41,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       const { data, error } = await supabase
         .from('students')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('owner_id', user.id);
 
       if (error) {
         console.warn('Supabase fetch error, falling back to local storage:', error.message);
@@ -50,13 +50,13 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       } else if (data) {
         const mappedData = data.map(dbStudent => ({
           id: dbStudent.id,
-          name: dbStudent.name,
-          phone: dbStudent.phone,
+          studentName: dbStudent.student_name,
+          phoneNumber: dbStudent.phone_number,
           deskNumber: parseInt(dbStudent.desk_number),
           shift: dbStudent.shift,
           price: parseFloat(dbStudent.price),
           paymentStatus: dbStudent.payment_status,
-          startDate: dbStudent.start_date,
+          joinDate: dbStudent.join_date,
           expiryDate: dbStudent.expiry_date,
           lastPaymentDate: dbStudent.last_payment_date,
           plan: dbStudent.plan || 'Custom Plan',
@@ -80,7 +80,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
 
   const addStudent = async (student: Omit<Student, 'id'>) => {
     // Check student limit for free users
-    const isPro = user?.isPro || false;
+    const isPro = user?.subscription?.status === 'active' || false;
     if (!isPro && students.length >= 20) {
       throw new Error('Free limit reached (20 students). Please upgrade to Pro for unlimited students.');
     }
@@ -111,14 +111,14 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       try {
         const dbStudent = {
           id: newStudent.id,
-          user_id: user.id,
-          name: newStudent.name,
-          phone: newStudent.phone,
+          owner_id: user.id,
+          student_name: newStudent.studentName,
+          phone_number: newStudent.phoneNumber,
           desk_number: newStudent.deskNumber.toString(),
           shift: newStudent.shift,
           price: newStudent.price,
           payment_status: newStudent.paymentStatus,
-          start_date: newStudent.startDate,
+          join_date: newStudent.joinDate,
           expiry_date: newStudent.expiryDate,
           last_payment_date: newStudent.lastPaymentDate,
           plan: newStudent.plan,
@@ -131,7 +131,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
         
         if (error) {
           console.error('Supabase insert error:', error.message);
-          // We could revert here, but keeping local as source of truth for now
         }
       } catch (e) {
         console.error('Failed to add student to Supabase', e);
@@ -171,13 +170,13 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       try {
         const dbUpdates: any = {};
-        if (updates.name) dbUpdates.name = updates.name;
-        if (updates.phone) dbUpdates.phone = updates.phone;
+        if (updates.studentName) dbUpdates.student_name = updates.studentName;
+        if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
         if (updates.deskNumber !== undefined) dbUpdates.desk_number = updates.deskNumber.toString();
         if (updates.shift) dbUpdates.shift = updates.shift;
         if (updates.price !== undefined) dbUpdates.price = updates.price;
         if (updates.paymentStatus) dbUpdates.payment_status = updates.paymentStatus;
-        if (updates.startDate) dbUpdates.start_date = updates.startDate;
+        if (updates.joinDate) dbUpdates.join_date = updates.joinDate;
         if (updates.expiryDate) dbUpdates.expiry_date = updates.expiryDate;
         if (updates.lastPaymentDate) dbUpdates.last_payment_date = updates.lastPaymentDate;
         if (updates.plan) dbUpdates.plan = updates.plan;
@@ -187,7 +186,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
           .from('students')
           .update(dbUpdates)
           .eq('id', id)
-          .eq('user_id', user.id);
+          .eq('owner_id', user.id);
         
         if (error) {
           console.error('Supabase update error:', error.message);
@@ -212,7 +211,7 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
           .from('students')
           .delete()
           .eq('id', id)
-          .eq('user_id', user.id);
+          .eq('owner_id', user.id);
         
         if (error) {
           console.error('Supabase delete error:', error.message);

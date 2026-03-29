@@ -31,8 +31,8 @@ export default function RemindersPage() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(student => {
-      const matchesSearch = student.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           student.phone.includes(searchQuery);
+      const matchesSearch = student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           student.phoneNumber.includes(searchQuery);
       
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -173,12 +173,12 @@ export default function RemindersPage() {
                     "h-14 w-14 rounded-2xl flex items-center justify-center font-bold text-xl shadow-sm",
                     student.paymentStatus === 'Paid' ? "bg-teal-50 text-teal-600" : "bg-rose-50 text-rose-600"
                   )}>
-                    {student.name.charAt(0)}
+                    {student.studentName.charAt(0)}
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-bold text-slate-900">{student.name}</span>
+                    <span className="font-bold text-slate-900">{student.studentName}</span>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Desk {student.deskNumber} • {student.phone}
+                      Desk {student.deskNumber} • {student.phoneNumber}
                     </span>
                   </div>
                 </div>

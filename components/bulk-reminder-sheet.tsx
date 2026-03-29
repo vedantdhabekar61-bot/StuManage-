@@ -65,7 +65,7 @@ export function BulkReminderSheet({ students, isOpen, onClose }: BulkReminderShe
                         <Users className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-slate-900">{student.name}</span>
+                        <span className="text-sm font-bold text-slate-900">{student.studentName}</span>
                         <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                           ₹{student.price} • Due {new Date(student.expiryDate).toLocaleDateString('en-GB')}
                         </span>

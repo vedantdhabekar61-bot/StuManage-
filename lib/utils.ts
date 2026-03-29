@@ -12,7 +12,7 @@ export function formatWhatsAppMessage(template: string, student: Student, librar
   
   const replacements: Record<string, string> = {
     '[Amount]': (student.price || 0).toString(),
-    '[Student Name]': student.name || '',
+    '[Student Name]': student.studentName || '',
     '[Due Date]': student.expiryDate ? new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }) : '',
     '[Library Name]': libraryName || 'the Library',
     '[Teacher / Library Name]': libraryName || 'the Library'
@@ -28,9 +28,9 @@ export function formatWhatsAppMessage(template: string, student: Student, librar
 }
 
 export function getWhatsAppUrl(student: Student, message: string): string {
-  if (!student.phone) return '#';
+  if (!student.phoneNumber) return '#';
   // Remove all non-numeric characters from phone
-  const cleanPhone = student.phone.replace(/\D/g, '');
+  const cleanPhone = student.phoneNumber.replace(/\D/g, '');
   // Ensure it has 91 prefix if it's a 10-digit number
   const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   return `https://wa.me/${phone}?text=${message}`;

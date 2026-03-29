@@ -25,7 +25,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (authLoaded && !user) {
       router.push('/login');
-    } else if (authLoaded && user && !user.isPro) {
+    } else if (authLoaded && user && user.subscription?.status === 'trial') {
       // Check if it's the first time (we can use a local storage flag for simplicity in this demo)
       const hasSeenTrial = localStorage.getItem('has_seen_trial');
       if (!hasSeenTrial) {
@@ -36,12 +36,12 @@ export default function Dashboard() {
   }, [user, authLoaded, router]);
   
   const handleStartTrial = async () => {
-    await updateSubscription(true);
+    await updateSubscription('trial');
   };
   
   const trialStatus = useMemo(() => {
-    if (!user) return { daysLeft: 30 };
-    const trialEnd = new Date(user.trialEndDate);
+    if (!user || !user.subscription) return { daysLeft: 30 };
+    const trialEnd = new Date(user.subscription.expiryDate);
     const now = new Date();
     const diffTime = trialEnd.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -101,7 +101,7 @@ export default function Dashboard() {
     
     updateStudent(student.id, {
       paymentStatus: 'Paid',
-      startDate: now.toISOString().split('T')[0],
+      joinDate: now.toISOString().split('T')[0],
       expiryDate: newExpiry.toISOString().split('T')[0],
       lastPaymentDate: now.toISOString().split('T')[0],
     });
@@ -210,10 +210,10 @@ export default function Dashboard() {
                           student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-50 text-orange-600" : 
                           "bg-blue-50 text-blue-600"
                         )}>
-                          {student.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                          {student.studentName.split(' ').map(n => n[0]).join('').toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-black text-[#1C1917] text-xl leading-tight">{student.name}</p>
+                          <p className="font-black text-[#1C1917] text-xl leading-tight">{student.studentName}</p>
                           <div className="flex items-center gap-2 mt-1.5">
                             <span className="text-[10px] font-bold text-[#78716C] bg-[#FDFBF7] px-2 py-0.5 rounded-lg border border-[#78716C]/10 uppercase tracking-wider">
                               Seat {student.deskNumber}

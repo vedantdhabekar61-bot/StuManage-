@@ -6,26 +6,20 @@ export function useSubscription() {
   const { user, isLoaded } = useAuth();
 
   const isSubscriptionActive = () => {
-    if (!user) return true; // Default to true while loading
+    if (!user || !user.subscription) return true; // Default to true while loading
 
     const now = new Date();
-    const trialEnd = new Date(user.trialEndDate);
-    const proExpiry = user.proExpiryDate ? new Date(user.proExpiryDate) : null;
+    const expiry = new Date(user.subscription.expiryDate);
 
-    if (now < trialEnd) return true;
-    if (proExpiry && now < proExpiry) return true;
-
-    return false;
+    return now < expiry || user.subscription.status === 'active';
   };
 
   const daysLeft = () => {
-    if (!user) return 0;
+    if (!user || !user.subscription) return 0;
     const now = new Date();
-    const trialEnd = new Date(user.trialEndDate);
-    const proExpiry = user.proExpiryDate ? new Date(user.proExpiryDate) : null;
+    const expiry = new Date(user.subscription.expiryDate);
 
-    const targetDate = proExpiry && proExpiry > trialEnd ? proExpiry : trialEnd;
-    const diffTime = targetDate.getTime() - now.getTime();
+    const diffTime = expiry.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
     return diffDays > 0 ? diffDays : 0;
@@ -36,13 +30,13 @@ export function useSubscription() {
       id: user.id,
       email: user.email,
       trial_start_date: user.createdAt,
-      trial_end_date: user.trialEndDate,
-      is_pro: user.isPro,
-      pro_expiry_date: user.proExpiryDate
+      trial_end_date: user.subscription?.expiryDate,
+      is_pro: user.subscription?.status === 'active',
+      pro_expiry_date: user.subscription?.expiryDate
     } : null,
     loading: !isLoaded,
     isActive: isSubscriptionActive(),
     daysLeft: daysLeft(),
-    isTrial: user ? new Date() < new Date(user.trialEndDate) : true
+    isTrial: user?.subscription?.status === 'trial'
   };
 }
