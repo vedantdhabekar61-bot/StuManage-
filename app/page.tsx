@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell } from 'lucide-react';
+import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell, Edit2, School } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -18,9 +18,11 @@ import { LogOut, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { settings } = useSettings();
+  const { settings, updateSettings } = useSettings();
   const { students, isLoaded, updateStudent } = useStudents();
   const { logout, user, updateSubscription, isLoaded: authLoaded } = useAuth();
+  const [isEditingLibrary, setIsEditingLibrary] = useState(false);
+  const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
 
   useEffect(() => {
     if (authLoaded && !user) {
@@ -122,7 +124,24 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-[#78716C]">Good morning,</span>
-            <span className="text-xl font-extrabold text-[#1C1917] tracking-tight">{user?.name || 'Admin'}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-extrabold text-[#1C1917] tracking-tight">{user?.name || 'Admin'}</span>
+            </div>
+            <button 
+              onClick={() => {
+                setNewLibraryName(settings.libraryName);
+                setIsEditingLibrary(true);
+              }}
+              className="flex items-center gap-1.5 mt-0.5 group"
+            >
+              <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/10 transition-colors group-hover:bg-primary/20">
+                <School className="h-3 w-3 text-primary" />
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate max-w-[120px]">
+                  {settings.libraryName}
+                </span>
+                <Edit2 className="h-2.5 w-2.5 text-primary/50" />
+              </div>
+            </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -274,6 +293,63 @@ export default function Dashboard() {
           Add Student
         </button>
       </div>
+
+      {/* Edit Library Name Modal */}
+      <AnimatePresence>
+        {isEditingLibrary && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsEditingLibrary(false)}
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-sm rounded-[2.5rem] bg-white p-8 shadow-2xl"
+            >
+              <div className="flex flex-col gap-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Institute Name</h3>
+                  <button 
+                    onClick={() => setIsEditingLibrary(false)}
+                    className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                    Library / Institute Name
+                  </label>
+                  <input 
+                    type="text"
+                    value={newLibraryName}
+                    onChange={(e) => setNewLibraryName(e.target.value)}
+                    placeholder="e.g. Modern Study Library"
+                    className="w-full rounded-2xl bg-slate-50 border-none px-5 py-4 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                    autoFocus
+                  />
+                </div>
+
+                <button 
+                  onClick={() => {
+                    updateSettings({ libraryName: newLibraryName });
+                    setIsEditingLibrary(false);
+                  }}
+                  className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }

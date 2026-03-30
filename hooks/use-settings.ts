@@ -48,7 +48,7 @@ export function useSettings() {
           .from('settings')
           .select('*')
           .eq('owner_id', user.id)
-          .single();
+          .maybeSingle();
 
         if (error) {
           if (error.message.includes('schema cache')) {

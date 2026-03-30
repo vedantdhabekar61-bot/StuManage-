@@ -34,45 +34,102 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async (uid: string, email: string, createdAt: string, metadata: any) => {
+    const ensureProfileExists = async (uid: string, email: string, metadata: any) => {
       try {
         // Fetch owner profile
-        const { data: owner, error: ownerError } = await supabase
+        let { data: owner, error: ownerError } = await supabase
           .from('owners')
           .select('*')
           .eq('id', uid)
-          .single();
+          .maybeSingle();
 
         if (ownerError) {
           console.error('Supabase owner fetch error:', ownerError.message);
-          return null;
+        }
+
+        // If owner doesn't exist, create it
+        if (!owner) {
+          const { data: newOwner, error: createError } = await supabase
+            .from('owners')
+            .upsert([{
+              id: uid,
+              email: email,
+              name: metadata.full_name || email.split('@')[0],
+              phone: '',
+            }], { onConflict: 'id' })
+            .select()
+            .maybeSingle();
+          
+          if (createError) {
+            console.error('Failed to create/upsert owner profile:', createError.message);
+          } else if (newOwner) {
+            owner = newOwner;
+          }
         }
 
         // Fetch subscription
-        const { data: subscription, error: subError } = await supabase
+        let { data: subscription, error: subError } = await supabase
           .from('subscriptions')
           .select('*')
           .eq('owner_id', uid)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single();
+          .maybeSingle();
 
-        return {
-          id: uid,
-          email: email,
-          name: owner.name || metadata.full_name || email.split('@')[0],
-          phone: owner.phone || '',
-          createdAt: createdAt,
-          subscription: subscription ? {
-            status: subscription.status,
-            expiryDate: subscription.expiry_date,
-            planPrice: subscription.plan_price
-          } : null
-        };
+        if (subError) {
+          console.error('Supabase subscription fetch error:', subError.message);
+        }
+
+        // If subscription doesn't exist, create a trial
+        if (!subscription) {
+          const expiryDate = new Date();
+          expiryDate.setDate(expiryDate.getDate() + 30); // 30 days trial
+
+          const { data: newSub, error: createSubError } = await supabase
+            .from('subscriptions')
+            .upsert([{
+              owner_id: uid,
+              status: 'trial',
+              expiry_date: expiryDate.toISOString(),
+              plan_price: 0
+            }], { onConflict: 'owner_id' })
+            .select()
+            .maybeSingle();
+          
+          if (createSubError) {
+            console.error('Failed to create/upsert trial subscription:', createSubError.message);
+          } else if (newSub) {
+            subscription = newSub;
+          }
+        }
+
+        return { owner, subscription };
       } catch (e) {
-        console.error('Failed to fetch profile', e);
+        console.error('Error in ensureProfileExists:', e);
+        return { owner: null, subscription: null };
+      }
+    };
+
+    const fetchProfile = async (uid: string, email: string, createdAt: string, metadata: any) => {
+      const { owner, subscription } = await ensureProfileExists(uid, email, metadata);
+      
+      if (!owner) {
+        console.error('Critical: Could not ensure owner profile exists. Blocking auth to prevent data corruption.');
         return null;
       }
+      
+      return {
+        id: uid,
+        email: email,
+        name: owner?.name || metadata.full_name || email.split('@')[0],
+        phone: owner?.phone || '',
+        createdAt: createdAt,
+        subscription: subscription ? {
+          status: subscription.status,
+          expiryDate: subscription.expiry_date,
+          planPrice: subscription.plan_price
+        } : null
+      };
     };
 
     const initAuth = async () => {
@@ -122,11 +179,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = async () => {
     if (supabaseUser) {
+      // Ensure profile exists even during refresh
       const { data: owner } = await supabase
         .from('owners')
         .select('*')
         .eq('id', supabaseUser.id)
-        .single();
+        .maybeSingle();
       
       const { data: subscription } = await supabase
         .from('subscriptions')
@@ -134,22 +192,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq('owner_id', supabaseUser.id)
         .order('created_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (owner) {
-        setUser({
-          id: supabaseUser.id,
-          email: supabaseUser.email!,
-          name: owner.name || supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
-          phone: owner.phone || '',
-          createdAt: supabaseUser.created_at,
-          subscription: subscription ? {
-            status: subscription.status,
-            expiryDate: subscription.expiry_date,
-            planPrice: subscription.plan_price
-          } : null
-        });
-      }
+      setUser({
+        id: supabaseUser.id,
+        email: supabaseUser.email!,
+        name: owner?.name || supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
+        phone: owner?.phone || '',
+        createdAt: supabaseUser.created_at,
+        subscription: subscription ? {
+          status: subscription.status,
+          expiryDate: subscription.expiry_date,
+          planPrice: subscription.plan_price
+        } : null
+      });
     }
   };
 
