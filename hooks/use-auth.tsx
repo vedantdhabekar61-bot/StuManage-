@@ -36,15 +36,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const ensureProfileExists = async (uid: string, email: string, metadata: any) => {
       try {
-        // Fetch owner profile
-        let { data: owner, error: ownerError } = await supabase
-          .from('owners')
-          .select('*')
-          .eq('id', uid)
-          .maybeSingle();
+        // Fetch owner profile and subscription in parallel
+        const [ownerResult, subResult] = await Promise.all([
+          supabase
+            .from('owners')
+            .select('*')
+            .eq('id', uid)
+            .maybeSingle(),
+          supabase
+            .from('subscriptions')
+            .select('*')
+            .eq('owner_id', uid)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        ]);
 
-        if (ownerError) {
-          console.error('Supabase owner fetch error:', ownerError.message);
+        let owner = ownerResult.data;
+        let subscription = subResult.data;
+
+        if (ownerResult.error) {
+          console.error('Supabase owner fetch error:', ownerResult.error.message);
+        }
+
+        if (subResult.error) {
+          console.error('Supabase subscription fetch error:', subResult.error.message);
         }
 
         // If owner doesn't exist, create it
@@ -65,19 +81,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           } else if (newOwner) {
             owner = newOwner;
           }
-        }
-
-        // Fetch subscription
-        let { data: subscription, error: subError } = await supabase
-          .from('subscriptions')
-          .select('*')
-          .eq('owner_id', uid)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (subError) {
-          console.error('Supabase subscription fetch error:', subError.message);
         }
 
         // If subscription doesn't exist, create a trial
@@ -118,7 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return null;
       }
       
-      return {
+      const profile = {
         id: uid,
         email: email,
         name: owner?.name || metadata.full_name || email.split('@')[0],
@@ -130,20 +133,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           planPrice: subscription.plan_price
         } : null
       };
+
+      // Cache profile
+      localStorage.setItem(`auth_profile_${uid}`, JSON.stringify(profile));
+      
+      return profile;
     };
 
     const initAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setSupabaseUser(session?.user ?? null);
+      const sUser = session?.user ?? null;
+      setSupabaseUser(sUser);
       
-      if (session?.user) {
+      if (sUser) {
+        // Try to load cached profile immediately
+        const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
+        if (cached) {
+          try {
+            setUser(JSON.parse(cached));
+            setIsLoaded(true);
+          } catch (e) {
+            console.error('Failed to parse cached profile', e);
+          }
+        }
+
         const profile = await fetchProfile(
-          session.user.id, 
-          session.user.email!, 
-          session.user.created_at,
-          session.user.user_metadata
+          sUser.id, 
+          sUser.email!, 
+          sUser.created_at,
+          sUser.user_metadata
         );
-        setUser(profile);
+        
+        if (profile) {
+          setUser(profile);
+        }
       } else {
         setUser(null);
       }
@@ -153,19 +176,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSupabaseUser(session?.user ?? null);
-      if (session?.user) {
+      const sUser = session?.user ?? null;
+      setSupabaseUser(sUser);
+      if (sUser) {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Try to load cached profile immediately
+          const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
+          if (cached) {
+            try {
+              setUser(JSON.parse(cached));
+              setIsLoaded(true);
+            } catch (e) {
+              console.error('Failed to parse cached profile', e);
+            }
+          }
+
           const profile = await fetchProfile(
-            session.user.id, 
-            session.user.email!, 
-            session.user.created_at,
-            session.user.user_metadata
+            sUser.id, 
+            sUser.email!, 
+            sUser.created_at,
+            sUser.user_metadata
           );
-          setUser(profile);
+          if (profile) {
+            setUser(profile);
+          }
+          setIsLoaded(true);
         }
       } else {
         setUser(null);
+        setIsLoaded(true);
       }
     });
 

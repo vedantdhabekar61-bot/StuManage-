@@ -24,15 +24,18 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   const fetchStudents = useCallback(async () => {
-    if (!user) {
-      const saved = localStorage.getItem(STUDENTS_KEY);
-      if (saved) {
-        try {
-          setStudents(JSON.parse(saved));
-        } catch (e) {
-          console.error('Failed to parse local students', e);
-        }
+    // Always try to load from localStorage first for immediate UI
+    const saved = localStorage.getItem(STUDENTS_KEY);
+    if (saved) {
+      try {
+        setStudents(JSON.parse(saved));
+        setIsLoaded(true); // Set isLoaded early if we have cached data
+      } catch (e) {
+        console.error('Failed to parse local students', e);
       }
+    }
+
+    if (!user) {
       setIsLoaded(true);
       return;
     }
@@ -45,8 +48,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
 
       if (error) {
         console.warn('Supabase fetch error, falling back to local storage:', error.message);
-        const saved = localStorage.getItem(STUDENTS_KEY);
-        if (saved) setStudents(JSON.parse(saved));
       } else if (data) {
         const mappedData = data.map(dbStudent => ({
           id: dbStudent.id,
@@ -67,8 +68,6 @@ export function StudentProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (e) {
       console.error('Failed to fetch students from Supabase', e);
-      const saved = localStorage.getItem(STUDENTS_KEY);
-      if (saved) setStudents(JSON.parse(saved));
     } finally {
       setIsLoaded(true);
     }

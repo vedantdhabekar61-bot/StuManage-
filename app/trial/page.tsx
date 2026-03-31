@@ -24,7 +24,7 @@ export default function TrialPage() {
   const handleStartTrial = async () => {
     setIsStarting(true);
     // In a real app, we'd save the trial start date in the database
-    await updateSubscription(true);
+    await updateSubscription('trial');
     setTimeout(() => {
       router.push('/');
     }, 800);
