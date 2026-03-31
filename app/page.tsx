@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, AlertCircle, IndianRupee, Clock, ArrowRight, PlusCircle, MessageCircle, Check, X, ShieldCheck, Calendar, ChevronRight, Bell, Edit2, School } from 'lucide-react';
+import { Users, Armchair, IndianRupee, Bell, Edit2, School, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -9,18 +9,16 @@ import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { SubscriptionBanner } from '@/components/subscription-banner';
-
 import { useAuth } from '@/hooks/use-auth';
-import { LogOut, RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
   const router = useRouter();
-  const { settings, updateSettings } = useSettings();
-  const { students, isLoaded, updateStudent } = useStudents();
-  const { logout, user, updateSubscription, isLoaded: authLoaded } = useAuth();
+  const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
+  const { students, isLoaded: studentsLoaded, updateStudent } = useStudents();
+  const { logout, user, isLoaded: authLoaded } = useAuth();
   const [isEditingLibrary, setIsEditingLibrary] = useState(false);
   const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
 
@@ -28,7 +26,6 @@ export default function Dashboard() {
     if (authLoaded && !user) {
       router.push('/login');
     } else if (authLoaded && user && user.subscription?.status === 'trial') {
-      // Check if it's the first time (we can use a local storage flag for simplicity in this demo)
       const hasSeenTrial = localStorage.getItem('has_seen_trial');
       if (!hasSeenTrial) {
         localStorage.setItem('has_seen_trial', 'true');
@@ -36,25 +33,13 @@ export default function Dashboard() {
       }
     }
   }, [user, authLoaded, router]);
-  
-  const handleStartTrial = async () => {
-    await updateSubscription('trial');
-  };
-  
-  const trialStatus = useMemo(() => {
-    if (!user || !user.subscription) return { daysLeft: 30 };
-    const trialEnd = new Date(user.subscription.expiryDate);
-    const now = new Date();
-    const diffTime = trialEnd.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return { daysLeft: Math.max(0, diffDays) };
-  }, [user]);
+
   const metrics = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const activeStudents = students.length;
-    const availableSeats = settings.totalSeats - activeStudents;
+    const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
     
     const overdueStudents = students.filter(s => {
       const expiry = new Date(s.expiryDate);
@@ -76,8 +61,6 @@ export default function Dashboard() {
       return diffDays <= 3 || s.paymentStatus === 'Overdue' || (expiry < today && s.paymentStatus !== 'Paid');
     });
 
-    const currentMonth = new Date().toLocaleString('default', { month: 'short' });
-
     return {
       activeStudents,
       availableSeats,
@@ -85,34 +68,33 @@ export default function Dashboard() {
       pendingFees,
       revenueThisMonth,
       occupancyPercentage,
-      urgentActions,
-      currentMonth
+      urgentActions
     };
   }, [students, settings.totalSeats]);
 
-  const handleMarkAsPaid = (student: Student) => {
+  const handleMarkAsPaid = async (student: Student) => {
     const now = new Date();
     const currentExpiry = new Date(student.expiryDate);
-    
-    // If student is already overdue, start new period from today
-    // If student is paying in advance, extend their current expiry
     const baseDate = currentExpiry > now ? currentExpiry : now;
     
     const newExpiry = new Date(baseDate);
     newExpiry.setMonth(newExpiry.getMonth() + 1);
     
-    updateStudent(student.id, {
-      paymentStatus: 'Paid',
-      joinDate: now.toISOString().split('T')[0],
-      expiryDate: newExpiry.toISOString().split('T')[0],
-      lastPaymentDate: now.toISOString().split('T')[0],
-    });
+    try {
+      await updateStudent(student.id, {
+        paymentStatus: 'Paid',
+        expiryDate: newExpiry.toISOString().split('T')[0],
+        lastPaymentDate: now.toISOString().split('T')[0],
+      });
+    } catch (e) {
+      console.error('Failed to mark as paid', e);
+    }
   };
 
-  if (!isLoaded) {
+  if (!authLoaded || !studentsLoaded || !settingsLoaded) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
       </div>
     );
   }
@@ -134,24 +116,24 @@ export default function Dashboard() {
               }}
               className="flex items-center gap-1.5 mt-0.5 group"
             >
-              <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/10 transition-colors group-hover:bg-primary/20">
-                <School className="h-3 w-3 text-primary" />
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate max-w-[120px]">
+              <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
+                <School className="h-3 w-3 text-teal-600" />
+                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate max-w-[120px]">
                   {settings.libraryName}
                 </span>
-                <Edit2 className="h-2.5 w-2.5 text-primary/50" />
+                <Edit2 className="h-2.5 w-2.5 text-teal-600/50" />
               </div>
             </button>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] transition-all active:scale-95">
+          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition-all active:scale-95">
             <Bell className="h-5 w-5 text-[#1C1917]" />
-            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-[#F59E0B]"></span>
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-amber-500"></span>
           </button>
           <button 
             onClick={logout}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -160,12 +142,12 @@ export default function Dashboard() {
 
       <SubscriptionBanner />
 
-      <div className="flex flex-col gap-8 px-6">
+      <div className="flex flex-col gap-8 px-6 mt-4">
         {/* Primary Metric: Revenue */}
         <section>
-          <div className="bg-white rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgba(14,164,149,0.08)] border border-primary/5 flex items-center justify-between transition-all hover:scale-[1.01]">
+          <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-teal-500/5 flex items-center justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
+              <div className="w-14 h-14 rounded-2xl bg-teal-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/20">
                 <IndianRupee className="h-8 w-8" />
               </div>
               <div>
@@ -173,7 +155,7 @@ export default function Dashboard() {
                 <p className="text-3xl font-black text-[#1C1917] tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
               </div>
             </div>
-            <Link href="/reminders" className="w-10 h-10 rounded-full bg-[#FDFBF7] flex items-center justify-center text-primary active:scale-95 transition-transform">
+            <Link href="/reminders" className="w-10 h-10 rounded-full bg-[#FDFBF7] flex items-center justify-center text-teal-600 active:scale-95 transition-transform">
               <ChevronRight className="h-6 w-6" />
             </Link>
           </div>
@@ -199,11 +181,11 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-[#1C1917] flex items-center gap-2">
               Action Alerts
-              <span className="bg-[#F59E0B]/20 text-[#F59E0B] text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-amber-500/20 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {metrics.urgentActions.length} Pending
               </span>
             </h2>
-            <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
+            <Link href="/reminders" className="text-sm font-bold text-teal-600">View All</Link>
           </div>
           
           <div className="flex flex-col gap-4">
@@ -219,13 +201,13 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-[2.5rem] p-6 shadow-[0_8px_30px_rgba(245,158,11,0.08)] border border-[#F59E0B]/10 flex flex-col gap-6 transition-all hover:scale-[1.01]"
+                    className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-amber-500/10 flex flex-col gap-6 transition-all hover:scale-[1.01]"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className={cn(
                           "w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center font-black text-xl shrink-0",
-                          student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-50 text-primary" : 
+                          student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-50 text-teal-600" : 
                           student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-50 text-orange-600" : 
                           "bg-blue-50 text-blue-600"
                         )}>
@@ -260,7 +242,7 @@ export default function Dashboard() {
                       />
                       <button 
                         onClick={() => handleMarkAsPaid(student)}
-                        className="flex-1 h-14 rounded-2xl bg-[#FDFBF7] text-[#78716C] border border-[#78716C]/10 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all hover:text-primary hover:bg-primary/5 active:scale-95"
+                        className="flex-1 h-14 rounded-2xl bg-[#FDFBF7] text-[#78716C] border border-[#78716C]/10 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all hover:text-teal-600 hover:bg-teal-500/5 active:scale-95"
                       >
                         <Check className="h-5 w-5" />
                         Paid
@@ -272,8 +254,8 @@ export default function Dashboard() {
             </AnimatePresence>
             
             {metrics.urgentActions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border-2 border-dashed border-[#dee4e1]">
-                <div className="mb-3 rounded-full bg-[#FDFBF7] p-4 text-[#dee4e1]">
+              <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
+                <div className="mb-3 rounded-full bg-[#FDFBF7] p-4 text-slate-200">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
                 <p className="font-bold text-[#78716C]">No urgent actions today!</p>
@@ -287,7 +269,7 @@ export default function Dashboard() {
       <div className="fixed bottom-24 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-20">
         <button 
           onClick={() => router.push('/add')}
-          className="bg-primary text-white shadow-lg shadow-primary/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
+          className="bg-teal-500 text-white shadow-lg shadow-teal-500/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
         >
           <PlusCircle className="h-6 w-6" />
           Add Student
@@ -331,7 +313,7 @@ export default function Dashboard() {
                     value={newLibraryName}
                     onChange={(e) => setNewLibraryName(e.target.value)}
                     placeholder="e.g. Modern Study Library"
-                    className="w-full rounded-2xl bg-slate-50 border-none px-5 py-4 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="w-full rounded-2xl bg-slate-50 border-none px-5 py-4 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-teal-500/20 transition-all"
                     autoFocus
                   />
                 </div>
@@ -341,7 +323,7 @@ export default function Dashboard() {
                     updateSettings({ libraryName: newLibraryName });
                     setIsEditingLibrary(false);
                   }}
-                  className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+                  className="w-full h-14 rounded-2xl bg-teal-500 text-white font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 active:scale-95 transition-transform"
                 >
                   Save Changes
                 </button>
@@ -353,4 +335,3 @@ export default function Dashboard() {
     </main>
   );
 }
-

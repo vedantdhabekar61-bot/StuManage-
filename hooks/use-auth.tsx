@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
@@ -33,164 +33,137 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
-  useEffect(() => {
-    const ensureProfileExists = async (uid: string, email: string, metadata: any) => {
-      try {
-        // Fetch owner profile and subscription in parallel
-        const [ownerResult, subResult] = await Promise.all([
-          supabase
-            .from('owners')
-            .select('*')
-            .eq('id', uid)
-            .maybeSingle(),
-          supabase
-            .from('subscriptions')
-            .select('*')
-            .eq('owner_id', uid)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        ]);
+  const ensureProfileExists = useCallback(async (uid: string, email: string, metadata: any) => {
+    try {
+      // Fetch owner profile and subscription in parallel
+      const [ownerResult, subResult] = await Promise.all([
+        supabase.from('owners').select('*').eq('id', uid).maybeSingle(),
+        supabase.from('subscriptions').select('*').eq('owner_id', uid).order('created_at', { ascending: false }).limit(1).maybeSingle()
+      ]);
 
-        let owner = ownerResult.data;
-        let subscription = subResult.data;
+      let owner = ownerResult.data;
+      let subscription = subResult.data;
 
-        if (ownerResult.error) {
-          console.error('Supabase owner fetch error:', ownerResult.error.message);
-        }
-
-        if (subResult.error) {
-          console.error('Supabase subscription fetch error:', subResult.error.message);
-        }
-
-        // If owner doesn't exist, create it
-        if (!owner) {
-          const { data: newOwner, error: createError } = await supabase
-            .from('owners')
-            .upsert([{
-              id: uid,
-              email: email,
-              name: metadata.full_name || email.split('@')[0],
-              phone: '',
-            }], { onConflict: 'id' })
-            .select()
-            .maybeSingle();
-          
-          if (createError) {
-            console.error('Failed to create/upsert owner profile:', createError.message);
-          } else if (newOwner) {
-            owner = newOwner;
-          }
-        }
-
-        // If subscription doesn't exist, create a trial
-        if (!subscription) {
-          const expiryDate = new Date();
-          expiryDate.setDate(expiryDate.getDate() + 30); // 30 days trial
-
-          const { data: newSub, error: createSubError } = await supabase
-            .from('subscriptions')
-            .upsert([{
-              owner_id: uid,
-              status: 'trial',
-              expiry_date: expiryDate.toISOString(),
-              plan_price: 0
-            }], { onConflict: 'owner_id' })
-            .select()
-            .maybeSingle();
-          
-          if (createSubError) {
-            console.error('Failed to create/upsert trial subscription:', createSubError.message);
-          } else if (newSub) {
-            subscription = newSub;
-          }
-        }
-
-        return { owner, subscription };
-      } catch (e) {
-        console.error('Error in ensureProfileExists:', e);
-        return { owner: null, subscription: null };
-      }
-    };
-
-    const fetchProfile = async (uid: string, email: string, createdAt: string, metadata: any) => {
-      const { owner, subscription } = await ensureProfileExists(uid, email, metadata);
-      
-      if (!owner) {
-        console.error('Critical: Could not ensure owner profile exists. Blocking auth to prevent data corruption.');
-        return null;
-      }
-      
-      const profile = {
-        id: uid,
-        email: email,
-        name: owner?.name || metadata.full_name || email.split('@')[0],
-        phone: owner?.phone || '',
-        createdAt: createdAt,
-        subscription: subscription ? {
-          status: subscription.status,
-          expiryDate: subscription.expiry_date,
-          planPrice: subscription.plan_price
-        } : null
-      };
-
-      // Cache profile
-      localStorage.setItem(`auth_profile_${uid}`, JSON.stringify(profile));
-      
-      return profile;
-    };
-
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const sUser = session?.user ?? null;
-      setSupabaseUser(sUser);
-      
-      if (sUser) {
-        // Try to load cached profile immediately
-        const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
-        if (cached) {
-          try {
-            setUser(JSON.parse(cached));
-            setIsLoaded(true);
-          } catch (e) {
-            console.error('Failed to parse cached profile', e);
-          }
-        }
-
-        const profile = await fetchProfile(
-          sUser.id, 
-          sUser.email!, 
-          sUser.created_at,
-          sUser.user_metadata
-        );
+      // If owner doesn't exist, create it
+      if (!owner && !ownerResult.error) {
+        const { data: newOwner, error: createError } = await supabase
+          .from('owners')
+          .upsert([{
+            id: uid,
+            email: email,
+            name: metadata.full_name || email.split('@')[0],
+            phone: '',
+          }], { onConflict: 'id' })
+          .select()
+          .maybeSingle();
         
-        if (profile) {
-          setUser(profile);
+        if (createError) {
+          console.error('Failed to create owner profile:', createError.message);
+        } else if (newOwner) {
+          owner = newOwner;
         }
-      } else {
-        setUser(null);
       }
-      setIsLoaded(true);
+
+      // If subscription doesn't exist, create a trial
+      if (!subscription && !subResult.error) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 30); // 30 days trial
+
+        const { data: newSub, error: createSubError } = await supabase
+          .from('subscriptions')
+          .upsert([{
+            owner_id: uid,
+            status: 'trial',
+            expiry_date: expiryDate.toISOString(),
+            plan_price: 0
+          }], { onConflict: 'owner_id' })
+          .select()
+          .maybeSingle();
+        
+        if (createSubError) {
+          console.error('Failed to create trial subscription:', createSubError.message);
+        } else if (newSub) {
+          subscription = newSub;
+        }
+      }
+
+      return { owner, subscription };
+    } catch (e) {
+      console.error('Error in ensureProfileExists:', e);
+      return { owner: null, subscription: null };
+    }
+  }, []);
+
+  const fetchProfile = useCallback(async (uid: string, email: string, createdAt: string, metadata: any) => {
+    const { owner, subscription } = await ensureProfileExists(uid, email, metadata);
+    
+    if (!owner) {
+      console.error('Critical: Could not ensure owner profile exists.');
+      return null;
+    }
+    
+    const profile: User = {
+      id: uid,
+      email: email,
+      name: owner.name || metadata.full_name || email.split('@')[0],
+      phone: owner.phone || '',
+      createdAt: createdAt,
+      subscription: subscription ? {
+        status: subscription.status,
+        expiryDate: subscription.expiry_date,
+        planPrice: subscription.plan_price
+      } : null
     };
 
+    // Cache profile
+    localStorage.setItem(`auth_profile_${uid}`, JSON.stringify(profile));
+    
+    return profile;
+  }, [ensureProfileExists]);
+
+  const initAuth = useCallback(async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    const sUser = session?.user ?? null;
+    setSupabaseUser(sUser);
+    
+    if (sUser) {
+      // Try to load cached profile immediately
+      const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
+      if (cached) {
+        try {
+          setUser(JSON.parse(cached));
+          setIsLoaded(true);
+        } catch (e) {
+          console.error('Failed to parse cached profile', e);
+        }
+      }
+
+      const profile = await fetchProfile(
+        sUser.id, 
+        sUser.email!, 
+        sUser.created_at,
+        sUser.user_metadata
+      );
+      
+      if (profile) {
+        setUser(profile);
+      }
+    } else {
+      setUser(null);
+    }
+    setIsLoaded(true);
+  }, [fetchProfile]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       const sUser = session?.user ?? null;
       setSupabaseUser(sUser);
+      
       if (sUser) {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-          // Try to load cached profile immediately
-          const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
-          if (cached) {
-            try {
-              setUser(JSON.parse(cached));
-              setIsLoaded(true);
-            } catch (e) {
-              console.error('Failed to parse cached profile', e);
-            }
-          }
-
           const profile = await fetchProfile(
             sUser.id, 
             sUser.email!, 
@@ -209,42 +182,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [initAuth, fetchProfile]);
 
   const logout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem(supabaseUser ? `auth_profile_${supabaseUser.id}` : '');
     setUser(null);
   };
 
   const refreshProfile = async () => {
     if (supabaseUser) {
-      // Ensure profile exists even during refresh
-      const { data: owner } = await supabase
-        .from('owners')
-        .select('*')
-        .eq('id', supabaseUser.id)
-        .maybeSingle();
-      
-      const { data: subscription } = await supabase
-        .from('subscriptions')
-        .select('*')
-        .eq('owner_id', supabaseUser.id)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      setUser({
-        id: supabaseUser.id,
-        email: supabaseUser.email!,
-        name: owner?.name || supabaseUser.user_metadata.full_name || supabaseUser.email!.split('@')[0],
-        phone: owner?.phone || '',
-        createdAt: supabaseUser.created_at,
-        subscription: subscription ? {
-          status: subscription.status,
-          expiryDate: subscription.expiry_date,
-          planPrice: subscription.plan_price
-        } : null
-      });
+      const profile = await fetchProfile(
+        supabaseUser.id, 
+        supabaseUser.email!, 
+        supabaseUser.created_at,
+        supabaseUser.user_metadata
+      );
+      if (profile) {
+        setUser(profile);
+      }
     }
   };
 

@@ -21,7 +21,7 @@ export const viewport = {
 import { BottomNav } from '@/components/bottom-nav';
 import { PageTransition } from '@/components/page-transition';
 import { AuthProvider } from '@/hooks/use-auth';
-import { StudentProvider } from '@/hooks/use-students';
+import { StudentsProvider } from '@/hooks/use-students';
 import { AuthGuard } from '@/components/auth-guard';
 import { SubscriptionGuard } from '@/components/subscription-guard';
 
@@ -30,7 +30,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${jakarta.variable}`}>
       <body className="bg-[#FDFBF7] text-[#1C1917] antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
-          <StudentProvider>
+          <StudentsProvider>
             <AuthGuard>
               <SubscriptionGuard>
                 <div className="mx-auto min-h-screen max-w-md bg-[#FDFBF7] pb-20">
@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 </div>
               </SubscriptionGuard>
             </AuthGuard>
-          </StudentProvider>
+          </StudentsProvider>
         </AuthProvider>
       </body>
     </html>

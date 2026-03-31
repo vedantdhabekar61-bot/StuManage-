@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/use-auth';
-
-const SETTINGS_KEY = 'libmanager_settings';
 
 interface Settings {
   totalSeats: number;
@@ -26,83 +24,82 @@ Thank you,
 };
 
 export function useSettings() {
-  const { user } = useAuth();
+  const { supabaseUser } = useAuth();
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const fetchSettings = useCallback(async () => {
+    if (!supabaseUser) {
+      setSettings(DEFAULT_SETTINGS);
+      setIsLoaded(true);
+      return;
+    }
+
+    // Load cached settings immediately
+    const cached = localStorage.getItem(`settings_${supabaseUser.id}`);
+    if (cached) {
+      try {
+        setSettings(JSON.parse(cached));
+        setIsLoaded(true);
+      } catch (e) {
+        console.error('Failed to parse cached settings', e);
+      }
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('*')
+        .eq('owner_id', supabaseUser.id)
+        .maybeSingle();
+
+      if (error) {
+        console.warn('Supabase settings fetch error:', error.message);
+      } else if (data) {
+        const fetchedSettings = {
+          totalSeats: data.total_seats,
+          libraryName: data.library_name,
+          messageTemplate: data.message_template,
+        };
+        setSettings(fetchedSettings);
+        localStorage.setItem(`settings_${supabaseUser.id}`, JSON.stringify(fetchedSettings));
+      }
+    } catch (e) {
+      console.error('Failed to fetch settings from Supabase', e);
+    }
+    setIsLoaded(true);
+  }, [supabaseUser]);
 
   useEffect(() => {
-    const fetchSettings = async () => {
-      if (!user) {
-        const saved = localStorage.getItem(SETTINGS_KEY);
-        if (saved) {
-          try {
-            setSettings(JSON.parse(saved));
-          } catch (e) {
-            console.error('Failed to parse local settings', e);
-          }
-        }
-        return;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from('settings')
-          .select('*')
-          .eq('owner_id', user.id)
-          .maybeSingle();
-
-        if (error) {
-          if (error.message.includes('schema cache')) {
-            console.warn('Supabase settings table missing. Using local storage.');
-          } else {
-            console.warn('Supabase settings fetch error:', error.message);
-          }
-          const saved = localStorage.getItem(SETTINGS_KEY);
-          if (saved) setSettings(JSON.parse(saved));
-        } else if (data) {
-          setSettings({
-            totalSeats: data.total_seats,
-            libraryName: data.library_name,
-            messageTemplate: data.message_template,
-          });
-        }
-      } catch (e) {
-        console.error('Failed to fetch settings from Supabase', e);
-      }
-    };
-
     fetchSettings();
-  }, [user]);
+  }, [fetchSettings]);
 
   const updateSettings = async (newSettings: Partial<Settings>) => {
+    if (!supabaseUser) return;
+
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
+    localStorage.setItem(`settings_${supabaseUser.id}`, JSON.stringify(updated));
 
-    if (user) {
-      try {
-        const dbSettings = {
-          owner_id: user.id,
+    try {
+      const { error } = await supabase
+        .from('settings')
+        .upsert({
+          owner_id: supabaseUser.id,
           total_seats: updated.totalSeats,
           library_name: updated.libraryName,
           message_template: updated.messageTemplate,
-        };
-
-        const { error } = await supabase
-          .from('settings')
-          .upsert(dbSettings, { onConflict: 'owner_id' });
-        
-        if (error) {
-          if (error.message.includes('schema cache')) {
-            console.warn('Supabase settings table missing. Settings saved locally only.');
-          } else {
-            console.error('Supabase settings upsert error:', error.message);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to update settings in Supabase', e);
+        }, { onConflict: 'owner_id' });
+      
+      if (error) {
+        console.error('Supabase settings upsert error:', error.message);
+        throw error;
       }
+    } catch (e) {
+      console.error('Failed to update settings in Supabase', e);
+      throw e;
     }
   };
 
-  return { settings, updateSettings };
+  return { settings, updateSettings, isLoaded };
 }

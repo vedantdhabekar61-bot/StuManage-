@@ -1,244 +1,161 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { Student } from '@/lib/types';
+import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/use-auth';
+import { Student } from '@/lib/types';
+import { useAuth } from './use-auth';
 
-const STUDENTS_KEY = 'libmanager_students';
-
-interface StudentContextType {
+interface StudentsContextType {
   students: Student[];
-  isLoaded: boolean;
-  addStudent: (student: Omit<Student, 'id'>) => Promise<Student>;
-  updateStudent: (id: string, updates: Partial<Student>) => Promise<void>;
+  addStudent: (student: Omit<Student, 'id'>) => Promise<void>;
+  updateStudent: (id: string, student: Partial<Student>) => Promise<void>;
   deleteStudent: (id: string) => Promise<void>;
+  isLoaded: boolean;
   refreshStudents: () => Promise<void>;
 }
 
-const StudentContext = createContext<StudentContextType | undefined>(undefined);
+const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
-export function StudentProvider({ children }: { children: React.ReactNode }) {
+export function StudentsProvider({ children }: { children: ReactNode }) {
   const [students, setStudents] = useState<Student[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
-  const { user } = useAuth();
+  const { supabaseUser } = useAuth();
 
   const fetchStudents = useCallback(async () => {
-    // Always try to load from localStorage first for immediate UI
-    const saved = localStorage.getItem(STUDENTS_KEY);
-    if (saved) {
-      try {
-        setStudents(JSON.parse(saved));
-        setIsLoaded(true); // Set isLoaded early if we have cached data
-      } catch (e) {
-        console.error('Failed to parse local students', e);
-      }
-    }
-
-    if (!user) {
+    if (!supabaseUser) {
+      setStudents([]);
       setIsLoaded(true);
       return;
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .eq('owner_id', user.id);
-
-      if (error) {
-        console.warn('Supabase fetch error, falling back to local storage:', error.message);
-      } else if (data) {
-        const mappedData = data.map(dbStudent => ({
-          id: dbStudent.id,
-          studentName: dbStudent.student_name,
-          phoneNumber: dbStudent.phone_number,
-          deskNumber: parseInt(dbStudent.desk_number),
-          shift: dbStudent.shift,
-          price: parseFloat(dbStudent.price),
-          paymentStatus: dbStudent.payment_status,
-          joinDate: dbStudent.join_date,
-          expiryDate: dbStudent.expiry_date,
-          lastPaymentDate: dbStudent.last_payment_date,
-          plan: dbStudent.plan || 'Custom Plan',
-          paymentMethod: dbStudent.payment_method || 'UPI',
-        }));
-        setStudents(mappedData as Student[]);
-        localStorage.setItem(STUDENTS_KEY, JSON.stringify(mappedData));
+    // Load cached students immediately
+    const cached = localStorage.getItem(`students_${supabaseUser.id}`);
+    if (cached) {
+      try {
+        setStudents(JSON.parse(cached));
+        setIsLoaded(true);
+      } catch (e) {
+        console.error('Failed to parse cached students', e);
       }
-    } catch (e) {
-      console.error('Failed to fetch students from Supabase', e);
-    } finally {
-      setIsLoaded(true);
     }
-  }, [user]);
+
+    const { data, error } = await supabase
+      .from('students')
+      .select('*')
+      .eq('owner_id', supabaseUser.id)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching students:', error.message);
+    } else if (data) {
+      const formattedStudents: Student[] = data.map(s => ({
+        id: s.id,
+        studentName: s.student_name,
+        phoneNumber: s.phone_number,
+        deskNumber: s.desk_number,
+        shift: s.shift,
+        plan: s.plan,
+        price: s.price,
+        joinDate: s.join_date,
+        expiryDate: s.expiry_date,
+        paymentStatus: s.payment_status,
+        paymentMethod: s.payment_method,
+        lastPaymentDate: s.last_payment_date
+      }));
+      setStudents(formattedStudents);
+      localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(formattedStudents));
+    }
+    setIsLoaded(true);
+  }, [supabaseUser]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStudents();
   }, [fetchStudents]);
 
   const addStudent = async (student: Omit<Student, 'id'>) => {
-    // Check student limit for free users
-    const isPro = user?.subscription?.status === 'active' || false;
-    if (!isPro && students.length >= 20) {
-      throw new Error('Free limit reached (20 students). Please upgrade to Pro for unlimited students.');
+    if (!supabaseUser) return;
+
+    const { error } = await supabase
+      .from('students')
+      .insert([{
+        owner_id: supabaseUser.id,
+        student_name: student.studentName,
+        phone_number: student.phoneNumber,
+        desk_number: student.deskNumber,
+        shift: student.shift,
+        plan: student.plan,
+        price: student.price,
+        join_date: student.joinDate,
+        expiry_date: student.expiryDate,
+        payment_status: student.paymentStatus,
+        payment_method: student.paymentMethod,
+        last_payment_date: student.lastPaymentDate
+      }]);
+
+    if (error) {
+      console.error('Error adding student:', error.message);
+      throw error;
     }
-
-    // Check if desk is already taken in the same shift
-    const isDeskTaken = students.some(s => 
-      s.deskNumber === student.deskNumber && 
-      (s.shift === student.shift || s.shift === 'Full Day' || student.shift === 'Full Day')
-    );
-
-    if (isDeskTaken) {
-      throw new Error(`Desk ${student.deskNumber} is already occupied for this shift.`);
-    }
-
-    const newStudent = {
-      ...student,
-      id: crypto.randomUUID(),
-    };
-
-    // Optimistic update
-    setStudents(prev => {
-      const updated = [...prev, newStudent];
-      localStorage.setItem(STUDENTS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    if (user) {
-      try {
-        const dbStudent = {
-          id: newStudent.id,
-          owner_id: user.id,
-          student_name: newStudent.studentName,
-          phone_number: newStudent.phoneNumber,
-          desk_number: newStudent.deskNumber.toString(),
-          shift: newStudent.shift,
-          price: newStudent.price,
-          payment_status: newStudent.paymentStatus,
-          join_date: newStudent.joinDate,
-          expiry_date: newStudent.expiryDate,
-          last_payment_date: newStudent.lastPaymentDate,
-          plan: newStudent.plan,
-          payment_method: newStudent.paymentMethod,
-        };
-
-        const { error } = await supabase
-          .from('students')
-          .insert([dbStudent]);
-        
-        if (error) {
-          console.error('Supabase insert error:', error.message);
-        }
-      } catch (e) {
-        console.error('Failed to add student to Supabase', e);
-      }
-    }
-
-    return newStudent;
+    await fetchStudents();
   };
 
-  const updateStudent = async (id: string, updates: Partial<Student>) => {
-    // Check for desk occupancy conflict if desk or shift is changing
-    if (updates.deskNumber !== undefined || updates.shift !== undefined) {
-      const studentToUpdate = students.find(s => s.id === id);
-      if (studentToUpdate) {
-        const newDesk = updates.deskNumber ?? studentToUpdate.deskNumber;
-        const newShift = updates.shift ?? studentToUpdate.shift;
-        
-        const isDeskTaken = students.some(s => 
-          s.id !== id && // Don't check against self
-          s.deskNumber === newDesk && 
-          (s.shift === newShift || s.shift === 'Full Day' || newShift === 'Full Day')
-        );
+  const updateStudent = async (id: string, student: Partial<Student>) => {
+    if (!supabaseUser) return;
 
-        if (isDeskTaken) {
-          throw new Error(`Desk ${newDesk} is already occupied for the ${newShift} shift.`);
-        }
-      }
+    const updateData: any = {};
+    if (student.studentName) updateData.student_name = student.studentName;
+    if (student.phoneNumber) updateData.phone_number = student.phoneNumber;
+    if (student.deskNumber) updateData.desk_number = student.deskNumber;
+    if (student.shift) updateData.shift = student.shift;
+    if (student.plan) updateData.plan = student.plan;
+    if (student.price) updateData.price = student.price;
+    if (student.joinDate) updateData.join_date = student.joinDate;
+    if (student.expiryDate) updateData.expiry_date = student.expiryDate;
+    if (student.paymentStatus) updateData.payment_status = student.paymentStatus;
+    if (student.paymentMethod) updateData.payment_method = student.paymentMethod;
+    if (student.lastPaymentDate) updateData.last_payment_date = student.lastPaymentDate;
+
+    const { error } = await supabase
+      .from('students')
+      .update(updateData)
+      .eq('id', id)
+      .eq('owner_id', supabaseUser.id);
+
+    if (error) {
+      console.error('Error updating student:', error.message);
+      throw error;
     }
-
-    // Optimistic update
-    setStudents(prev => {
-      const updated = prev.map(s => s.id === id ? { ...s, ...updates } : s);
-      localStorage.setItem(STUDENTS_KEY, JSON.stringify(updated));
-      return updated;
-    });
-
-    if (user) {
-      try {
-        const dbUpdates: any = {};
-        if (updates.studentName) dbUpdates.student_name = updates.studentName;
-        if (updates.phoneNumber) dbUpdates.phone_number = updates.phoneNumber;
-        if (updates.deskNumber !== undefined) dbUpdates.desk_number = updates.deskNumber.toString();
-        if (updates.shift) dbUpdates.shift = updates.shift;
-        if (updates.price !== undefined) dbUpdates.price = updates.price;
-        if (updates.paymentStatus) dbUpdates.payment_status = updates.paymentStatus;
-        if (updates.joinDate) dbUpdates.join_date = updates.joinDate;
-        if (updates.expiryDate) dbUpdates.expiry_date = updates.expiryDate;
-        if (updates.lastPaymentDate) dbUpdates.last_payment_date = updates.lastPaymentDate;
-        if (updates.plan) dbUpdates.plan = updates.plan;
-        if (updates.paymentMethod) dbUpdates.payment_method = updates.paymentMethod;
-
-        const { error } = await supabase
-          .from('students')
-          .update(dbUpdates)
-          .eq('id', id)
-          .eq('owner_id', user.id);
-        
-        if (error) {
-          console.error('Supabase update error:', error.message);
-        }
-      } catch (e) {
-        console.error('Failed to update student in Supabase', e);
-      }
-    }
+    await fetchStudents();
   };
 
   const deleteStudent = async (id: string) => {
-    // Optimistic update
-    setStudents(prev => {
-      const updated = prev.filter(s => s.id !== id);
-      localStorage.setItem(STUDENTS_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    if (!supabaseUser) return;
 
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('students')
-          .delete()
-          .eq('id', id)
-          .eq('owner_id', user.id);
-        
-        if (error) {
-          console.error('Supabase delete error:', error.message);
-        }
-      } catch (e) {
-        console.error('Failed to delete student from Supabase', e);
-      }
+    const { error } = await supabase
+      .from('students')
+      .delete()
+      .eq('id', id)
+      .eq('owner_id', supabaseUser.id);
+
+    if (error) {
+      console.error('Error deleting student:', error.message);
+      throw error;
     }
+    await fetchStudents();
   };
 
   return (
-    <StudentContext.Provider value={{ 
-      students, 
-      isLoaded, 
-      addStudent, 
-      updateStudent, 
-      deleteStudent,
-      refreshStudents: fetchStudents
-    }}>
+    <StudentsContext.Provider value={{ students, addStudent, updateStudent, deleteStudent, isLoaded, refreshStudents: fetchStudents }}>
       {children}
-    </StudentContext.Provider>
+    </StudentsContext.Provider>
   );
 }
 
 export function useStudents() {
-  const context = useContext(StudentContext);
+  const context = useContext(StudentsContext);
   if (context === undefined) {
-    throw new Error('useStudents must be used within a StudentProvider');
+    throw new Error('useStudents must be used within a StudentsProvider');
   }
   return context;
 }
