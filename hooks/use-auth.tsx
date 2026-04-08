@@ -29,9 +29,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== 'undefined') {
+      const lastUid = localStorage.getItem('last_auth_uid');
+      if (lastUid) {
+        const cached = localStorage.getItem(`auth_profile_${lastUid}`);
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            console.error('Failed to parse initial cached profile', e);
+          }
+        }
+      }
+    }
+    return null;
+  });
   const [supabaseUser, setSupabaseUser] = useState<SupabaseUser | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const lastUid = localStorage.getItem('last_auth_uid');
+      if (lastUid && localStorage.getItem(`auth_profile_${lastUid}`)) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  // Remove the useEffect that was doing the same thing
 
   const ensureProfileExists = useCallback(async (uid: string, email: string, metadata: any) => {
     try {
@@ -117,45 +142,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Cache profile
     localStorage.setItem(`auth_profile_${uid}`, JSON.stringify(profile));
+    localStorage.setItem('last_auth_uid', uid);
     
     return profile;
   }, [ensureProfileExists]);
 
   const initAuth = useCallback(async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    const sUser = session?.user ?? null;
-    setSupabaseUser(sUser);
-    
-    if (sUser) {
-      // Try to load cached profile immediately
-      const cached = localStorage.getItem(`auth_profile_${sUser.id}`);
-      if (cached) {
-        try {
-          setUser(JSON.parse(cached));
-          setIsLoaded(true);
-        } catch (e) {
-          console.error('Failed to parse cached profile', e);
-        }
-      }
-
-      const profile = await fetchProfile(
-        sUser.id, 
-        sUser.email!, 
-        sUser.created_at,
-        sUser.user_metadata
-      );
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const sUser = session?.user ?? null;
+      setSupabaseUser(sUser);
       
-      if (profile) {
-        setUser(profile);
+      if (sUser) {
+        // We already tried to load from cache in the initializer.
+        // Now we fetch the fresh profile in the background.
+        const profile = await fetchProfile(
+          sUser.id, 
+          sUser.email!, 
+          sUser.created_at,
+          sUser.user_metadata
+        );
+        
+        if (profile) {
+          setUser(profile);
+        }
+      } else {
+        setUser(null);
+        localStorage.removeItem('last_auth_uid');
       }
-    } else {
-      setUser(null);
+    } catch (e) {
+      console.error('Error in initAuth:', e);
+    } finally {
+      setIsLoaded(true);
     }
-    setIsLoaded(true);
   }, [fetchProfile]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -186,7 +208,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem(supabaseUser ? `auth_profile_${supabaseUser.id}` : '');
+    if (supabaseUser) {
+      localStorage.removeItem(`auth_profile_${supabaseUser.id}`);
+    }
+    localStorage.removeItem('last_auth_uid');
     setUser(null);
   };
 

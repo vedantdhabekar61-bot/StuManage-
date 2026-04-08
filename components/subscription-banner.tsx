@@ -6,9 +6,17 @@ import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 
 export function SubscriptionBanner() {
-  const { isActive, daysLeft, isTrial, loading } = useSubscription();
+  const { isActive, daysLeft, isTrial, isPro, loading } = useSubscription();
 
-  if (loading || !isActive || !isTrial) return null;
+  // Don't show if loading
+  if (loading) return null;
+  
+  // Don't show if active Pro user with more than 5 days left
+  if (isPro && isActive && daysLeft > 5) return null;
+  
+  // Show if trial is active OR if subscription is expired
+  const shouldShow = isTrial || !isActive;
+  if (!shouldShow) return null;
 
   return (
     <AnimatePresence>

@@ -25,8 +25,31 @@ Thank you,
 
 export function useSettings() {
   const { supabaseUser } = useAuth();
-  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [settings, setSettings] = useState<Settings>(() => {
+    if (typeof window !== 'undefined') {
+      const lastUid = localStorage.getItem('last_auth_uid');
+      if (lastUid) {
+        const cached = localStorage.getItem(`settings_${lastUid}`);
+        if (cached) {
+          try {
+            return JSON.parse(cached);
+          } catch (e) {
+            console.error('Failed to parse initial cached settings', e);
+          }
+        }
+      }
+    }
+    return DEFAULT_SETTINGS;
+  });
+  const [isLoaded, setIsLoaded] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const lastUid = localStorage.getItem('last_auth_uid');
+      if (lastUid && localStorage.getItem(`settings_${lastUid}`)) {
+        return true;
+      }
+    }
+    return false;
+  });
 
   const fetchSettings = useCallback(async () => {
     if (!supabaseUser) {
