@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { supabase } from '@/lib/supabase';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -20,22 +20,22 @@ export async function POST(req: Request) {
     const isAuthentic = expectedSignature === razorpay_signature;
 
     if (isAuthentic) {
-      // Update Supabase profile
+      // Update Supabase subscription using admin client
       const proExpiryDate = new Date();
       proExpiryDate.setDate(proExpiryDate.getDate() + 30);
 
-      const { error } = await supabase
-        .from('profiles')
+      const { error } = await supabaseAdmin
+        .from('subscriptions')
         .update({
-          is_pro: true,
-          pro_expiry_date: proExpiryDate.toISOString(),
+          status: 'active',
+          expiry_date: proExpiryDate.toISOString().split('T')[0],
           updated_at: new Date().toISOString()
         })
-        .eq('id', user_id);
+        .eq('owner_id', user_id);
 
       if (error) {
-        console.error('Supabase profile update error:', error);
-        return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+        console.error('Supabase subscription update error:', error);
+        return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
       }
 
       return NextResponse.json({ status: 'success' });
