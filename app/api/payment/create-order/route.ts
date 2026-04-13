@@ -5,6 +5,11 @@ export async function POST(req: Request) {
   try {
     const { amount, currency = 'INR' } = await req.json();
 
+    // Security: Validate amount (e.g., must be ₹50 for the Pro plan)
+    if (!amount || amount !== 50) {
+      return NextResponse.json({ error: 'Invalid amount requested' }, { status: 400 });
+    }
+
     const razorpay = new Razorpay({
       key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,

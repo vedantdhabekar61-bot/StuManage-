@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { getSupabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -24,8 +24,9 @@ export async function POST(req: Request) {
       const proExpiryDate = new Date();
       proExpiryDate.setDate(proExpiryDate.getDate() + 30);
 
-      const { error } = await supabaseAdmin
-        .from('subscriptions')
+      const supabaseAdmin = getSupabaseAdmin();
+      const { error } = await (supabaseAdmin
+        .from('subscriptions') as any)
         .update({
           status: 'active',
           expiry_date: proExpiryDate.toISOString().split('T')[0],

@@ -9,7 +9,7 @@ export function useSubscription() {
   const status = useMemo(() => {
     if (!user || !user.subscription) {
       return {
-        isActive: true, // Default to true while loading
+        isActive: !isLoaded ? true : false, // Default to true ONLY while loading
         daysLeft: 0,
         isTrial: false,
         isPro: false,
@@ -24,7 +24,7 @@ export function useSubscription() {
     const daysLeft = Math.max(0, diffDays);
 
     return {
-      isActive: now < expiry || user.subscription.status === 'active',
+      isActive: (user.subscription.status === 'active' || user.subscription.status === 'trial') && now < expiry,
       daysLeft,
       isTrial: user.subscription.status === 'trial',
       isPro: user.subscription.status === 'active',

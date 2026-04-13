@@ -37,32 +37,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, isLoaded, pathname, router, hasSeenWelcome]);
 
-  if (isLoaded === false) {
+  if (!isLoaded) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
-          className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-[#0ea495] text-white shadow-2xl shadow-[#0ea495]/20"
-        >
-          <Activity className="h-10 w-10" />
-        </motion.div>
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="mt-6 flex flex-col items-center gap-1"
-        >
-          <h2 className="text-lg font-bold text-[#1C1917]">StuManage app</h2>
-          <p className="text-xs font-semibold text-[#78716C] uppercase tracking-widest">Loading your space...</p>
-        </motion.div>
+        <Activity className="h-10 w-10 animate-spin text-[#0ea495]" />
+        <p className="mt-4 text-sm font-medium text-slate-500">Loading your space...</p>
       </div>
     );
   }
 
   const showWelcome = !hasSeenWelcome && !user;
-  const showPaywall = user && !isActive && pathname !== '/billing' && pathname !== '/payment';
+  const showPaywall = user && !isActive && pathname !== '/billing' && pathname !== '/payment' && pathname !== '/trial';
 
   return (
     <AnimatePresence mode="wait">
