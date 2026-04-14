@@ -27,13 +27,27 @@ export function formatWhatsAppMessage(template: string, student: Student, librar
   return encodeURIComponent(msg);
 }
 
-export function getWhatsAppUrl(student: Student, message: string): string {
+function getWhatsAppUrl(student: Student, message: string): string {
   if (!student.phoneNumber) return '#';
   // Remove all non-numeric characters from phone
   const cleanPhone = student.phoneNumber.replace(/\D/g, '');
   // Ensure it has 91 prefix if it's a 10-digit number
   const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
   return `https://wa.me/${phone}?text=${message}`;
+}
+
+export function isStudentOverdue(student: Student): boolean {
+  if (student.paymentStatus === 'Paid') return false;
+  if (student.paymentStatus === 'Overdue') return true;
+  
+  if (!student.expiryDate) return false;
+  const expiry = new Date(student.expiryDate);
+  const now = new Date();
+  // Reset time to start of day for accurate comparison
+  expiry.setHours(0, 0, 0, 0);
+  now.setHours(0, 0, 0, 0);
+  
+  return expiry < now;
 }
 
 export function openWhatsApp(student: Student, message: string): boolean {

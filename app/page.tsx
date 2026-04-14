@@ -9,7 +9,7 @@ import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { cn, isStudentOverdue } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { SubscriptionBanner } from '@/components/subscription-banner';
 import { useAuth } from '@/hooks/use-auth';
@@ -41,24 +41,21 @@ export default function Dashboard() {
     const activeStudents = students.length;
     const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
     
-    const overdueStudents = students.filter(s => {
-      const expiry = new Date(s.expiryDate);
-      expiry.setHours(0, 0, 0, 0);
-      return (expiry < today && s.paymentStatus !== 'Paid') || s.paymentStatus === 'Overdue';
-    });
+    const overdueStudents = students.filter(isStudentOverdue);
 
     const pendingFees = students
-      .filter(s => s.paymentStatus !== 'Paid' || new Date(s.expiryDate) < today)
+      .filter(s => s.paymentStatus !== 'Paid' || isStudentOverdue(s))
       .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
     const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? (Number(s.price) || 0) : 0), 0);
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
     
     const urgentActions = students.filter(s => {
+      if (s.paymentStatus === 'Paid') return false;
       const expiry = new Date(s.expiryDate);
       const diffTime = expiry.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 3 || s.paymentStatus === 'Overdue' || (expiry < today && s.paymentStatus !== 'Paid');
+      return diffDays <= 3 || isStudentOverdue(s);
     });
 
     return {

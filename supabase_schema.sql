@@ -105,7 +105,7 @@ CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
   INSERT INTO public.owners (id, email, name)
-  VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'full_name', new.email.split('@')[0]));
+  VALUES (new.id, new.email, COALESCE(new.raw_user_meta_data->>'full_name', SPLIT_PART(new.email, '@', 1)));
   
   INSERT INTO public.subscriptions (owner_id, status)
   VALUES (new.id, 'trial');

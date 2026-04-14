@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { Student } from '@/lib/types';
-import { formatWhatsAppMessage, openWhatsApp, getWhatsAppUrl, cn } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, cn, isStudentOverdue } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { BulkReminderSheet } from '@/components/bulk-reminder-sheet';
 
@@ -39,7 +39,7 @@ export default function RemindersPage() {
       const dueDate = new Date(student.expiryDate);
       dueDate.setHours(0, 0, 0, 0);
 
-      const isOverdue = student.paymentStatus === 'Overdue';
+      const isOverdue = isStudentOverdue(student);
       const isPaid = student.paymentStatus === 'Paid';
 
       if (activeFilter === 'Overdue') return matchesSearch && isOverdue;
@@ -52,16 +52,12 @@ export default function RemindersPage() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const overdueStudents = students.filter(s => {
-      const dueDate = new Date(s.expiryDate);
-      dueDate.setHours(0, 0, 0, 0);
-      return dueDate < today && s.paymentStatus !== 'Paid';
-    });
+    const overdueStudents = students.filter(isStudentOverdue);
 
     const paidThisMonthCount = students.filter(s => s.paymentStatus === 'Paid').length;
     
     const totalPendingAmount = students
-      .filter(s => s.paymentStatus !== 'Paid' || new Date(s.expiryDate) < today)
+      .filter(s => s.paymentStatus !== 'Paid' || isStudentOverdue(s))
       .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
     return { 
@@ -185,10 +181,10 @@ export default function RemindersPage() {
                 <div className={cn(
                   "status-pill",
                   student.paymentStatus === 'Paid' ? "bg-teal-100 text-teal-700" : 
-                  student.paymentStatus === 'Overdue' ? "bg-rose-100 text-rose-700" : 
+                  isStudentOverdue(student) ? "bg-rose-100 text-rose-700" : 
                   "bg-amber-100 text-amber-700"
                 )}>
-                  {student.paymentStatus}
+                  {isStudentOverdue(student) ? 'Overdue' : student.paymentStatus}
                 </div>
               </div>
 

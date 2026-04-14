@@ -127,17 +127,17 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
     if (!supabaseUser) return;
 
     const updateData: any = {};
-    if (student.studentName) updateData.student_name = student.studentName;
-    if (student.phoneNumber) updateData.phone_number = student.phoneNumber;
-    if (student.deskNumber) updateData.desk_number = student.deskNumber;
-    if (student.shift) updateData.shift = student.shift;
-    if (student.plan) updateData.plan = student.plan;
-    if (student.price) updateData.price = student.price;
-    if (student.joinDate) updateData.join_date = student.joinDate;
-    if (student.expiryDate) updateData.expiry_date = student.expiryDate;
-    if (student.paymentStatus) updateData.payment_status = student.paymentStatus;
-    if (student.paymentMethod) updateData.payment_method = student.paymentMethod;
-    if (student.lastPaymentDate) updateData.last_payment_date = student.lastPaymentDate;
+    if (student.studentName !== undefined) updateData.student_name = student.studentName;
+    if (student.phoneNumber !== undefined) updateData.phone_number = student.phoneNumber;
+    if (student.deskNumber !== undefined) updateData.desk_number = student.deskNumber;
+    if (student.shift !== undefined) updateData.shift = student.shift;
+    if (student.plan !== undefined) updateData.plan = student.plan;
+    if (student.price !== undefined) updateData.price = student.price;
+    if (student.joinDate !== undefined) updateData.join_date = student.joinDate;
+    if (student.expiryDate !== undefined) updateData.expiry_date = student.expiryDate;
+    if (student.paymentStatus !== undefined) updateData.payment_status = student.paymentStatus;
+    if (student.paymentMethod !== undefined) updateData.payment_method = student.paymentMethod;
+    if (student.lastPaymentDate !== undefined) updateData.last_payment_date = student.lastPaymentDate;
 
     const { error } = await supabase
       .from('students')

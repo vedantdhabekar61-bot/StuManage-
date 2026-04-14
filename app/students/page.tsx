@@ -163,7 +163,6 @@ export default function StudentsPage() {
                       newExpiry.setMonth(newExpiry.getMonth() + 1);
                       updateStudent(student.id, {
                         paymentStatus: 'Paid',
-                        joinDate: now.toISOString().split('T')[0],
                         expiryDate: newExpiry.toISOString().split('T')[0],
                         lastPaymentDate: now.toISOString().split('T')[0],
                       });

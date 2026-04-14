@@ -23,8 +23,8 @@ export default function TrialPage() {
 
   const handleStartTrial = async () => {
     setIsStarting(true);
-    // In a real app, we'd save the trial start date in the database
-    await updateSubscription('trial');
+    // The DB trigger already creates a trial subscription on signup.
+    // We just need to redirect to the dashboard.
     setTimeout(() => {
       router.push('/');
     }, 800);

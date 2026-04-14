@@ -15,7 +15,6 @@ export default function AddStudentPage() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duration, setDuration] = useState<number | string>(3);
-  const [durationUnit, setDurationUnit] = useState<'Month' | 'Year'>('Month');
 
   const [formData, setFormData] = useState(() => {
     const now = new Date();
@@ -36,24 +35,20 @@ export default function AddStudentPage() {
     };
   });
 
-  const calculateExpiry = (startDate: string, dur: number, unit: 'Month' | 'Year') => {
+  const calculateExpiry = (startDate: string, dur: number) => {
     if (!startDate) return '';
     const start = new Date(startDate);
     if (isNaN(start.getTime())) return '';
     
     const expiry = new Date(start);
-    if (unit === 'Month') {
-      expiry.setMonth(expiry.getMonth() + dur);
-    } else {
-      expiry.setFullYear(expiry.getFullYear() + dur);
-    }
+    expiry.setMonth(expiry.getMonth() + dur);
     return expiry.toISOString().split('T')[0];
   };
 
   const handleStartDateChange = (date: string) => {
     setError(null);
     const durNum = typeof duration === 'string' ? parseInt(duration) || 0 : duration;
-    const newExpiry = calculateExpiry(date, durNum, durationUnit);
+    const newExpiry = calculateExpiry(date, durNum);
     setFormData(prev => ({ 
       ...prev, 
       joinDate: date,
@@ -64,7 +59,7 @@ export default function AddStudentPage() {
   const handleDurationChange = (val: string) => {
     const numVal = parseInt(val);
     const durNum = isNaN(numVal) ? 0 : numVal;
-    const newExpiry = calculateExpiry(formData.joinDate, durNum, durationUnit);
+    const newExpiry = calculateExpiry(formData.joinDate, durNum);
     setDuration(val === '' ? '' : numVal);
     setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
   };

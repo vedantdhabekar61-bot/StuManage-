@@ -30,8 +30,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${jakarta.variable}`}>
       <body className="bg-[#FDFBF7] text-[#1C1917] antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
-          <StudentsProvider>
-            <AuthGuard>
+          <AuthGuard>
+            <StudentsProvider>
               <SubscriptionGuard>
                 <div className="mx-auto min-h-screen max-w-md bg-[#FDFBF7] pb-20">
                   <PageTransition>
@@ -40,8 +40,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   <BottomNav />
                 </div>
               </SubscriptionGuard>
-            </AuthGuard>
-          </StudentsProvider>
+            </StudentsProvider>
+          </AuthGuard>
         </AuthProvider>
       </body>
     </html>
