@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 
 export default function AddStudentPage() {
   const router = useRouter();
-  const { addStudent, students } = useStudents();
+  const { addStudent, students, isLoaded: studentsLoaded } = useStudents();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +84,17 @@ export default function AddStudentPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (!studentsLoaded) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-[#0ea495]" />
+          <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading Roster...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-[#FAFAFA] pb-24 font-sans">
@@ -172,7 +183,7 @@ export default function AddStudentPage() {
                     {(() => {
                       const deskNum = parseInt(formData.deskNumber);
                       const occupiedBy = students.find(s => 
-                        Number(s.deskNumber) === deskNum && 
+                        s.deskNumber && Number(s.deskNumber.toString().trim()) === deskNum && 
                         (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
                       );
                       if (occupiedBy) {

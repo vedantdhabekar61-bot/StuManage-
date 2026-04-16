@@ -321,7 +321,7 @@ export default function StudentsPage() {
                       const deskNum = editingStudent.deskNumber;
                       const occupiedBy = students.find(s => 
                         s.id !== editingStudent.id &&
-                        Number(s.deskNumber) === Number(deskNum) && 
+                        s.deskNumber && Number(s.deskNumber.toString().trim()) === Number(deskNum) && 
                         (s.shift === editingStudent.shift || s.shift === 'Full Day' || editingStudent.shift === 'Full Day')
                       );
                       
