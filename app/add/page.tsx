@@ -172,7 +172,7 @@ export default function AddStudentPage() {
                     {(() => {
                       const deskNum = parseInt(formData.deskNumber);
                       const occupiedBy = students.find(s => 
-                        s.deskNumber === deskNum && 
+                        Number(s.deskNumber) === deskNum && 
                         (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
                       );
                       if (occupiedBy) {

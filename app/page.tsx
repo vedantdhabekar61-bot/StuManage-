@@ -210,51 +210,41 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-amber-500/10 flex flex-col gap-6 transition-all hover:scale-[1.01]"
+                    className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4 transition-all hover:scale-[1.01]"
                   >
+                    {/* Top Row: Name + Amount */}
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className={cn(
-                          "w-14 h-14 rounded-2xl shadow-sm flex items-center justify-center font-black text-xl shrink-0",
-                          student.id.charCodeAt(0) % 3 === 0 ? "bg-teal-50 text-teal-600" : 
-                          student.id.charCodeAt(0) % 3 === 1 ? "bg-orange-50 text-orange-600" : 
-                          "bg-blue-50 text-blue-600"
-                        )}>
-                          {student.studentName.split(' ').map(n => n[0]).join('').toUpperCase()}
-                        </div>
-                        <div>
-                          <p className="font-black text-[#1C1917] text-xl leading-tight">{student.studentName}</p>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-[10px] font-bold text-[#78716C] bg-[#FDFBF7] px-2 py-0.5 rounded-lg border border-[#78716C]/10 uppercase tracking-wider">
-                              Seat {student.deskNumber}
-                            </span>
-                            <span className={cn(
-                              "text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-lg",
-                              isOverdue ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
-                            )}>
-                              {isOverdue ? `Overdue by ${Math.abs(daysLeft)}d` : `Due in ${daysLeft}d`}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] font-black text-[#78716C] uppercase tracking-widest mb-0.5">Fees Due</p>
-                        <p className="text-2xl font-black text-[#1C1917]">₹{student.price}</p>
-                      </div>
+                      <p className="font-bold text-slate-900 text-lg">{student.studentName}</p>
+                      <p className="font-bold text-slate-900 text-lg">₹{student.price}</p>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    {/* Middle Row: Seat + Status */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-slate-500">Seat {student.deskNumber}</p>
+                      <p className={cn(
+                        "text-sm font-bold",
+                        isOverdue ? "text-rose-600" : "text-amber-600"
+                      )}>
+                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : `Due in ${daysLeft}d`}
+                      </p>
+                    </div>
+
+                    {/* Divider */}
+                    <div className="h-px bg-slate-50 w-full" />
+
+                    {/* Bottom Section: Stacked Actions */}
+                    <div className="flex flex-col gap-2.5">
                       <WhatsAppReminderButton
                         student={student}
                         showText={true}
-                        className="flex-[2] h-14 rounded-2xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/20 flex items-center justify-center gap-3 text-sm font-black uppercase tracking-widest active:scale-[0.98] transition-all"
+                        className="w-full h-12 rounded-2xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest active:scale-[0.98] transition-all"
                       />
                       <button 
                         onClick={() => handleMarkAsPaid(student)}
-                        className="flex-1 h-14 rounded-2xl bg-[#FDFBF7] text-[#78716C] border border-[#78716C]/10 flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest transition-all hover:text-teal-600 hover:bg-teal-500/5 active:scale-95"
+                        className="w-full h-12 rounded-2xl bg-white text-slate-600 border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-slate-50 active:scale-95"
                       >
-                        <Check className="h-5 w-5" />
-                        Paid
+                        <Check className="h-4 w-4" />
+                        Mark as Paid
                       </button>
                     </div>
                   </motion.div>

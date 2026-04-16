@@ -24,7 +24,10 @@ export default function StudentsPage() {
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
       // Search matching logic
-      const matchesSearch = s.studentName.toLowerCase().includes(search.toLowerCase()) || s.phoneNumber.includes(search);
+                      const matchesSearch = 
+        s.studentName.toLowerCase().includes(search.toLowerCase()) || 
+        s.phoneNumber.includes(search) ||
+        s.deskNumber.toString().includes(search);
       
       // Filter matching logic updated with isStudentOverdue
       let matchesFilter = false;
@@ -318,7 +321,7 @@ export default function StudentsPage() {
                       const deskNum = editingStudent.deskNumber;
                       const occupiedBy = students.find(s => 
                         s.id !== editingStudent.id &&
-                        s.deskNumber === deskNum && 
+                        Number(s.deskNumber) === Number(deskNum) && 
                         (s.shift === editingStudent.shift || s.shift === 'Full Day' || editingStudent.shift === 'Full Day')
                       );
                       
