@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2, Lock } from 'lucide-react';
 
-const PUBLIC_PATHS = ['/login', '/signup', '/billing', '/trial', '/payment', '/auth/callback'];
+const PUBLIC_PATHS = ['/login', '/auth', '/billing', '/trial', '/payment', '/auth/callback'];
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const { isActive, loading } = useSubscription();

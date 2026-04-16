@@ -25,7 +25,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoaded && (hasSeenWelcome || user)) {
-      const isAuthPage = pathname === '/login' || pathname === '/signup';
+      const isAuthPage = pathname === '/login' || pathname === '/auth';
       
       if (!user && !isAuthPage) {
         // Consistently redirect unauthenticated users to /login

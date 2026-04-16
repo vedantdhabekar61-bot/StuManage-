@@ -51,11 +51,16 @@ export default function Dashboard() {
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
     
     const urgentActions = students.filter(s => {
+      const isOverdue = isStudentOverdue(s);
+      if (isOverdue) return true;
+
+      // If not overdue, but already Paid, it's not urgent
       if (s.paymentStatus === 'Paid') return false;
+
       const expiry = new Date(s.expiryDate);
       const diffTime = expiry.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 3 || isStudentOverdue(s);
+      return diffDays <= 3;
     });
 
     return {
@@ -195,8 +200,8 @@ export default function Dashboard() {
           <div className="flex flex-col gap-4">
             <AnimatePresence mode="popLayout">
               {metrics.urgentActions.map((student) => {
+                const isOverdue = isStudentOverdue(student);
                 const daysLeft = Math.ceil((new Date(student.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                const isOverdue = daysLeft < 0;
                 
                 return (
                   <motion.div 
