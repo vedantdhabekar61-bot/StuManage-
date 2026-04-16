@@ -99,7 +99,17 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   const addStudent = async (student: Omit<Student, 'id'>) => {
     if (!supabaseUser) return;
 
-    const { error } = await supabase
+    // Create a temporary ID for optimistic update
+    const tempId = crypto.randomUUID();
+    const newStudent: Student = { ...student, id: tempId };
+    
+    // Optimistic update
+    const previousStudents = [...students];
+    const updatedStudents = [newStudent, ...students];
+    setStudents(updatedStudents);
+    localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(updatedStudents));
+
+    const { data, error } = await supabase
       .from('students')
       .insert([{
         owner_id: supabaseUser.id,
@@ -114,17 +124,47 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
         payment_status: student.paymentStatus,
         payment_method: student.paymentMethod,
         last_payment_date: student.lastPaymentDate
-      }]);
+      }])
+      .select()
+      .single();
 
     if (error) {
       console.error('Error adding student:', error.message);
+      setStudents(previousStudents);
+      localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(previousStudents));
       throw error;
     }
-    await fetchStudents();
+
+    // Replace temp student with real one from DB
+    if (data) {
+      const realStudent: Student = {
+        id: data.id,
+        studentName: data.student_name,
+        phoneNumber: data.phone_number,
+        deskNumber: data.desk_number,
+        shift: data.shift,
+        plan: data.plan,
+        price: data.price,
+        joinDate: data.join_date,
+        expiryDate: data.expiry_date,
+        paymentStatus: data.payment_status,
+        paymentMethod: data.payment_method,
+        lastPaymentDate: data.last_payment_date
+      };
+      const finalStudents = [realStudent, ...previousStudents];
+      setStudents(finalStudents);
+      localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(finalStudents));
+    }
   };
 
   const updateStudent = async (id: string, student: Partial<Student>) => {
     if (!supabaseUser) return;
+
+    // Optimistic update
+    const previousStudents = [...students];
+    const updatedStudents = students.map(s => s.id === id ? { ...s, ...student } : s);
+    setStudents(updatedStudents);
+    localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(updatedStudents));
 
     const updateData: any = {};
     if (student.studentName !== undefined) updateData.student_name = student.studentName;
@@ -147,13 +187,20 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error('Error updating student:', error.message);
+      setStudents(previousStudents);
+      localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(previousStudents));
       throw error;
     }
-    await fetchStudents();
   };
 
   const deleteStudent = async (id: string) => {
     if (!supabaseUser) return;
+
+    // Optimistic update
+    const previousStudents = [...students];
+    const updatedStudents = students.filter(s => s.id !== id);
+    setStudents(updatedStudents);
+    localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(updatedStudents));
 
     const { error } = await supabase
       .from('students')
@@ -163,9 +210,10 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
 
     if (error) {
       console.error('Error deleting student:', error.message);
+      setStudents(previousStudents);
+      localStorage.setItem(`students_${supabaseUser.id}`, JSON.stringify(previousStudents));
       throw error;
     }
-    await fetchStudents();
   };
 
   return (

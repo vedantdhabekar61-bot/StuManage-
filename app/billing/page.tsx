@@ -47,7 +47,7 @@ export default function BillingPage() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: order.amount,
         currency: order.currency,
-        name: 'DeskTracker Pro',
+        name: 'StuManage app Pro',
         description: 'Monthly Subscription',
         order_id: order.id,
         handler: async function (response: any) {

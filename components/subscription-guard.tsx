@@ -32,7 +32,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
         </div>
         <h1 className="mb-2 text-2xl font-bold text-slate-900">Subscription Expired</h1>
         <p className="mb-8 text-slate-500">
-          Your free trial or subscription has ended. Please pay ₹50 to continue using DeskTracker Pro.
+          Your free trial or subscription has ended. Please pay ₹50 to continue using StuManage app Pro features.
         </p>
         <button
           onClick={() => router.push('/billing')}
