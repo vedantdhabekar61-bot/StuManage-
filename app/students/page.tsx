@@ -8,7 +8,7 @@ import { Student, Shift } from '@/lib/types';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { motion, AnimatePresence } from 'motion/react';
-import { formatWhatsAppMessage, openWhatsApp, cn } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, cn, isStudentOverdue } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 
 export default function StudentsPage() {
@@ -23,8 +23,19 @@ export default function StudentsPage() {
 
   const filteredStudents = useMemo(() => {
     return students.filter(s => {
+      // Search matching logic
       const matchesSearch = s.studentName.toLowerCase().includes(search.toLowerCase()) || s.phoneNumber.includes(search);
-      const matchesFilter = filter === 'All' || s.paymentStatus === filter;
+      
+      // Filter matching logic updated with isStudentOverdue
+      let matchesFilter = false;
+      if (filter === 'All') {
+        matchesFilter = true;
+      } else if (filter === 'Overdue') {
+        matchesFilter = isStudentOverdue(s);
+      } else {
+        matchesFilter = s.paymentStatus === filter;
+      }
+
       return matchesSearch && matchesFilter;
     }).sort((a, b) => a.studentName.localeCompare(b.studentName));
   }, [students, search, filter]);
@@ -76,7 +87,8 @@ export default function StudentsPage() {
         {/* Filter Chips */}
         <div className="flex overflow-x-auto no-scrollbar gap-2 pb-1 -mx-4 px-4">
           {(['All', 'Paid', 'Pending', 'Overdue'] as const).map((f) => {
-            const count = f === 'Overdue' ? students.filter(s => s.paymentStatus === 'Overdue').length : 0;
+            // Updated counter logic to match the filter function
+            const count = f === 'Overdue' ? students.filter(s => isStudentOverdue(s)).length : 0;
             return (
               <button
                 key={f}

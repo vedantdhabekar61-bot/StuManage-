@@ -17,7 +17,7 @@ declare global {
 export default function BillingPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { profile, isActive, daysLeft } = useSubscription();
+  const { isActive, daysLeft } = useSubscription();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -51,6 +51,7 @@ export default function BillingPage() {
         description: 'Monthly Subscription',
         order_id: order.id,
         handler: async function (response: any) {
+          // Verification call: user_id removed to prevent spoofing
           const verifyRes = await fetch('/api/payment/verify', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -58,7 +59,6 @@ export default function BillingPage() {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              user_id: user.id,
             }),
           });
 

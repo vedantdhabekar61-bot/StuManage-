@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, Phone, Armchair, Clock, CreditCard, Calendar, CheckCircle2, IndianRupee, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { User, Armchair, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
@@ -72,13 +72,10 @@ export default function AddStudentPage() {
     try {
       await addStudent({
         ...formData,
-        deskNumber: parseInt(formData.deskNumber),
+        deskNumber: parseInt(formData.deskNumber) || 0,
       });
-      
-      // Removed artificial delay for faster performance
       setIsSubmitting(false);
       setShowSuccess(true);
-      
       setTimeout(() => {
         router.push('/students');
       }, 1000);
@@ -178,7 +175,6 @@ export default function AddStudentPage() {
                         s.deskNumber === deskNum && 
                         (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
                       );
-                      
                       if (occupiedBy) {
                         return (
                           <>

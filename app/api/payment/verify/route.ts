@@ -1,14 +1,27 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { getSupabaseAdmin } from '@/lib/supabase-admin';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
   try {
+    // Initialize Supabase route handler client
+    const supabase = createRouteHandlerClient({ cookies });
+    
+    // Get the secure, verified user from the session
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Block unauthorized requests before processing anything else
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Extract Razorpay payload (user_id is securely excluded)
     const { 
       razorpay_order_id, 
       razorpay_payment_id, 
-      razorpay_signature,
-      user_id 
+      razorpay_signature 
     } = await req.json();
 
     const body = razorpay_order_id + "|" + razorpay_payment_id;
@@ -32,7 +45,8 @@ export async function POST(req: Request) {
           expiry_date: proExpiryDate.toISOString().split('T')[0],
           updated_at: new Date().toISOString()
         })
-        .eq('owner_id', user_id);
+        // Use the securely retrieved user.id instead of the request body
+        .eq('owner_id', user.id);
 
       if (error) {
         console.error('Supabase subscription update error:', error);

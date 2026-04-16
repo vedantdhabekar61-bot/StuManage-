@@ -1,17 +1,14 @@
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
-import { useSubscription } from '@/hooks/use-subscription';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { WelcomeScreen } from './welcome-screen';
-import { SubscriptionModal } from './subscription-modal';
 import { AnimatePresence, motion } from 'motion/react';
 import { Activity } from 'lucide-react';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth();
-  const { isActive } = useSubscription();
   const router = useRouter();
   const pathname = usePathname();
   const [hasSeenWelcome, setHasSeenWelcome] = useState<boolean>(() => {
@@ -29,9 +26,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (isLoaded && (hasSeenWelcome || user)) {
       const isAuthPage = pathname === '/login' || pathname === '/signup';
+      
       if (!user && !isAuthPage) {
-        router.push('/signup');
+        // Consistently redirect unauthenticated users to /login
+        router.push('/login');
       } else if (user && isAuthPage) {
+        // Redirect authenticated users away from auth pages
         router.push('/');
       }
     }
@@ -47,7 +47,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   const showWelcome = !hasSeenWelcome && !user;
-  const showPaywall = user && !isActive && pathname !== '/billing' && pathname !== '/payment' && pathname !== '/trial';
 
   return (
     <AnimatePresence mode="wait">
@@ -60,16 +59,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           className="fixed inset-0 z-[300]"
         >
           <WelcomeScreen onDismiss={handleDismissWelcome} />
-        </motion.div>
-      ) : showPaywall ? (
-        <motion.div
-          key="paywall"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[400]"
-        >
-          <SubscriptionModal />
         </motion.div>
       ) : (
         <motion.div
