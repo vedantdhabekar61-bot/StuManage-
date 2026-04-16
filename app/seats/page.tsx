@@ -13,14 +13,26 @@ import { cn } from '@/lib/utils';
 export default function SeatsPage() {
   const router = useRouter();
   const [activeShift, setActiveShift] = useState<Shift>('Morning');
-  const { settings, updateSettings } = useSettings();
-  const { students } = useStudents();
+  const { students, isLoaded: studentsLoaded } = useStudents();
+  const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
   const [isEditing, setIsEditing] = useState(false);
   const [tempSeats, setTempSeats] = useState(settings.totalSeats);
 
   const desks = Array.from({ length: settings.totalSeats }, (_, i) => {
     const deskNumber = i + 1;
-    const student = students.find(s => s.deskNumber === deskNumber && (s.shift === activeShift || s.shift === 'Full Day'));
+    const student = students.find(s => {
+      const sDesk = s.deskNumber ? Number(s.deskNumber.toString().trim()) : null;
+      if (sDesk !== deskNumber) return false;
+      
+      if (activeShift === 'Full Day') {
+        // In Full Day view, show as booked if anyone is using the seat in any shift
+        return true;
+      }
+      
+      // In specific shifts, show as booked if student is in that shift or has a Full Day booking
+      return s.shift === activeShift || s.shift === 'Full Day';
+    });
+    
     return {
       number: deskNumber,
       status: student ? 'Booked' : 'Available',
@@ -33,6 +45,14 @@ export default function SeatsPage() {
     updateSettings({ totalSeats: Number(tempSeats) });
     setIsEditing(false);
   };
+
+  if (!studentsLoaded || !settingsLoaded) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col bg-[#FDFBF7] pb-24">

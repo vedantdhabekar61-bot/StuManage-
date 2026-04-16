@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, IndianRupee, Bell, Edit2, School, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap } from 'lucide-react';
+import { Users, Armchair, IndianRupee, Edit2, School, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -136,10 +136,6 @@ export default function Dashboard() {
             <Zap className="h-4 w-4 fill-current" />
             <span className="text-[10px] font-black uppercase tracking-widest">Upgrade</span>
           </Link>
-          <button className="relative flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm transition-all active:scale-95">
-            <Bell className="h-5 w-5 text-[#1C1917]" />
-            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-amber-500"></span>
-          </button>
           <button 
             onClick={logout}
             className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
