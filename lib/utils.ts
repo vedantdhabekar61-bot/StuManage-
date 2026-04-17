@@ -46,13 +46,11 @@ export function isStudentOverdue(student: Student): boolean {
   expiry.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
   
-  // If expiry date is before today, it's overdue regardless of status
+  // 1. If expiry date is in the past, they are overdue regardless of status
   if (expiry < now) return true;
   
-  // If it's today or in the future, check if it's explicitly marked as Overdue
-  // but NOT if it's marked as Paid
-  if (student.paymentStatus === 'Paid') return false;
-  if (student.paymentStatus === 'Overdue') return true;
+  // 2. If status is NOT Paid, flag them (could be Pending or explicitly Overdue)
+  if (student.paymentStatus !== 'Paid') return true;
   
   return false;
 }
