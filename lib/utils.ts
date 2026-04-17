@@ -55,6 +55,12 @@ export function isStudentOverdue(student: Student): boolean {
   return false;
 }
 
+export function isValidPhone(phone: string): boolean {
+  // Removes non-numeric for validation check
+  const cleanPhone = phone.replace(/\D/g, '');
+  return /^[6-9]\d{9}$/.test(cleanPhone);
+}
+
 export function openWhatsApp(student: Student, message: string): boolean {
   const url = getWhatsAppUrl(student, message);
   if (url !== '#') {

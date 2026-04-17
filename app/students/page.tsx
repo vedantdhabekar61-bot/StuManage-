@@ -8,7 +8,7 @@ import { Student, Shift } from '@/lib/types';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { motion, AnimatePresence } from 'motion/react';
-import { formatWhatsAppMessage, openWhatsApp, cn, isStudentOverdue } from '@/lib/utils';
+import { formatWhatsAppMessage, openWhatsApp, cn, isStudentOverdue, isValidPhone } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 
 export default function StudentsPage() {
@@ -250,6 +250,12 @@ export default function StudentsPage() {
                   if (editingStudent) {
                     try {
                       setEditError(null);
+                      
+                      if (!isValidPhone(editingStudent.phoneNumber)) {
+                        setEditError('Please enter a valid 10-digit phone number.');
+                        return;
+                      }
+
                       await updateStudent(editingStudent.id, editingStudent);
                       setEditingStudent(null);
                     } catch (err: any) {
@@ -287,6 +293,9 @@ export default function StudentsPage() {
                       value={editingStudent.phoneNumber}
                       onChange={(e) => setEditingStudent({ ...editingStudent, phoneNumber: e.target.value })}
                     />
+                    {editingStudent.phoneNumber && !isValidPhone(editingStudent.phoneNumber) && (
+                      <p className="mt-1 ml-1 text-[11px] font-medium text-rose-500">Invalid phone number</p>
+                    )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="relative">

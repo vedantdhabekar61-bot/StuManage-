@@ -6,7 +6,7 @@ import { User, Armchair, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Loade
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
-import { cn } from '@/lib/utils';
+import { cn, isValidPhone } from '@/lib/utils';
 
 export default function AddStudentPage() {
   const router = useRouter();
@@ -68,6 +68,13 @@ export default function AddStudentPage() {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
+    
+    // Validate phone number
+    if (!isValidPhone(formData.phoneNumber)) {
+      setError('Please enter a valid 10-digit phone number starting with 6-9.');
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       await addStudent({
@@ -156,6 +163,9 @@ export default function AddStudentPage() {
                     value={formData.phoneNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   />
+                  {formData.phoneNumber && !isValidPhone(formData.phoneNumber) && (
+                    <p className="mt-1 ml-1 text-[11px] font-medium text-rose-500">Invalid phone number</p>
+                  )}
                 </div>
               </div>
             </div>
