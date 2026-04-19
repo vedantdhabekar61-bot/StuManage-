@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, IndianRupee, Edit2, School, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap } from 'lucide-react';
+import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'motion/react';
@@ -13,6 +13,7 @@ import { cn, isStudentOverdue } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { SubscriptionBanner } from '@/components/subscription-banner';
 import { useAuth } from '@/hooks/use-auth';
+import { Logo } from '@/components/logo';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -105,11 +106,12 @@ export default function Dashboard() {
     <main className="flex min-h-screen flex-col bg-[#FDFBF7] pb-24">
       {/* Header */}
       <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
+          <Logo size={42} />
           <div className="flex flex-col">
             <span className="text-xs font-semibold text-[#78716C]">Good morning,</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold text-[#1C1917] tracking-tight">{user?.name || 'Admin'}</span>
+              <span className="text-xl font-extrabold text-[#1C1917] tracking-tight truncate max-w-[120px]">{user?.name || 'Admin'}</span>
             </div>
             <button 
               onClick={() => {
@@ -119,11 +121,10 @@ export default function Dashboard() {
               className="flex items-center gap-1.5 mt-0.5 group"
             >
               <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
-                <School className="h-3 w-3 text-teal-600" />
-                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate max-w-[120px]">
+                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate max-w-[100px]">
                   {settings.libraryName}
                 </span>
-                <Edit2 className="h-2.5 w-2.5 text-teal-600/50" />
+                <Edit2 className="h-2 w-2 text-teal-600/50" />
               </div>
             </button>
           </div>

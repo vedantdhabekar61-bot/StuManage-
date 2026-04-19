@@ -15,6 +15,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
+import { Logo } from '@/components/logo';
 
 export default function TrialPage() {
   const router = useRouter();
@@ -67,11 +68,9 @@ export default function TrialPage() {
           animate={{ scale: 1, opacity: 1 }}
           className="relative z-10 flex flex-col items-center text-center text-white"
         >
-          <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-[2.5rem] bg-white/20 backdrop-blur-md shadow-2xl border border-white/30">
-            <ShieldCheck className="h-12 w-12 text-white" />
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight">StuManage <span className="text-teal-100">app</span></h1>
-          <p className="text-teal-50 font-medium mt-2 opacity-80">Smart Student Management</p>
+          <Logo size={96} variant="glass" className="mb-6" />
+          <h1 className="text-4xl font-black tracking-tighter uppercase">Stu<span className="text-teal-100">Manage</span></h1>
+          <p className="text-teal-50 font-medium mt-2 opacity-80 uppercase tracking-widest text-[10px]">Study Smart. Manage Better.</p>
         </motion.div>
       </div>
 

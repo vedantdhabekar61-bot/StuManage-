@@ -3,8 +3,8 @@
   "short_name": "StuManage",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#2563eb",
+  "background_color": "#FDFBF7",
+  "theme_color": "#0ea495",
   "orientation": "portrait",
   "icons": [
     {

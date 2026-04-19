@@ -5,8 +5,9 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'motion/react';
-import { Mail, Lock, ArrowRight, Activity } from 'lucide-react';
+import { Mail, Lock, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from '@/components/logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -66,21 +67,14 @@ export default function LoginPage() {
         className="w-full max-w-sm space-y-10"
       >
         <div className="flex flex-col items-center text-center">
-          <motion.div 
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
-            className="flex h-20 w-20 items-center justify-center rounded-[2rem] bg-teal-500 text-white shadow-xl shadow-teal-100"
-          >
-            <Activity className="h-10 w-10" />
-          </motion.div>
+          <Logo size={88} className="mb-6" />
           <motion.h1 
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="mt-8 text-4xl font-bold tracking-tight text-slate-900"
+            className="text-4xl font-black tracking-tighter text-slate-900 uppercase"
           >
-            StuManage <span className="text-teal-500">app</span>
+            Stu<span className="text-teal-500">Manage</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
