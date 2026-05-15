@@ -16,7 +16,7 @@ declare global {
 
 export default function BillingPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { isActive, daysLeft } = useSubscription();
   const [loading, setLoading] = useState(false);
 
@@ -64,6 +64,7 @@ export default function BillingPage() {
 
           const result = await verifyRes.json();
           if (result.status === 'success') {
+            await refreshProfile();
             alert('Payment Successful! Your Pro features are now active.');
             router.push('/');
           } else {
