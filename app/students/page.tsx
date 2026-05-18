@@ -59,7 +59,7 @@ export default function StudentsPage() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -67,7 +67,7 @@ export default function StudentsPage() {
           </div>
           <button 
             onClick={() => router.push('/add')}
-            className="w-10 h-10 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-primary active:scale-95 transition-transform"
+            className="w-11 h-11 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-primary active:scale-95 transition-transform"
           >
             <PlusCircle className="h-6 w-6" />
           </button>
@@ -156,9 +156,11 @@ export default function StudentsPage() {
                         e.stopPropagation();
                         setDeletingStudent(student);
                       }}
-                      className="h-6 w-6 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center active:scale-95 transition-transform"
+                      className="h-11 w-11 -mr-2 flex items-center justify-center active:scale-95 transition-transform"
                     >
-                      <X className="h-4 w-4" />
+                      <div className="h-6 w-6 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center">
+                        <X className="h-4 w-4" />
+                      </div>
                     </button>
                   </div>
                   <span className="text-[11px] font-bold text-[#78716C]">₹{student.price}/mo</span>
@@ -288,6 +290,7 @@ export default function StudentsPage() {
                     <input 
                       required
                       type="tel" 
+                      inputMode="numeric"
                       placeholder="Phone Number" 
                       className="w-full bg-[#FDFBF7] border-none rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-semibold focus:ring-2 focus:ring-primary focus:outline-none"
                       value={editingStudent.phoneNumber}
@@ -303,6 +306,7 @@ export default function StudentsPage() {
                       <input 
                         required
                         type="number" 
+                        inputMode="numeric"
                         placeholder="Seat" 
                         className="w-full bg-[#FDFBF7] border-none rounded-2xl py-3.5 pl-12 pr-4 text-[15px] font-semibold focus:ring-2 focus:ring-primary focus:outline-none"
                         value={editingStudent.deskNumber}

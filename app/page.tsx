@@ -139,7 +139,7 @@ export default function Dashboard() {
           </Link>
           <button 
             onClick={logout}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -262,7 +262,7 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-24 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-20">
+      <div className="fixed bottom-28 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-[40]">
         <button 
           onClick={() => router.push('/add')}
           className="bg-teal-500 text-white shadow-lg shadow-teal-500/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"

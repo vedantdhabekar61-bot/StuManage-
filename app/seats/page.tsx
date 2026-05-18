@@ -62,7 +62,7 @@ export default function SeatsPage() {
           <div className="flex items-center gap-3">
             <button 
               onClick={() => router.back()}
-              className="w-10 h-10 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
+              className="w-11 h-11 rounded-full bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex items-center justify-center text-[#78716C] active:scale-95 transition-transform"
             >
               <ArrowLeft className="h-5 w-5" />
             </button>
@@ -74,7 +74,7 @@ export default function SeatsPage() {
               setTempSeats(settings.totalSeats);
             }}
             className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95",
+              "w-11 h-11 rounded-full flex items-center justify-center transition-all active:scale-95",
               isEditing ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-white shadow-[0_4px_14px_rgba(28,25,23,0.05)] text-[#78716C]"
             )}
           >
@@ -126,6 +126,7 @@ export default function SeatsPage() {
                   <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Total Capacity</span>
                   <input 
                     type="number" 
+                    inputMode="numeric"
                     className="w-24 bg-[#FDFBF7] border-none rounded-xl px-3 py-2 text-[15px] font-bold focus:ring-2 focus:ring-primary focus:outline-none"
                     value={tempSeats}
                     onChange={(e) => setTempSeats(Number(e.target.value))}
@@ -134,13 +135,13 @@ export default function SeatsPage() {
                 <div className="flex items-center gap-2">
                   <button 
                     onClick={handleSaveSeats}
-                    className="w-10 h-10 rounded-full bg-primary text-white shadow-lg shadow-primary/20 flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-11 h-11 rounded-full bg-primary text-white shadow-lg shadow-primary/20 flex items-center justify-center active:scale-95 transition-transform"
                   >
                     <Check className="h-5 w-5" />
                   </button>
                   <button 
                     onClick={() => setIsEditing(false)}
-                    className="w-10 h-10 rounded-full bg-[#FDFBF7] text-[#78716C] flex items-center justify-center active:scale-95 transition-transform"
+                    className="w-11 h-11 rounded-full bg-[#FDFBF7] text-[#78716C] flex items-center justify-center active:scale-95 transition-transform"
                   >
                     <X className="h-5 w-5" />
                   </button>

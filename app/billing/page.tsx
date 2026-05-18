@@ -7,6 +7,7 @@ import { useSubscription } from '@/hooks/use-subscription';
 import { Check, CreditCard, ShieldCheck, Zap, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
+import { useSnackbar } from '@/components/snackbar';
 
 declare global {
   interface Window {
@@ -16,9 +17,10 @@ declare global {
 
 export default function BillingPage() {
   const router = useRouter();
-  const { user, refreshProfile } = useAuth();
+  const { user } = useAuth();
   const { isActive, daysLeft } = useSubscription();
   const [loading, setLoading] = useState(false);
+  const { show } = useSnackbar();
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -64,18 +66,19 @@ export default function BillingPage() {
 
           const result = await verifyRes.json();
           if (result.status === 'success') {
-            await refreshProfile();
-            alert('Payment Successful! Your Pro features are now active.');
-            router.push('/');
+            show('Payment Successful! Your Pro features are now active.', 'success');
+            setTimeout(() => {
+              router.push('/');
+            }, 2000);
           } else {
-            alert('Payment Verification Failed. Please contact support.');
+            show('Payment Verification Failed. Please contact support.', 'error');
           }
         },
         prefill: {
           email: user.email,
         },
         theme: {
-          color: '#4f46e5',
+          color: '#0ea495',
         },
       };
 
@@ -83,7 +86,7 @@ export default function BillingPage() {
       rzp.open();
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Something went wrong. Please try again.');
+      show('Something went wrong. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -94,7 +97,7 @@ export default function BillingPage() {
       <header className="mb-8 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>

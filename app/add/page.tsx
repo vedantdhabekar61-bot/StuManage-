@@ -109,7 +109,7 @@ export default function AddStudentPage() {
       <header className="flex items-center gap-6 px-6 pt-8 pb-4 bg-white sticky top-0 z-10">
         <button 
           onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full text-[#1C1917] transition-all active:scale-95"
+          className="flex h-11 w-11 items-center justify-center rounded-full text-[#1C1917] transition-all active:scale-95"
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
@@ -158,6 +158,7 @@ export default function AddStudentPage() {
                   <input 
                     required
                     type="tel" 
+                    inputMode="numeric"
                     placeholder="98765 43210" 
                     className="w-full bg-white border border-gray-200 rounded-3xl py-4 pl-16 pr-6 text-[15px] font-medium placeholder:text-[#78716C]/40 focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
                     value={formData.phoneNumber}
@@ -183,6 +184,7 @@ export default function AddStudentPage() {
                 <input 
                   required
                   type="number" 
+                  inputMode="numeric"
                   placeholder="Enter assigned desk number" 
                   className="w-full bg-[#F5F7F9] border-none rounded-2xl py-4 px-6 text-[15px] font-medium placeholder:text-[#78716C]/50 focus:ring-2 focus:ring-[#0ea495]/20 focus:outline-none transition-all"
                   value={formData.deskNumber}
@@ -252,6 +254,7 @@ export default function AddStudentPage() {
                   <input 
                     required
                     type="number" 
+                    inputMode="numeric"
                     className="w-full bg-white border border-gray-200 rounded-3xl py-4 px-6 text-[18px] font-bold text-[#1C1917] focus:ring-2 focus:ring-[#0ea495]/20 focus:border-[#0ea495] focus:outline-none transition-all"
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
