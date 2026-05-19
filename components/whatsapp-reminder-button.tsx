@@ -81,26 +81,26 @@ export function WhatsAppReminderButton({ student, className, showText = true }: 
       {/* Error Modal (Fallback) */}
       <AnimatePresence>
         {error && (
-          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-6">
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-foreground/40 backdrop-blur-sm p-6">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-white p-8 shadow-2xl border border-white"
+              className="w-full max-w-sm overflow-hidden rounded-[2.5rem] bg-card p-8 shadow-2xl border border-border/10"
             >
               <div className="flex flex-col items-center gap-6 text-center">
-                <div className="rounded-[1.5rem] bg-rose-50 p-5 text-rose-600 border border-rose-100">
+                <div className="rounded-[1.5rem] bg-rose-50 dark:bg-rose-950/20 p-5 text-rose-600 border border-rose-100 dark:border-rose-900/30">
                   <MessageCircle className="h-10 w-10" />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <h3 className="text-xl font-bold text-slate-900">WhatsApp Error</h3>
-                  <p className="text-sm font-medium text-slate-400 leading-relaxed">
+                  <h3 className="text-xl font-bold text-foreground">WhatsApp Error</h3>
+                  <p className="text-sm font-medium text-muted leading-relaxed">
                     WhatsApp not installed or popup blocked. Please check your settings to send reminders.
                   </p>
                 </div>
                 <button
                   onClick={() => setError(null)}
-                  className="mt-2 w-full rounded-2xl bg-teal-500 py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-100 transition-all active:scale-95"
+                  className="mt-2 w-full rounded-2xl bg-primary py-4 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-primary/20 transition-all active:scale-95"
                 >
                   Got it
                 </button>

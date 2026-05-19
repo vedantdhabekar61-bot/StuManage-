@@ -1,9 +1,9 @@
 'use client';
 
-import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap } from 'lucide-react';
+import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap, Clock } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { useSettings } from '@/hooks/use-settings';
 import { useStudents } from '@/hooks/use-students';
 import { Student } from '@/lib/types';
@@ -18,10 +18,28 @@ import { Logo } from '@/components/logo';
 export default function Dashboard() {
   const router = useRouter();
   const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
-  const { students, isLoaded: studentsLoaded, updateStudent } = useStudents();
+  const { students, isLoaded: studentsLoaded, updateStudent, refreshStudents } = useStudents();
   const { logout, user, isLoaded: authLoaded } = useAuth();
   const [isEditingLibrary, setIsEditingLibrary] = useState(false);
   const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const { scrollY } = useScroll();
+  const pullDistance = 80;
+  const refreshOpacity = useTransform(scrollY, [-pullDistance, 0], [1, 0]);
+  const refreshScale = useTransform(scrollY, [-pullDistance, 0], [1, 0.5]);
+
+  useEffect(() => {
+    const handleScroll = async () => {
+      if (window.scrollY < -pullDistance && !isRefreshing) {
+        setIsRefreshing(true);
+        await refreshStudents();
+        setIsRefreshing(false);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isRefreshing, refreshStudents]);
 
   useEffect(() => {
     if (authLoaded && !user) {
@@ -103,15 +121,32 @@ export default function Dashboard() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-[#FDFBF7] pb-24">
+    <main className="flex min-h-screen flex-col bg-background pb-24">
+      {/* Pull to Refresh Indicator */}
+      <motion.div 
+        style={{ opacity: refreshOpacity, scale: refreshScale }}
+        className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
+      >
+        <div className="bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          {isRefreshing ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          ) : (
+            <Clock className="h-4 w-4" />
+          )}
+          <span className="text-[10px] font-bold uppercase tracking-widest">
+            {isRefreshing ? 'Updating...' : 'Pull to refresh'}
+          </span>
+        </div>
+      </motion.div>
+
       {/* Header */}
-      <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
+      <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
         <div className="flex items-center gap-4">
           <Logo size={42} />
           <div className="flex flex-col">
-            <span className="text-xs font-semibold text-[#78716C]">Good morning,</span>
+            <span className="text-xs font-semibold text-muted">Good morning,</span>
             <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold text-[#1C1917] tracking-tight truncate max-w-[120px]">{user?.name || 'Admin'}</span>
+              <span className="text-xl font-extrabold text-foreground tracking-tight truncate max-w-[120px]">{user?.name || 'Admin'}</span>
             </div>
             <button 
               onClick={() => {
@@ -120,11 +155,11 @@ export default function Dashboard() {
               }}
               className="flex items-center gap-1.5 mt-0.5 group"
             >
-              <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20">
-                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate max-w-[100px]">
+              <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/10 transition-colors group-hover:bg-primary/20">
+                <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate max-w-[100px]">
                   {settings.libraryName}
                 </span>
-                <Edit2 className="h-2 w-2 text-teal-600/50" />
+                <Edit2 className="h-2 w-2 text-primary/50" />
               </div>
             </button>
           </div>
@@ -132,14 +167,14 @@ export default function Dashboard() {
         <div className="flex items-center gap-3">
           <Link 
             href="/billing"
-            className="flex h-10 items-center gap-2 rounded-full bg-amber-500/10 px-4 text-amber-600 transition-all hover:bg-amber-500/20 active:scale-95"
+            className="flex h-10 items-center gap-2 rounded-full bg-accent/10 px-4 text-accent transition-all hover:bg-accent/20 active:scale-95"
           >
             <Zap className="h-4 w-4 fill-current" />
             <span className="text-[10px] font-black uppercase tracking-widest">Upgrade</span>
           </Link>
           <button 
             onClick={logout}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm text-[#1C1917] transition-colors hover:text-rose-600 active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft text-foreground transition-colors hover:text-rose-600 active:scale-95"
           >
             <LogOut className="h-5 w-5" />
           </button>
@@ -151,17 +186,17 @@ export default function Dashboard() {
       <div className="flex flex-col gap-8 px-6 mt-4">
         {/* Primary Metric: Revenue */}
         <section>
-          <div className="bg-white rounded-[2.5rem] p-6 shadow-sm border border-teal-500/5 flex items-center justify-between transition-all hover:scale-[1.01]">
+          <div className="bg-card rounded-[2.5rem] p-6 shadow-soft border border-primary/5 flex items-center justify-between transition-all hover:scale-[1.01]">
             <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-teal-500 flex items-center justify-center text-white shadow-lg shadow-teal-500/20">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
                 <IndianRupee className="h-8 w-8" />
               </div>
               <div>
-                <p className="text-xs font-bold text-[#78716C] uppercase tracking-widest">Monthly Revenue</p>
-                <p className="text-3xl font-black text-[#1C1917] tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
+                <p className="text-xs font-bold text-muted uppercase tracking-widest">Monthly Revenue</p>
+                <p className="text-3xl font-black text-foreground tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
               </div>
             </div>
-            <Link href="/reminders" className="w-10 h-10 rounded-full bg-[#FDFBF7] flex items-center justify-center text-teal-600 active:scale-95 transition-transform">
+            <Link href="/reminders" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-primary active:scale-95 transition-transform">
               <ChevronRight className="h-6 w-6" />
             </Link>
           </div>
@@ -185,13 +220,13 @@ export default function Dashboard() {
         {/* Action Alerts */}
         <section className="flex flex-col gap-4 mb-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-[#1C1917] flex items-center gap-2">
+            <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
               Action Alerts
-              <span className="bg-amber-500/20 text-amber-600 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full">
                 {metrics.urgentActions.length} Pending
               </span>
             </h2>
-            <Link href="/reminders" className="text-sm font-bold text-teal-600">View All</Link>
+            <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
           </div>
           
           <div className="flex flex-col gap-4">
@@ -207,27 +242,27 @@ export default function Dashboard() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4 transition-all hover:scale-[1.01]"
+                    className="bg-card rounded-3xl p-5 shadow-soft border border-border/5 flex flex-col gap-4 transition-all hover:scale-[1.01]"
                   >
                     {/* Top Row: Name + Amount */}
                     <div className="flex items-center justify-between">
-                      <p className="font-bold text-slate-900 text-lg">{student.studentName}</p>
-                      <p className="font-bold text-slate-900 text-lg">₹{student.price}</p>
+                      <p className="font-extrabold text-foreground text-lg">{student.studentName}</p>
+                      <p className="font-extrabold text-foreground text-lg">₹{student.price}</p>
                     </div>
 
                     {/* Middle Row: Seat + Status */}
                     <div className="flex items-center justify-between">
-                      <p className="text-sm font-medium text-slate-500">Seat {student.deskNumber}</p>
+                      <p className="text-sm font-bold text-muted">Seat {student.deskNumber}</p>
                       <p className={cn(
-                        "text-sm font-bold",
-                        isOverdue ? "text-rose-600" : "text-amber-600"
+                        "text-sm font-black",
+                        isOverdue ? "text-rose-600" : "text-accent"
                       )}>
                         {isOverdue ? `${Math.abs(daysLeft)}d overdue` : `Due in ${daysLeft}d`}
                       </p>
                     </div>
 
                     {/* Divider */}
-                    <div className="h-px bg-slate-50 w-full" />
+                    <div className="h-px bg-border/20 w-full" />
 
                     {/* Bottom Section: Stacked Actions */}
                     <div className="flex flex-col gap-2.5">
@@ -238,7 +273,7 @@ export default function Dashboard() {
                       />
                       <button 
                         onClick={() => handleMarkAsPaid(student)}
-                        className="w-full h-12 rounded-2xl bg-white text-slate-600 border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest transition-all hover:bg-slate-50 active:scale-95"
+                        className="w-full h-12 rounded-2xl bg-background text-muted border border-border/50 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all hover:bg-muted/5 active:scale-95"
                       >
                         <Check className="h-4 w-4" />
                         Mark as Paid
@@ -250,11 +285,11 @@ export default function Dashboard() {
             </AnimatePresence>
             
             {metrics.urgentActions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-white rounded-2xl border-2 border-dashed border-slate-200">
-                <div className="mb-3 rounded-full bg-[#FDFBF7] p-4 text-slate-200">
+              <div className="flex flex-col items-center justify-center py-12 text-center bg-card rounded-[2rem] border border-dashed border-border/50">
+                <div className="mb-3 rounded-full bg-background p-4 text-muted/30">
                   <ShieldCheck className="h-8 w-8" />
                 </div>
-                <p className="font-bold text-[#78716C]">No urgent actions today!</p>
+                <p className="font-bold text-muted">No urgent actions today!</p>
               </div>
             )}
           </div>
@@ -262,13 +297,13 @@ export default function Dashboard() {
       </div>
 
       {/* Floating Action Button */}
-      <div className="fixed bottom-28 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-[40]">
+      <div className="fixed bottom-24 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-[60]">
         <button 
           onClick={() => router.push('/add')}
-          className="bg-teal-500 text-white shadow-lg shadow-teal-500/30 rounded-full h-14 px-5 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
+          className="bg-primary text-white shadow-xl shadow-primary/30 rounded-full h-14 px-6 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
         >
           <PlusCircle className="h-6 w-6" />
-          Add Student
+          <span>Add Student</span>
         </button>
       </div>
 
@@ -281,27 +316,27 @@ export default function Dashboard() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsEditingLibrary(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] bg-white p-8 shadow-2xl"
+              className="relative w-full max-w-sm rounded-[2.5rem] bg-card p-8 shadow-2xl"
             >
               <div className="flex flex-col gap-6">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-slate-900 tracking-tight">Institute Name</h3>
+                  <h3 className="text-xl font-black text-foreground tracking-tight">Institute Name</h3>
                   <button 
                     onClick={() => setIsEditingLibrary(false)}
-                    className="h-8 w-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400"
+                    className="h-11 w-11 rounded-full bg-background flex items-center justify-center text-muted active:scale-95 transition-transform"
                   >
-                    <X className="h-5 w-5" />
+                    <X className="h-6 w-6" />
                   </button>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
                     Library / Institute Name
                   </label>
                   <input 
@@ -309,7 +344,7 @@ export default function Dashboard() {
                     value={newLibraryName}
                     onChange={(e) => setNewLibraryName(e.target.value)}
                     placeholder="e.g. Modern Study Library"
-                    className="w-full rounded-2xl bg-slate-50 border-none px-5 py-4 text-sm font-bold text-slate-900 focus:ring-2 focus:ring-teal-500/20 transition-all"
+                    className="w-full rounded-2xl bg-background border-none px-5 py-4 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted/50"
                     autoFocus
                   />
                 </div>
@@ -319,7 +354,7 @@ export default function Dashboard() {
                     updateSettings({ libraryName: newLibraryName });
                     setIsEditingLibrary(false);
                   }}
-                  className="w-full h-14 rounded-2xl bg-teal-500 text-white font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 active:scale-95 transition-transform"
+                  className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform"
                 >
                   Save Changes
                 </button>

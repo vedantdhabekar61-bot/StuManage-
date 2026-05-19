@@ -8,14 +8,20 @@ const jakarta = Plus_Jakarta_Sans({
   weight: ['400', '500', '600', '700', '800']
 });
 
+import type { Viewport } from 'next';
+
 export const metadata: Metadata = {
   title: 'StuManage app',
   description: 'Manage your reading room and study library efficiently.',
   manifest: '/manifest.json',
 };
 
-export const viewport = {
+export const viewport: Viewport = {
   themeColor: '#0ea495',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 import { BottomNav } from '@/components/bottom-nav';
@@ -29,13 +35,13 @@ import { SnackbarProvider } from '@/components/snackbar';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable}`}>
-      <body className="bg-[#FDFBF7] text-[#1C1917] antialiased font-sans" suppressHydrationWarning>
+      <body className="bg-background text-foreground antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
           <SnackbarProvider>
             <AuthGuard>
               <StudentsProvider>
                 <SubscriptionGuard>
-                  <div className="mx-auto min-h-screen max-w-md bg-[#FDFBF7] pb-20">
+                  <div className="mx-auto min-h-screen max-w-md bg-background pb-20">
                     <PageTransition>
                       {children}
                     </PageTransition>

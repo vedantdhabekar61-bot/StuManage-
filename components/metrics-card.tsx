@@ -11,7 +11,7 @@ interface MetricsCardProps {
 export function MetricsCard({ label, value, icon: Icon, className, trend }: MetricsCardProps & { trend?: string }) {
   return (
     <div className={cn(
-      "bg-white rounded-2xl p-4 shadow-[0_4px_14px_rgba(28,25,23,0.05)] flex flex-col justify-between h-[120px] transition-all hover:scale-[1.01]",
+      "bg-card rounded-2xl p-4 shadow-soft flex flex-col justify-between h-[120px] transition-all hover:scale-[1.01] border border-border/10",
       className
     )}>
       <div className="flex items-center justify-between mb-2">
@@ -19,14 +19,14 @@ export function MetricsCard({ label, value, icon: Icon, className, trend }: Metr
           <Icon className="h-5 w-5" />
         </div>
         {trend && (
-          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">
+          <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
             {trend}
           </span>
         )}
       </div>
       <div>
-        <div className="text-3xl font-extrabold text-[#1C1917] tracking-tight">{value}</div>
-        <div className="text-sm font-semibold text-[#78716C] mt-0.5">{label}</div>
+        <div className="text-3xl font-extrabold text-foreground tracking-tight">{value}</div>
+        <div className="text-sm font-semibold text-muted mt-0.5">{label}</div>
       </div>
     </div>
   );

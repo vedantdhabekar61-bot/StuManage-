@@ -9,13 +9,31 @@
   --color-secondary-foreground: #ffffff;
   --color-accent: #f59e0b;
   --color-accent-foreground: #ffffff;
-  --color-background: #FDFBF7;
-  --color-foreground: #1C1917;
-  --color-muted: #78716C;
-  --color-muted-foreground: #78716C;
-  --color-card: #ffffff;
-  --color-card-foreground: #1C1917;
-  --color-border: #dee4e1;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted);
+  --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-border: var(--border);
+}
+
+:root {
+  --background: #FDFBF7;
+  --foreground: #1C1917;
+  --muted: #78716C;
+  --card: #ffffff;
+  --border: #dee4e1;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0C0A09;
+    --foreground: #FAFAF9;
+    --muted: #A8A29E;
+    --card: #1C1917;
+    --border: #292524;
+  }
 }
 
 @layer base {
