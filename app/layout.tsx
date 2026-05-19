@@ -1,5 +1,12 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans } from 'next/font/google';
+import { BottomNav } from '@/components/bottom-nav';
+import { PageTransition } from '@/components/page-transition';
+import { AuthProvider } from '@/hooks/use-auth';
+import { StudentsProvider } from '@/hooks/use-students';
+import { AuthGuard } from '@/components/auth-guard';
+import { SubscriptionGuard } from '@/components/subscription-guard';
+import { SnackbarProvider } from '@/components/snackbar';
 import '@/globals.css';
 
 const jakarta = Plus_Jakarta_Sans({ 
@@ -7,8 +14,6 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-sans',
   weight: ['400', '500', '600', '700', '800']
 });
-
-import type { Viewport } from 'next';
 
 export const metadata: Metadata = {
   title: 'StuManage app',
@@ -21,16 +26,8 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  userScalable: false,
+  userScalable: false, // Note: Set to false prevents zoom. Good for native app feel, bad for accessibility.
 };
-
-import { BottomNav } from '@/components/bottom-nav';
-import { PageTransition } from '@/components/page-transition';
-import { AuthProvider } from '@/hooks/use-auth';
-import { StudentsProvider } from '@/hooks/use-students';
-import { AuthGuard } from '@/components/auth-guard';
-import { SubscriptionGuard } from '@/components/subscription-guard';
-import { SnackbarProvider } from '@/components/snackbar';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -38,6 +35,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="bg-background text-foreground antialiased font-sans" suppressHydrationWarning>
         <AuthProvider>
           <SnackbarProvider>
+            {/* Make sure AuthGuard and SubscriptionGuard ignore public routes like /login */}
             <AuthGuard>
               <StudentsProvider>
                 <SubscriptionGuard>
