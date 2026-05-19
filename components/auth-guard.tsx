@@ -46,7 +46,17 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const isAuthPage = pathname === '/login' || pathname === '/auth';
   const showWelcome = !hasSeenWelcome && !user;
+
+  // Prevent flash of content if we are about to redirect to login
+  if (!user && !isAuthPage && !showWelcome) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
+        <Activity className="h-10 w-10 animate-spin text-[#0ea495]" />
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence mode="wait">

@@ -34,11 +34,6 @@ export default function RemindersPage() {
       const matchesSearch = student.studentName.toLowerCase().includes(searchQuery.toLowerCase()) || 
                            student.phoneNumber.includes(searchQuery);
       
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const dueDate = new Date(student.expiryDate);
-      dueDate.setHours(0, 0, 0, 0);
-
       const isOverdue = isStudentOverdue(student);
       const isPaid = student.paymentStatus === 'Paid';
 
@@ -49,19 +44,15 @@ export default function RemindersPage() {
   }, [students, searchQuery, activeFilter]);
 
   const stats = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const overdueStudents = students.filter(isStudentOverdue);
-
+    const overdueCount = students.filter(isStudentOverdue).length;
     const paidThisMonthCount = students.filter(s => s.paymentStatus === 'Paid').length;
     
     const totalPendingAmount = students
-      .filter(s => s.paymentStatus !== 'Paid' || isStudentOverdue(s))
+      .filter(s => s.paymentStatus !== 'Paid')
       .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
     return { 
-      overdueCount: overdueStudents.length, 
+      overdueCount, 
       paidThisMonthCount, 
       totalPendingAmount 
     };

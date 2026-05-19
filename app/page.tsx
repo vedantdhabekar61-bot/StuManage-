@@ -20,37 +20,26 @@ export default function Dashboard() {
   const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
   const { students, isLoaded: studentsLoaded, updateStudent, refreshStudents } = useStudents();
   const { logout, user, isLoaded: authLoaded } = useAuth();
-  
   const [isEditingLibrary, setIsEditingLibrary] = useState(false);
   const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  // FIX 2: State to track which students are currently being processed
-  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
 
   const { scrollY } = useScroll();
   const pullDistance = 80;
   const refreshOpacity = useTransform(scrollY, [-pullDistance, 0], [1, 0]);
   const refreshScale = useTransform(scrollY, [-pullDistance, 0], [1, 0.5]);
 
-  // FIX 1: Optimized Scroll Listener
   useEffect(() => {
-    let isFetching = false; 
-
     const handleScroll = async () => {
-      if (window.scrollY < -pullDistance && !isFetching) {
-        isFetching = true;
+      if (window.scrollY < -pullDistance && !isRefreshing) {
         setIsRefreshing(true);
         await refreshStudents();
         setIsRefreshing(false);
-        isFetching = false;
       }
     };
-    
-    // { passive: true } prevents the browser from waiting on JS, stopping scroll stutter
-    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [refreshStudents]);
+  }, [isRefreshing, refreshStudents]);
 
   useEffect(() => {
     if (authLoaded && !user) {
@@ -64,61 +53,47 @@ export default function Dashboard() {
     }
   }, [user, authLoaded, router]);
 
-  // FIX 3: Single-pass metric calculation
   const metrics = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const activeStudents = students.length;
     const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
+    
+    const overdueStudents = students.filter(isStudentOverdue);
+
+    const pendingFees = students
+      .filter(s => s.paymentStatus !== 'Paid')
+      .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
+
+    const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? (Number(s.price) || 0) : 0), 0);
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
-
-    const calculated = students.reduce((acc, s) => {
+    
+    const urgentActions = students.filter(s => {
       const isOverdue = isStudentOverdue(s);
-      const price = Number(s.price) || 0;
-      const isPaid = s.paymentStatus === 'Paid';
+      if (isOverdue) return true;
 
-      // Calculate Revenue & Pending Fees
-      if (isPaid && !isOverdue) {
-        acc.revenueThisMonth += price;
-      } else {
-        acc.pendingFees += price;
-      }
+      // If not overdue, but already Paid, it's not urgent
+      if (s.paymentStatus === 'Paid') return false;
 
-      // Calculate Overdue Students
-      if (isOverdue) {
-        acc.overdueStudentsCount += 1;
-      }
-
-      // Calculate Urgent Actions
       const expiry = new Date(s.expiryDate);
       const diffTime = expiry.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-      if (isOverdue || (!isPaid && diffDays <= 3)) {
-        acc.urgentActions.push(s);
-      }
-
-      return acc;
-    }, {
-      overdueStudentsCount: 0,
-      pendingFees: 0,
-      revenueThisMonth: 0,
-      urgentActions: [] as Student[]
+      return diffDays <= 3;
     });
 
     return {
       activeStudents,
       availableSeats,
+      overdueStudentsCount: overdueStudents.length,
+      pendingFees,
+      revenueThisMonth,
       occupancyPercentage,
-      ...calculated
+      urgentActions
     };
   }, [students, settings.totalSeats]);
 
   const handleMarkAsPaid = async (student: Student) => {
-    // Lock the button
-    setProcessingIds(prev => new Set(prev).add(student.id)); 
-    
     const now = new Date();
     const currentExpiry = new Date(student.expiryDate);
     const baseDate = currentExpiry > now ? currentExpiry : now;
@@ -134,13 +109,6 @@ export default function Dashboard() {
       });
     } catch (e) {
       console.error('Failed to mark as paid', e);
-    } finally {
-      // Unlock the button
-      setProcessingIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(student.id);
-        return newSet;
-      }); 
     }
   };
 
@@ -266,7 +234,6 @@ export default function Dashboard() {
               {metrics.urgentActions.map((student) => {
                 const isOverdue = isStudentOverdue(student);
                 const daysLeft = Math.ceil((new Date(student.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                const isProcessing = processingIds.has(student.id);
                 
                 return (
                   <motion.div 
@@ -277,11 +244,13 @@ export default function Dashboard() {
                     exit={{ opacity: 0, scale: 0.95 }}
                     className="bg-card rounded-3xl p-5 shadow-soft border border-border/5 flex flex-col gap-4 transition-all hover:scale-[1.01]"
                   >
+                    {/* Top Row: Name + Amount */}
                     <div className="flex items-center justify-between">
                       <p className="font-extrabold text-foreground text-lg">{student.studentName}</p>
                       <p className="font-extrabold text-foreground text-lg">₹{student.price}</p>
                     </div>
 
+                    {/* Middle Row: Seat + Status */}
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-bold text-muted">Seat {student.deskNumber}</p>
                       <p className={cn(
@@ -292,8 +261,10 @@ export default function Dashboard() {
                       </p>
                     </div>
 
+                    {/* Divider */}
                     <div className="h-px bg-border/20 w-full" />
 
+                    {/* Bottom Section: Stacked Actions */}
                     <div className="flex flex-col gap-2.5">
                       <WhatsAppReminderButton
                         student={student}
@@ -302,18 +273,10 @@ export default function Dashboard() {
                       />
                       <button 
                         onClick={() => handleMarkAsPaid(student)}
-                        disabled={isProcessing}
-                        className={cn(
-                          "w-full h-12 rounded-2xl bg-background text-muted border border-border/50 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all",
-                          isProcessing ? "opacity-50 cursor-not-allowed" : "hover:bg-muted/5 active:scale-95"
-                        )}
+                        className="w-full h-12 rounded-2xl bg-background text-muted border border-border/50 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all hover:bg-muted/5 active:scale-95"
                       >
-                        {isProcessing ? (
-                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted border-t-transparent" />
-                        ) : (
-                          <Check className="h-4 w-4" />
-                        )}
-                        {isProcessing ? 'Processing...' : 'Mark as Paid'}
+                        <Check className="h-4 w-4" />
+                        Mark as Paid
                       </button>
                     </div>
                   </motion.div>

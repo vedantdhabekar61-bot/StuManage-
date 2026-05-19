@@ -37,22 +37,20 @@ function getWhatsAppUrl(student: Student, message: string): string {
 }
 
 export function isStudentOverdue(student: Student): boolean {
+  if (student.paymentStatus === 'Paid') return false;
   if (!student.expiryDate) return false;
   
   const expiry = new Date(student.expiryDate);
+  if (isNaN(expiry.getTime())) return false;
+  
   const now = new Date();
   
   // Reset time to start of day for accurate comparison
   expiry.setHours(0, 0, 0, 0);
   now.setHours(0, 0, 0, 0);
   
-  // 1. If expiry date is in the past, they are overdue regardless of status
-  if (expiry < now) return true;
-  
-  // 2. If status is NOT Paid, flag them (could be Pending or explicitly Overdue)
-  if (student.paymentStatus !== 'Paid') return true;
-  
-  return false;
+  // Only overdue if the date has strictly passed (is before today)
+  return expiry < now;
 }
 
 export function isValidPhone(phone: string): boolean {

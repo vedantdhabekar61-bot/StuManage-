@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { User, Armchair, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
@@ -8,15 +8,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { cn, isValidPhone } from '@/lib/utils';
 
-// Helper to get local date string (fixes the UTC-IST timezone offset bug)
-const getLocalDateStr = (date: Date) => {
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-};
-
 export default function AddStudentPage() {
   const router = useRouter();
   const { addStudent, students, isLoaded: studentsLoaded } = useStudents();
-  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +24,12 @@ export default function AddStudentPage() {
     return {
       studentName: '',
       phoneNumber: '',
-      deskNumber: '', // Keep as string for smooth typing
+      deskNumber: '',
       shift: 'Afternoon' as Shift,
       plan: 'Custom Plan',
-      price: '1200',  // Keep as string for smooth typing
-      joinDate: getLocalDateStr(now),
-      expiryDate: getLocalDateStr(expiry),
+      price: 1200,
+      joinDate: now.toISOString().split('T')[0],
+      expiryDate: expiry.toISOString().split('T')[0],
       paymentStatus: 'Paid' as PaymentStatus,
       paymentMethod: 'UPI' as PaymentMethod,
     };
@@ -48,7 +42,7 @@ export default function AddStudentPage() {
     
     const expiry = new Date(start);
     expiry.setMonth(expiry.getMonth() + dur);
-    return getLocalDateStr(expiry);
+    return expiry.toISOString().split('T')[0];
   };
 
   const handleStartDateChange = (date: string) => {
@@ -70,34 +64,14 @@ export default function AddStudentPage() {
     setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
   };
 
-  // Check if desk is double-booked
-  const deskStatus = useMemo(() => {
-    if (!formData.deskNumber) return { isChecking: false, occupiedBy: null };
-    
-    const deskNum = parseInt(formData.deskNumber);
-    if (isNaN(deskNum)) return { isChecking: false, occupiedBy: null };
-
-    const occupiedBy = students.find(s => 
-      s.deskNumber && Number(s.deskNumber.toString().trim()) === deskNum && 
-      (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
-    );
-
-    return { isChecking: true, deskNum, occupiedBy };
-  }, [formData.deskNumber, formData.shift, students]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
     
+    // Validate phone number
     if (!isValidPhone(formData.phoneNumber)) {
-      setError('Please enter a valid 10-digit phone number.');
-      setIsSubmitting(false);
-      return;
-    }
-
-    if (deskStatus.occupiedBy) {
-      setError(`Desk ${deskStatus.deskNum} is already occupied by ${deskStatus.occupiedBy.studentName} for this shift.`);
+      setError('Please enter a valid 10-digit phone number starting with 6-9.');
       setIsSubmitting(false);
       return;
     }
@@ -106,23 +80,14 @@ export default function AddStudentPage() {
       await addStudent({
         ...formData,
         deskNumber: parseInt(formData.deskNumber) || 0,
-        price: parseInt(formData.price) || 0,
       });
-      
       setIsSubmitting(false);
       setShowSuccess(true);
-      
-      // Fast pre-fetch route before pushing
-      router.prefetch('/students');
       setTimeout(() => {
         router.push('/students');
       }, 1000);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Failed to register student. Please try again.');
-      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to register student. Please try again.');
       setIsSubmitting(false);
     }
   };
@@ -140,6 +105,7 @@ export default function AddStudentPage() {
 
   return (
     <main className="flex min-h-screen flex-col bg-background pb-24 font-sans">
+      {/* Header */}
       <header className="flex items-center gap-6 px-6 pt-8 pb-4 bg-card sticky top-0 z-10 border-b border-border/10">
         <button 
           onClick={() => router.back()}
@@ -151,6 +117,7 @@ export default function AddStudentPage() {
       </header>
 
       <div className="px-6 py-8 flex flex-col items-center">
+        {/* Error Message */}
         <AnimatePresence>
           {error && (
             <motion.div 
@@ -159,7 +126,7 @@ export default function AddStudentPage() {
               exit={{ opacity: 0, y: -10 }}
               className="w-full mb-6 rounded-2xl bg-rose-50 dark:bg-rose-950/20 p-4 text-[14px] font-bold text-rose-600 border border-rose-100 flex items-center gap-2"
             >
-              <AlertCircle className="h-4 w-4 shrink-0" />
+              <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
             </motion.div>
           )}
@@ -198,7 +165,7 @@ export default function AddStudentPage() {
                     onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
                   />
                   {formData.phoneNumber && !isValidPhone(formData.phoneNumber) && (
-                    <p className="mt-1 ml-1 text-[11px] font-medium text-rose-500">Invalid phone number format</p>
+                    <p className="mt-1 ml-1 text-[11px] font-medium text-rose-500">Invalid phone number</p>
                   )}
                 </div>
               </div>
@@ -223,22 +190,31 @@ export default function AddStudentPage() {
                   value={formData.deskNumber}
                   onChange={(e) => setFormData(prev => ({ ...prev, deskNumber: e.target.value }))}
                 />
-                
-                {deskStatus.isChecking && (
+                {formData.deskNumber && (
                   <div className="flex items-center gap-2 mt-2">
-                    {deskStatus.occupiedBy ? (
-                      <>
-                        <AlertCircle className="h-3 w-3 text-rose-500 shrink-0" />
-                        <span className="text-[11px] font-medium text-rose-500">
-                          Desk {deskStatus.deskNum} is occupied by {deskStatus.occupiedBy.studentName} ({deskStatus.occupiedBy.shift})
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
-                        <span className="text-[11px] font-medium text-primary">Desk {deskStatus.deskNum} is available</span>
-                      </>
-                    )}
+                    {(() => {
+                      const deskNum = parseInt(formData.deskNumber);
+                      const occupiedBy = students.find(s => 
+                        s.deskNumber && Number(s.deskNumber.toString().trim()) === deskNum && 
+                        (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
+                      );
+                      if (occupiedBy) {
+                        return (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-rose-500" />
+                            <span className="text-[11px] font-medium text-rose-500">
+                              Desk {deskNum} is occupied by {occupiedBy.studentName} ({occupiedBy.shift})
+                            </span>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 text-primary" />
+                          <span className="text-[11px] font-medium text-primary">Desk {deskNum} is available for this shift</span>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -281,7 +257,7 @@ export default function AddStudentPage() {
                     inputMode="numeric"
                     className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[18px] font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
                     value={formData.price}
-                    onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -364,9 +340,9 @@ export default function AddStudentPage() {
           </section>
 
           <button 
-            disabled={isSubmitting || !!deskStatus.occupiedBy}
+            disabled={isSubmitting}
             type="submit" 
-            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-primary py-5 text-[16px] font-bold text-white shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-primary py-5 text-[16px] font-bold text-white shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="h-6 w-6 animate-spin" />

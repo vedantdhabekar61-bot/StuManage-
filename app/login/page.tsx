@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// Ensure these imports map correctly to your file structure
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'motion/react';
@@ -20,8 +19,6 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
-    setError(null); // FIX 3: Clear any existing errors
-    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -30,13 +27,9 @@ export default function LoginPage() {
         },
       });
       if (error) throw error;
-    } catch (err: unknown) { // FIX 2: Better TypeScript typing
-      console.error('Google Sign-In error:', err);
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('An unexpected error occurred during Google sign in.');
-      }
+    } catch (error: any) {
+      console.error('Google Sign-In error:', error);
+      setError(error.message);
     } finally {
       setIsGoogleLoading(false);
     }
@@ -56,16 +49,10 @@ export default function LoginPage() {
       if (error) throw error;
 
       if (data.user) {
-        // FIX 1: Refresh server state before pushing
-        router.refresh(); 
         router.push('/');
       }
-    } catch (err: unknown) { // FIX 2: Better TypeScript typing
-      if (err instanceof Error) {
-        setError(err.message);
-      } else {
-        setError('Invalid login credentials.');
-      }
+    } catch (error: any) {
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -190,12 +177,17 @@ export default function LoginPage() {
           </div>
         </motion.form>
 
-        <p className="text-center text-sm font-medium text-slate-400">
-          Don&apos;t have an account?{' '}
-          <Link href="/auth" className="font-bold text-teal-600 hover:underline">
-            Sign Up
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-center text-sm font-medium text-slate-400">
+            Don&apos;t have an account?{' '}
+            <Link href="/auth" className="font-bold text-teal-600 hover:underline">
+              Sign Up
+            </Link>
+          </p>
+          <Link href="/privacy" className="text-xs font-bold uppercase tracking-widest text-[#0ea495]/40 hover:text-[#0ea495] transition-colors">
+            Privacy Policy
           </Link>
-        </p>
+        </div>
       </motion.div>
     </main>
   );
