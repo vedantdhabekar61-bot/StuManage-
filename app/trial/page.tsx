@@ -7,11 +7,10 @@ import {
   CheckCircle2, 
   ShieldCheck, 
   Zap, 
-  Users, 
+  Armchair, 
   Bell, 
   BarChart3, 
   ChevronRight,
-  ArrowLeft,
   Lock
 } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
@@ -31,25 +30,26 @@ export default function TrialPage() {
     }, 800);
   };
 
+  // Features aligned with actual app capabilities (matches Billing Page)
   const benefits = [
     {
-      title: "Track Student Fees",
-      subtitle: "फीस का हिसाब रखें",
+      title: "Track Fees & Expiry",
+      subtitle: "फीस और एक्सपायरी ट्रैक करें",
       icon: <Zap className="h-5 w-5 text-amber-500" />
     },
     {
-      title: "Manual Fee Reminders",
-      subtitle: "व्हाट्सएप पर रिमाइंडर भेजें",
+      title: "WhatsApp Reminders",
+      subtitle: "व्हाट्सएप रिमाइंडर भेजें",
       icon: <Bell className="h-5 w-5 text-teal-500" />
     },
     {
-      title: "Attendance Management",
-      subtitle: "हाजिरी लगाना हुआ आसान",
-      icon: <Users className="h-5 w-5 text-emerald-500" />
+      title: "Seat Allocation",
+      subtitle: "सीट और शिफ्ट मैनेज करें",
+      icon: <Armchair className="h-5 w-5 text-emerald-500" />
     },
     {
-      title: "Simple Monthly Reports",
-      subtitle: "महीने की पूरी रिपोर्ट देखें",
+      title: "Dashboard Metrics",
+      subtitle: "डैशबोर्ड पर सब देखें",
       icon: <BarChart3 className="h-5 w-5 text-rose-500" />
     }
   ];
@@ -74,7 +74,7 @@ export default function TrialPage() {
         </motion.div>
       </div>
 
-      {/* Content Area - Increased pb-32 to pb-40 */}
+      {/* Content Area */}
       <div className="flex-1 -mt-10 relative z-20 bg-slate-50 rounded-t-[3rem] px-6 pt-12 pb-40 border-t border-white">
         <div className="max-w-md mx-auto flex flex-col gap-10">
           {/* Heading Section */}
@@ -138,7 +138,7 @@ export default function TrialPage() {
         </div>
       </div>
 
-      {/* Sticky Bottom Button - Added z-50, pb-8, and pointer-events classes */}
+      {/* Sticky Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6 pb-8 z-50 bg-gradient-to-t from-slate-50 via-slate-50 to-transparent pt-12 pointer-events-none">
         <div className="max-w-md mx-auto pointer-events-auto">
           <button 
