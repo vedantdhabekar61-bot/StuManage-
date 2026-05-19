@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+// Ensure these imports map correctly to your file structure
 import { useAuth } from '@/hooks/use-auth';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'motion/react';
@@ -19,6 +20,8 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
+    setError(null); // FIX 3: Clear any existing errors
+    
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
@@ -27,9 +30,13 @@ export default function LoginPage() {
         },
       });
       if (error) throw error;
-    } catch (error: any) {
-      console.error('Google Sign-In error:', error);
-      setError(error.message);
+    } catch (err: unknown) { // FIX 2: Better TypeScript typing
+      console.error('Google Sign-In error:', err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred during Google sign in.');
+      }
     } finally {
       setIsGoogleLoading(false);
     }
@@ -49,10 +56,16 @@ export default function LoginPage() {
       if (error) throw error;
 
       if (data.user) {
+        // FIX 1: Refresh server state before pushing
+        router.refresh(); 
         router.push('/');
       }
-    } catch (error: any) {
-      setError(error.message);
+    } catch (err: unknown) { // FIX 2: Better TypeScript typing
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Invalid login credentials.');
+      }
     } finally {
       setIsLoading(false);
     }
