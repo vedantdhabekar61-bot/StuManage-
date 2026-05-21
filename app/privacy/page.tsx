@@ -72,7 +72,7 @@ export default function PrivacyPolicyPage() {
               Our app integrates with:
             </p>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong>Google Firebase:</strong> For authentication and database hosting.</li>
+              <li><strong>Supabase:</strong> For authentication and database hosting (supabase.com). Your data is stored on Supabase's servers.</li>
               <li><strong>Razorpay:</strong> For secure payment gateway services.</li>
             </ul>
           </section>

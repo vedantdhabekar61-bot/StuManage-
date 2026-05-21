@@ -156,7 +156,7 @@ export default function TrialPage() {
             )}
           </button>
           <p className="text-center text-[10px] text-slate-600 mt-5 font-bold uppercase tracking-widest drop-shadow-sm">
-            1000+ Teachers already using StuManage app
+            Built for tuition centers &amp; reading rooms across India
           </p>
         </div>
       </div>

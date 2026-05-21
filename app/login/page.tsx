@@ -184,9 +184,15 @@ export default function LoginPage() {
               Sign Up
             </Link>
           </p>
-          <Link href="/privacy" className="text-xs font-bold uppercase tracking-widest text-[#0ea495]/40 hover:text-[#0ea495] transition-colors">
-            Privacy Policy
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/privacy" className="text-xs font-bold uppercase tracking-widest text-[#0ea495]/40 hover:text-[#0ea495] transition-colors">
+              Privacy Policy
+            </Link>
+            <span className="text-slate-300">·</span>
+            <Link href="/terms" className="text-xs font-bold uppercase tracking-widest text-[#0ea495]/40 hover:text-[#0ea495] transition-colors">
+              Terms of Service
+            </Link>
+          </div>
         </div>
       </motion.div>
     </main>
