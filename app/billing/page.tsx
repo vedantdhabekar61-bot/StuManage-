@@ -8,7 +8,6 @@ import { supabase } from '@/lib/supabase';
 import { Check, CreditCard, ShieldCheck, Zap, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
-import { useSnackbar } from '@/components/snackbar';
 
 declare global {
   interface Window {
@@ -21,7 +20,6 @@ export default function BillingPage() {
   const { user, refreshProfile } = useAuth();
   const { isActive, daysLeft } = useSubscription();
   const [loading, setLoading] = useState(false);
-  const { show } = useSnackbar();
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -54,45 +52,37 @@ export default function BillingPage() {
         description: 'Monthly Subscription',
         order_id: order.id,
         handler: async function (response: any) {
-          try {
-            // Get the current session token
-            const { data: { session } } = await supabase.auth.getSession();
-            const token = session?.access_token;
+          // Verification call: user_id removed to prevent spoofing
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token;
 
-            // Verification call: send token in Authorization header
-            const verifyRes = await fetch('/api/payment/verify', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token || ''}`
-              },
-              body: JSON.stringify({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-              }),
-            });
+          const verifyRes = await fetch('/api/payment/verify', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token || ''}`
+            },
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            }),
+          });
 
           const result = await verifyRes.json();
           if (result.status === 'success') {
             await refreshProfile();
-            show('Payment Successful! Your Pro features are now active.', 'success');
-            setTimeout(() => {
-              router.push('/');
-            }, 2000);
+            alert('Payment Successful! Your Pro features are now active.');
+            router.push('/');
           } else {
-            show('Payment Verification Failed. Please contact support.', 'error');
-          }
-          } catch (e) {
-            console.error(e);
-            show('Payment Verification Failed. Please contact support.', 'error');
+            alert('Payment Verification Failed. Please contact support.');
           }
         },
         prefill: {
           email: user.email,
         },
         theme: {
-          color: '#0ea495',
+          color: '#4f46e5',
         },
       };
 
@@ -100,39 +90,39 @@ export default function BillingPage() {
       rzp.open();
     } catch (error) {
       console.error('Payment error:', error);
-      show('Something went wrong. Please try again.', 'error');
+      alert('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-background p-6 pb-24">
+    <div className="min-h-screen bg-slate-50 p-6 pb-24">
       <header className="mb-8 flex items-center gap-4">
         <button
           onClick={() => router.back()}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-card text-muted shadow-soft transition-all active:scale-95"
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-slate-500 shadow-sm transition-all active:scale-95"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        <h1 className="text-xl font-bold text-foreground">Subscription</h1>
+        <h1 className="text-xl font-bold text-slate-900">Subscription</h1>
       </header>
 
       <div className="mx-auto max-w-lg flex flex-col gap-6">
         {/* Status Card */}
-        <div className="bg-card rounded-[2rem] p-6 flex flex-col gap-4 shadow-soft border border-border/10">
+        <div className="soft-card p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-widest text-muted">Current Status</span>
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-400">Current Status</span>
             <div className={cn(
               "status-pill",
-              isActive ? "bg-primary/10 text-primary border border-primary/20" : "bg-rose-100 dark:bg-rose-900/20 text-rose-700"
+              isActive ? "bg-teal-100 text-teal-700" : "bg-rose-100 text-rose-700"
             )}>
               {isActive ? 'Active' : 'Expired'}
             </div>
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-4xl font-black text-foreground">{daysLeft}</span>
-            <span className="text-sm font-bold text-muted uppercase tracking-widest">days remaining</span>
+            <span className="text-4xl font-bold text-slate-900">{daysLeft}</span>
+            <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">days remaining</span>
           </div>
         </div>
 
@@ -148,31 +138,31 @@ export default function BillingPage() {
           
           <div className="relative z-10">
             <div className="mb-8">
-              <div className="inline-flex rounded-full bg-primary/20 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-primary mb-4">
+              <div className="inline-flex rounded-full bg-teal-500/20 px-4 py-1 text-[10px] font-bold uppercase tracking-widest text-teal-400 mb-4">
                 Recommended
               </div>
-              <h2 className="text-3xl font-black">Pro Plan</h2>
-              <p className="text-white/60 text-sm mt-1">Unlimited students & full features</p>
+              <h2 className="text-3xl font-bold">Pro Plan</h2>
+              <p className="text-slate-400 text-sm mt-1">Unlimited students & full features</p>
             </div>
 
             <div className="mb-8 flex items-baseline gap-1">
-              <span className="text-5xl font-black">₹50</span>
-              <span className="text-white/60 font-medium">/month</span>
+              <span className="text-5xl font-bold">₹50</span>
+              <span className="text-slate-400 font-medium">/month</span>
             </div>
 
             <ul className="mb-10 space-y-5">
               {[
                 'Unlimited Student Records',
                 'Bulk WhatsApp Reminders',
-                'Monthly Revenue Tracker',
-                'Instant Fee Analytics',
-                'Secure Cloud Storage'
+                'Advanced Analytics',
+                'Priority Support',
+                'Cloud Sync & Backup'
               ].map((feature) => (
-                <li key={feature} className="flex items-center gap-4 text-sm text-white/80">
-                  <div className="rounded-full bg-primary/20 p-1">
-                    <Check className="h-4 w-4 text-primary" />
+                <li key={feature} className="flex items-center gap-4 text-sm text-slate-300">
+                  <div className="rounded-full bg-teal-500/20 p-1">
+                    <Check className="h-4 w-4 text-teal-400" />
                   </div>
-                  <span className="font-bold">{feature}</span>
+                  <span className="font-medium">{feature}</span>
                 </li>
               ))}
             </ul>
@@ -180,7 +170,7 @@ export default function BillingPage() {
             <button
               onClick={handlePayment}
               disabled={loading}
-              className="w-full rounded-2xl bg-primary py-5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+              className="w-full rounded-2xl bg-teal-500 py-5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-teal-500/20 transition-all active:scale-95 disabled:opacity-50"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -192,7 +182,7 @@ export default function BillingPage() {
               )}
             </button>
 
-            <div className="mt-8 flex items-center justify-center gap-6 text-[10px] text-white/40 uppercase tracking-widest font-bold">
+            <div className="mt-8 flex items-center justify-center gap-6 text-[10px] text-slate-500 uppercase tracking-widest font-bold">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-4 w-4" />
                 Secure
