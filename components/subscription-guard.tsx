@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { Loader2, Lock } from 'lucide-react';
 
-const PUBLIC_PATHS = ['/login', '/auth', '/billing', '/trial', '/payment', '/auth/callback'];
+const PUBLIC_PATHS = ['/login', '/auth', '/billing', '/trial', '/payment', '/auth/callback', '/privacy', '/terms'];
 
 export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded: authLoaded } = useAuth();
@@ -14,7 +14,7 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const isPublicPath = PUBLIC_PATHS.includes(pathname);
+  const isPublicPath = PUBLIC_PATHS.some(path => pathname === path || pathname.startsWith(`${path}/`));
   const loading = !authLoaded || subLoading;
 
   useEffect(() => {

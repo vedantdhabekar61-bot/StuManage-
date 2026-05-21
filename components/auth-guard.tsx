@@ -25,12 +25,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoaded && (hasSeenWelcome || user)) {
-      const isAuthPage = pathname === '/login' || pathname === '/auth';
+      const publicPaths = ['/login', '/auth', '/privacy', '/terms'];
+      const isPublicPage = publicPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
       
-      if (!user && !isAuthPage) {
+      if (!user && !isPublicPage) {
         // Consistently redirect unauthenticated users to /login
         router.push('/login');
-      } else if (user && isAuthPage) {
+      } else if (user && (pathname === '/login' || pathname === '/auth' || pathname.startsWith('/auth/'))) {
         // Redirect authenticated users away from auth pages
         router.push('/');
       }
@@ -46,11 +47,12 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const isAuthPage = pathname === '/login' || pathname === '/auth';
+  const publicPaths = ['/login', '/auth', '/privacy', '/terms'];
+  const isPublicPage = publicPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
   const showWelcome = !hasSeenWelcome && !user;
 
   // Prevent flash of content if we are about to redirect to login
-  if (!user && !isAuthPage && !showWelcome) {
+  if (!user && !isPublicPage && !showWelcome) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
         <Activity className="h-10 w-10 animate-spin text-[#0ea495]" />
