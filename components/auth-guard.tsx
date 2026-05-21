@@ -49,7 +49,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   const publicPaths = ['/login', '/auth', '/privacy', '/terms'];
   const isPublicPage = publicPaths.some(path => pathname === path || pathname.startsWith(`${path}/`));
-  const showWelcome = !hasSeenWelcome && !user;
+  const showWelcome = !hasSeenWelcome && !user && (pathname === '/' || pathname === '/login' || pathname === '/auth');
 
   // Prevent flash of content if we are about to redirect to login
   if (!user && !isPublicPage && !showWelcome) {

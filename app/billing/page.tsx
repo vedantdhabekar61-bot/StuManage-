@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
 import { useSubscription } from '@/hooks/use-subscription';
+import { supabase } from '@/lib/supabase';
 import { Check, CreditCard, ShieldCheck, Zap, Loader2, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
@@ -53,16 +54,24 @@ export default function BillingPage() {
         description: 'Monthly Subscription',
         order_id: order.id,
         handler: async function (response: any) {
-          // Verification call: user_id removed to prevent spoofing
-          const verifyRes = await fetch('/api/payment/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_signature: response.razorpay_signature,
-            }),
-          });
+          try {
+            // Get the current session token
+            const { data: { session } } = await supabase.auth.getSession();
+            const token = session?.access_token;
+
+            // Verification call: send token in Authorization header
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token || ''}`
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
 
           const result = await verifyRes.json();
           if (result.status === 'success') {
@@ -72,6 +81,10 @@ export default function BillingPage() {
               router.push('/');
             }, 2000);
           } else {
+            show('Payment Verification Failed. Please contact support.', 'error');
+          }
+          } catch (e) {
+            console.error(e);
             show('Payment Verification Failed. Please contact support.', 'error');
           }
         },
