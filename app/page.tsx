@@ -153,7 +153,7 @@ export default function Dashboard() {
             </div>
           </button>
           <div className="flex flex-col min-w-0 shrink">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Good morning,</span>
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Namaste,</span>
             <div className="flex items-baseline gap-2 min-w-0">
               <span className="text-xl font-bold text-slate-900 tracking-tight truncate flex-1">{user?.name || 'Admin'}</span>
             </div>
@@ -197,7 +197,7 @@ export default function Dashboard() {
                 <IndianRupee className="h-8 w-8" />
               </div>
               <div>
-                <p className="text-xs font-bold text-muted uppercase tracking-widest">Monthly Revenue</p>
+                <p className="text-xs font-bold text-muted uppercase tracking-widest">Monthly Income</p>
                 <p className="text-3xl font-black text-foreground tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
               </div>
             </div>
