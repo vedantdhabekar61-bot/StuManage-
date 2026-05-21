@@ -73,13 +73,16 @@ export default function Dashboard() {
       const isOverdue = isStudentOverdue(s);
       if (isOverdue) return true;
 
-      // If not overdue, but already Paid, it's not urgent
-      if (s.paymentStatus === 'Paid') return false;
+      if (s.paymentStatus === 'Pending') return true;
 
-      const expiry = new Date(s.expiryDate);
-      const diffTime = expiry.getTime() - today.getTime();
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return diffDays <= 3;
+      if (s.paymentStatus === 'Paid') {
+        const expiry = new Date(s.expiryDate);
+        const diffTime = expiry.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= 3 && diffDays >= 0;
+      }
+
+      return false;
     });
 
     return {
@@ -259,9 +262,9 @@ export default function Dashboard() {
                       <p className="text-sm font-bold text-muted">Seat {student.deskNumber}</p>
                       <p className={cn(
                         "text-sm font-black",
-                        isOverdue ? "text-rose-600" : "text-accent"
+                        isOverdue ? "text-rose-600" : (student.paymentStatus === 'Pending' ? "text-amber-500" : "text-accent")
                       )}>
-                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : `Due in ${daysLeft}d`}
+                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : (student.paymentStatus === 'Pending' ? "Payment Pending" : `Due in ${daysLeft}d`)}
                       </p>
                     </div>
 
