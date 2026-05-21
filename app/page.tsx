@@ -140,44 +140,49 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Header */}
-      <header className="flex items-center justify-between px-6 pt-8 pb-6 sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-        <div className="flex items-center gap-4">
-          <Logo size={42} />
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold text-muted">Good morning,</span>
-            <div className="flex items-baseline gap-2">
-              <span className="text-xl font-extrabold text-foreground tracking-tight truncate max-w-[120px]">{user?.name || 'Admin'}</span>
+      <header className="flex items-center justify-between px-4 sm:px-6 pt-8 pb-4 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
+        <div className="flex items-center gap-3 min-w-0">
+          <button 
+            onClick={() => { if (window.confirm('Are you sure you want to log out?')) logout(); }}
+            className="shrink-0 active:scale-95 transition-transform"
+            aria-label="Profile"
+            title="Log out"
+          >
+            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 text-lg font-bold shadow-sm">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
+            </div>
+          </button>
+          <div className="flex flex-col min-w-0 shrink">
+            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Good morning,</span>
+            <div className="flex items-baseline gap-2 min-w-0">
+              <span className="text-xl font-bold text-slate-900 tracking-tight truncate flex-1">{user?.name || 'Admin'}</span>
             </div>
             <button 
               onClick={() => {
                 setNewLibraryName(settings.libraryName);
                 setIsEditingLibrary(true);
               }}
-              className="flex items-center gap-1.5 mt-0.5 group"
+              className="flex items-center gap-1.5 mt-0.5 group shrink-0 min-w-0"
             >
-              <div className="flex items-center gap-1 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/10 transition-colors group-hover:bg-primary/20">
-                <span className="text-[10px] font-bold text-primary uppercase tracking-wider truncate max-w-[100px]">
+              <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20 max-w-full">
+                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate">
                   {settings.libraryName}
                 </span>
-                <Edit2 className="h-2 w-2 text-primary/50" />
+                <Edit2 className="h-2 w-2 shrink-0 text-teal-600/50" />
               </div>
             </button>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0 pl-2">
           <Link 
             href="/billing"
-            className="flex h-10 items-center gap-2 rounded-full bg-accent/10 px-4 text-accent transition-all hover:bg-accent/20 active:scale-95"
+            className="flex h-10 w-10 sm:w-auto items-center justify-center sm:px-4 gap-2 rounded-full bg-teal-50 text-teal-600 transition-all hover:bg-teal-100 active:scale-95"
+            aria-label="Upgrade to Pro"
+            title="Upgrade"
           >
-            <Zap className="h-4 w-4 fill-current" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Upgrade</span>
+            <Zap className="h-4 w-4 fill-current shrink-0" />
+            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Upgrade</span>
           </Link>
-          <button 
-            onClick={logout}
-            className="flex h-11 w-11 items-center justify-center rounded-full bg-card shadow-soft text-foreground transition-colors hover:text-rose-600 active:scale-95"
-          >
-            <LogOut className="h-5 w-5" />
-          </button>
         </div>
       </header>
 
