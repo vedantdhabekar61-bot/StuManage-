@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
 export async function POST(req: Request) {
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  
   try {
     const { amount, currency = 'INR' } = await req.json();
 
-    // Security: Validate amount (e.g., must be ₹50 for the Pro plan)
     if (!amount || amount !== 50) {
-      return NextResponse.json({ error: 'Invalid amount requested' }, { status: 400 });
+      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
     const razorpay = new Razorpay({

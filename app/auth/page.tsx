@@ -207,12 +207,19 @@ export default function SignUpPage() {
           </div>
         </motion.form>
 
-        <p className="text-center text-sm font-medium text-slate-400">
-          Already have an account?{' '}
-          <Link href="/login" className="font-bold text-teal-600 hover:underline">
-            Log In
-          </Link>
-        </p>
+        <div className="flex flex-col items-center gap-4">
+          <p className="text-center text-sm font-medium text-slate-400">
+            Already have an account?{' '}
+            <Link href="/login" className="font-bold text-teal-600 hover:underline">
+              Log In
+            </Link>
+          </p>
+          <div className="flex items-center justify-center gap-3">
+            <Link href="/terms" className="text-xs text-slate-400 hover:text-teal-600">Terms</Link>
+            <span className="text-slate-300">·</span>
+            <Link href="/privacy" className="text-xs text-slate-400 hover:text-teal-600">Privacy</Link>
+          </div>
+        </div>
       </motion.div>
     </main>
   );

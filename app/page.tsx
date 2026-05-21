@@ -208,7 +208,6 @@ export default function Dashboard() {
             label="Active Students" 
             value={metrics.activeStudents} 
             icon={Users} 
-            trend="+4 this week"
           />
           <MetricsCard 
             label="Available Seats" 
