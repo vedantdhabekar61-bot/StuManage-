@@ -30,7 +30,7 @@ export default function AddStudentPage() {
       price: 1200,
       joinDate: now.toISOString().split('T')[0],
       expiryDate: expiry.toISOString().split('T')[0],
-      paymentStatus: 'Paid' as PaymentStatus,
+      paymentStatus: 'Pending' as PaymentStatus,
       paymentMethod: 'UPI' as PaymentMethod,
     };
   });
@@ -77,15 +77,17 @@ export default function AddStudentPage() {
     }
     
     try {
-      await addStudent({
+      addStudent({
         ...formData,
         deskNumber: parseInt(formData.deskNumber) || 0,
+      }).catch(err => {
+        console.error('Failed to register student:', err);
       });
       setIsSubmitting(false);
       setShowSuccess(true);
       setTimeout(() => {
         router.push('/students');
-      }, 1000);
+      }, 600);
     } catch (err: any) {
       setError(err.message || 'Failed to register student. Please try again.');
       setIsSubmitting(false);
@@ -304,6 +306,32 @@ export default function AddStudentPage() {
                       onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
                     />
                   </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[13px] font-bold text-foreground ml-1">Payment Status</label>
+                <div className="flex bg-background p-1.5 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Paid' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentStatus === 'Paid' ? "bg-card text-primary shadow-sm" : "text-muted"
+                    )}
+                  >
+                    Paid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Pending' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentStatus === 'Pending' ? "bg-card text-amber-500 shadow-sm" : "text-muted"
+                    )}
+                  >
+                    Pending
+                  </button>
                 </div>
               </div>
 
