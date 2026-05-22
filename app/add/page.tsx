@@ -7,7 +7,7 @@ import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
 import { motion, AnimatePresence } from 'motion/react';
 import { useStudents } from '@/hooks/use-students';
 import { cn, isValidPhone } from '@/lib/utils';
-import { useSnackbar } from '@/components/snackbar'; // <--- Added here
+import { useSnackbar } from '@/components/snackbar';
 
 // Helper to reliably get YYYY-MM-DD in local time
 const toLocalDateString = (date: Date) => {
@@ -15,12 +15,12 @@ const toLocalDateString = (date: Date) => {
   return new Date(date.getTime() - offset).toISOString().split('T')[0];
 };
 
-
 export default function AddStudentPage() {
   const router = useRouter();
   const { addStudent, students, isLoaded: studentsLoaded } = useStudents();
+  const snackbar = useSnackbar();
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccess, setShowSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duration, setDuration] = useState<number | string>(3);
 
@@ -38,7 +38,7 @@ export default function AddStudentPage() {
       price: 1200,
       joinDate: toLocalDateString(now),
       expiryDate: toLocalDateString(expiry),
-      paymentStatus: 'Pending' as PaymentStatus,
+      paymentStatus: 'Paid' as PaymentStatus,
       paymentMethod: 'UPI' as PaymentMethod,
     };
   });
@@ -49,14 +49,7 @@ export default function AddStudentPage() {
     if (isNaN(start.getTime())) return '';
     
     const expiry = new Date(start);
-    const expectedMonth = (expiry.getMonth() + dur) % 12;
     expiry.setMonth(expiry.getMonth() + dur);
-    
-    // Handle rollover
-    if (expiry.getMonth() !== expectedMonth && dur > 0) {
-      expiry.setDate(0);
-    }
-    
     return toLocalDateString(expiry);
   };
 
@@ -87,6 +80,7 @@ export default function AddStudentPage() {
     // Validate phone number
     if (!isValidPhone(formData.phoneNumber)) {
       setError('Please enter a valid 10-digit phone number starting with 6-9.');
+      snackbar.show('Please enter a valid 10-digit phone number.', 'error');
       setIsSubmitting(false);
       return;
     }
@@ -96,13 +90,14 @@ export default function AddStudentPage() {
         ...formData,
         deskNumber: parseInt(formData.deskNumber) || 0,
       });
-      setIsSubmitting(false);
-      setShowSuccess(true);
-      setTimeout(() => {
-        router.push('/students');
-      }, 600);
+      
+      snackbar.show('Student successfully registered!', 'success');
+      router.push('/students'); // Instant redirect
+      
     } catch (err: any) {
-      setError(err.message || 'Failed to register student. Please try again.');
+      const errorMessage = err.message || 'Failed to register student. Please try again.';
+      setError(errorMessage);
+      snackbar.show(errorMessage, 'error');
       setIsSubmitting(false);
     }
   };
@@ -323,32 +318,6 @@ export default function AddStudentPage() {
               </div>
 
               <div className="space-y-3">
-                <label className="text-[13px] font-bold text-foreground ml-1">Payment Status</label>
-                <div className="flex bg-background p-1.5 rounded-2xl">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Paid' }))}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
-                      formData.paymentStatus === 'Paid' ? "bg-card text-primary shadow-sm" : "text-muted"
-                    )}
-                  >
-                    Paid
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Pending' }))}
-                    className={cn(
-                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
-                      formData.paymentStatus === 'Pending' ? "bg-card text-amber-500 shadow-sm" : "text-muted"
-                    )}
-                  >
-                    Pending
-                  </button>
-                </div>
-              </div>
-
-              <div className="space-y-3">
                 <label className="text-[13px] font-bold text-foreground ml-1">Payment Method</label>
                 <div className="flex bg-background p-1.5 rounded-2xl">
                   <button
@@ -396,31 +365,6 @@ export default function AddStudentPage() {
           </button>
         </form>
       </div>
-
-      <AnimatePresence>
-        {showSuccess && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/40 backdrop-blur-md p-6"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              className="bg-card rounded-[40px] p-10 flex flex-col items-center gap-6 text-center max-w-xs w-full shadow-2xl"
-            >
-              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                <CheckCircle2 className="h-10 w-10" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-[24px] font-extrabold text-foreground">Success!</h3>
-                <p className="text-[15px] font-semibold text-muted">Student has been registered successfully.</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </main>
   );
 }

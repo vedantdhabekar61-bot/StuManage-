@@ -31,11 +31,12 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { StudentsProvider } from '@/hooks/use-students';
 import { AuthGuard } from '@/components/auth-guard';
 import { SubscriptionGuard } from '@/components/subscription-guard';
+import { SnackbarProvider } from '@/components/snackbar';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable}`}>
-      <body className="bg-[#FDFBF7] text-[#1C1917] antialiased font-sans" suppressHydrationWarning>
+      <body className="bg-background text-foreground antialiased font-sans" suppressHydrationWarning>
         <script
           dangerouslySetInnerHTML={{
             __html: `
@@ -55,12 +56,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <AuthGuard>
             <StudentsProvider>
               <SubscriptionGuard>
-                <div className="mx-auto min-h-screen max-w-md bg-[#FDFBF7] pb-20">
-                  <PageTransition>
-                    {children}
-                  </PageTransition>
-                  <BottomNav />
-                </div>
+                <SnackbarProvider> 
+                  <div className="mx-auto min-h-screen max-w-md bg-background pb-20">
+                    <PageTransition>
+                      {children}
+                    </PageTransition>
+                    <BottomNav />
+                  </div>
+                </SnackbarProvider>
               </SubscriptionGuard>
             </StudentsProvider>
           </AuthGuard>
