@@ -1,472 +1,424 @@
 'use client';
 
-import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap, Clock, RefreshCw } from 'lucide-react';
-import { MetricsCard } from '@/components/metrics-card';
-import Link from 'next/link';
-import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { useSettings } from '@/hooks/use-settings';
-import { useStudents } from '@/hooks/use-students';
-import { Student } from '@/lib/types';
-import { useMemo, useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { cn, isStudentOverdue } from '@/lib/utils';
-import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
-import { SubscriptionBanner } from '@/components/subscription-banner';
-import { useAuth } from '@/hooks/use-auth';
-import { Logo } from '@/components/logo';
+import { User, Armchair, CreditCard, CheckCircle2, AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { Shift, PaymentMethod, PaymentStatus } from '@/lib/types';
+import { motion, AnimatePresence } from 'motion/react';
+import { useStudents } from '@/hooks/use-students';
+import { cn, isValidPhone } from '@/lib/utils';
 
-// Helper to reliably get YYYY-MM-DD in local time, preventing IST to UTC date shifts
+// Helper to reliably get YYYY-MM-DD in local time
 const toLocalDateString = (date: Date) => {
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().split('T')[0];
 };
 
-export default function Dashboard() {
+export default function AddStudentPage() {
   const router = useRouter();
-  const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
-  const { students, isLoaded: studentsLoaded, updateStudent, refreshStudents } = useStudents();
-  const { logout, user, isLoaded: authLoaded } = useAuth();
-  const [isEditingLibrary, setIsEditingLibrary] = useState(false);
-  const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const { addStudent, students, isLoaded: studentsLoaded } = useStudents();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number | string>(3);
 
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-
-  const { scrollY } = useScroll();
-  const pullDistance = 80;
-  const refreshOpacity = useTransform(scrollY, [-pullDistance, 0], [1, 0]);
-  const refreshScale = useTransform(scrollY, [-pullDistance, 0], [1, 0.5]);
-
-  useEffect(() => {
-    const handleScroll = async () => {
-      if (window.scrollY < -pullDistance && !isRefreshing) {
-        setIsRefreshing(true);
-        await refreshStudents();
-        setIsRefreshing(false);
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isRefreshing, refreshStudents]);
-
-  useEffect(() => {
-    if (authLoaded && !user) {
-      router.push('/login');
-    } else if (authLoaded && user && user.subscription?.status === 'trial') {
-      const hasSeenTrial = localStorage.getItem('has_seen_trial');
-      if (!hasSeenTrial) {
-        localStorage.setItem('has_seen_trial', 'true');
-        router.push('/trial');
-      }
-    }
-  }, [user, authLoaded, router]);
-
-  const metrics = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
-    const activeStudents = students.length;
-    const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
-    
-    const overdueStudents = students.filter(isStudentOverdue);
-
-    const pendingFees = students
-      .filter(s => s.paymentStatus !== 'Paid')
-      .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
-
-    // FIX 1: Only sum revenue for payments made in the current calendar month
-    const revenueThisMonth = students.reduce((acc, s) => {
-      if (s.paymentStatus === 'Paid' && s.lastPaymentDate) {
-        const paymentDate = new Date(s.lastPaymentDate);
-        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-          return acc + (Number(s.price) || 0);
-        }
-      }
-      return acc;
-    }, 0);
-
-    const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
-    
-    const urgentActions = students.filter(s => {
-      const isOverdue = isStudentOverdue(s);
-      if (isOverdue) return true;
-
-      if (s.paymentStatus === 'Pending') return true;
-
-      if (s.paymentStatus === 'Paid') {
-        const expiry = new Date(s.expiryDate);
-        expiry.setHours(0, 0, 0, 0); // FIX 2: Normalize to midnight to prevent Math.ceil timezone jumps
-        
-        const diffTime = expiry.getTime() - today.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
-        return diffDays <= 3 && diffDays >= 0;
-      }
-
-      return false;
-    });
-
-    return {
-      activeStudents,
-      availableSeats,
-      overdueStudentsCount: overdueStudents.length,
-      pendingFees,
-      revenueThisMonth,
-      occupancyPercentage,
-      urgentActions
-    };
-  }, [students, settings.totalSeats]);
-
-  const handleMarkAsPaid = async (student: Student) => {
+  const [formData, setFormData] = useState(() => {
     const now = new Date();
-    const currentExpiry = new Date(student.expiryDate);
-    const baseDate = currentExpiry > now ? currentExpiry : now;
+    const expiry = new Date(now);
+    expiry.setMonth(expiry.getMonth() + 3);
     
-    const newExpiry = new Date(baseDate);
-    const expectedMonth = (newExpiry.getMonth() + 1) % 12;
-    newExpiry.setMonth(newExpiry.getMonth() + 1);
+    return {
+      studentName: '',
+      phoneNumber: '',
+      deskNumber: '',
+      shift: 'Afternoon' as Shift,
+      plan: 'Custom Plan',
+      price: 1200,
+      joinDate: toLocalDateString(now),
+      expiryDate: toLocalDateString(expiry),
+      paymentStatus: 'Pending' as PaymentStatus,
+      paymentMethod: 'UPI' as PaymentMethod,
+    };
+  });
+
+  const calculateExpiry = (startDate: string, dur: number) => {
+    if (!startDate) return '';
+    const start = new Date(startDate);
+    if (isNaN(start.getTime())) return '';
     
-    // FIX 3: Handle 31st to 28th/30th rollover (e.g., Jan 31 -> Feb 28, not Mar 3)
-    if (newExpiry.getMonth() !== expectedMonth) {
-      newExpiry.setDate(0); 
+    const expiry = new Date(start);
+    const expectedMonth = (expiry.getMonth() + dur) % 12;
+    expiry.setMonth(expiry.getMonth() + dur);
+    
+    // Handle rollover
+    if (expiry.getMonth() !== expectedMonth && dur > 0) {
+      expiry.setDate(0);
+    }
+    
+    return toLocalDateString(expiry);
+  };
+
+  const handleStartDateChange = (date: string) => {
+    setError(null);
+    const durNum = typeof duration === 'string' ? parseInt(duration) || 0 : duration;
+    const newExpiry = calculateExpiry(date, durNum);
+    setFormData(prev => ({ 
+      ...prev, 
+      joinDate: date,
+      expiryDate: newExpiry 
+    }));
+  };
+
+  const handleDurationChange = (val: string) => {
+    const numVal = parseInt(val);
+    const durNum = isNaN(numVal) ? 0 : numVal;
+    const newExpiry = calculateExpiry(formData.joinDate, durNum);
+    setDuration(val === '' ? '' : numVal);
+    setFormData(prev => ({ ...prev, expiryDate: newExpiry }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
+    
+    // Validate phone number
+    if (!isValidPhone(formData.phoneNumber)) {
+      setError('Please enter a valid 10-digit phone number starting with 6-9.');
+      setIsSubmitting(false);
+      return;
     }
     
     try {
-      // FIX 4: Use toLocalDateString to prevent IST shifting to yesterday in UTC
-      await updateStudent(student.id, {
-        paymentStatus: 'Paid',
-        expiryDate: toLocalDateString(newExpiry),
-        lastPaymentDate: toLocalDateString(now),
+      await addStudent({
+        ...formData,
+        deskNumber: parseInt(formData.deskNumber) || 0,
       });
-    } catch (e) {
-      console.error('Failed to mark as paid', e);
+      setIsSubmitting(false);
+      setShowSuccess(true);
+      setTimeout(() => {
+        router.push('/students');
+      }, 600);
+    } catch (err: any) {
+      setError(err.message || 'Failed to register student. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
-  const handleManualRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshStudents();
-    setIsRefreshing(false);
-  };
-
-  if (!authLoaded || !studentsLoaded || !settingsLoaded) {
+  if (!studentsLoaded) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-bold text-muted uppercase tracking-widest">Loading Roster...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col bg-background pb-24">
-      {/* Pull to Refresh Indicator */}
-      <motion.div 
-        style={{ opacity: refreshOpacity, scale: refreshScale }}
-        className="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none"
-      >
-        <div className="bg-primary text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-          {isRefreshing ? (
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-          ) : (
-            <Clock className="h-4 w-4" />
-          )}
-          <span className="text-[10px] font-bold uppercase tracking-widest">
-            {isRefreshing ? 'Updating...' : 'Pull to refresh'}
-          </span>
-        </div>
-      </motion.div>
-
+    <main className="flex min-h-screen flex-col bg-background pb-24 font-sans">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 pt-8 pb-4 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
-        <div className="flex items-center gap-3 min-w-0">
-          <button 
-            onClick={() => setShowLogoutConfirm(true)}
-            className="shrink-0 active:scale-95 transition-transform"
-            aria-label="Profile"
-            title="Log out"
-          >
-            <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 text-lg font-bold shadow-sm">
-              {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
-            </div>
-          </button>
-          <div className="flex flex-col min-w-0 shrink">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Namaste,</span>
-            <div className="flex items-baseline gap-2 min-w-0">
-              <span className="text-xl font-bold text-slate-900 tracking-tight truncate flex-1">{user?.name || 'Admin'}</span>
-            </div>
-            <button 
-              onClick={() => {
-                setNewLibraryName(settings.libraryName);
-                setIsEditingLibrary(true);
-              }}
-              className="flex items-center gap-1.5 mt-0.5 group shrink-0 min-w-0"
-            >
-              <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20 max-w-full">
-                <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate">
-                  {settings.libraryName}
-                </span>
-                <Edit2 className="h-2 w-2 shrink-0 text-teal-600/50" />
-              </div>
-            </button>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 pl-2">
-          {/* FIX 5: Manual refresh button for non-iOS devices */}
-          <button 
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 active:scale-95", isRefreshing && "animate-spin text-primary")}
-            aria-label="Refresh data"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
-          <Link 
-            href="/billing"
-            className="flex h-10 w-10 sm:w-auto items-center justify-center sm:px-4 gap-2 rounded-full bg-teal-50 text-teal-600 transition-all hover:bg-teal-100 active:scale-95"
-            aria-label="Upgrade to Pro"
-            title="Upgrade"
-          >
-            <Zap className="h-4 w-4 fill-current shrink-0" />
-            <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Upgrade</span>
-          </Link>
-        </div>
+      <header className="flex items-center gap-6 px-6 pt-8 pb-4 bg-card sticky top-0 z-10 border-b border-border/10">
+        <button 
+          onClick={() => router.back()}
+          className="flex h-11 w-11 items-center justify-center rounded-full text-foreground transition-all active:scale-95"
+        >
+          <ArrowLeft className="h-6 w-6" />
+        </button>
+        <h1 className="text-[20px] font-bold text-foreground">Add New Student</h1>
       </header>
 
-      <SubscriptionBanner />
+      <div className="px-6 py-8 flex flex-col items-center">
+        {/* Error Message */}
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="w-full mb-6 rounded-2xl bg-rose-50 dark:bg-rose-950/20 p-4 text-[14px] font-bold text-rose-600 border border-rose-100 flex items-center gap-2"
+            >
+              <AlertCircle className="h-4 w-4" />
+              <span>{error}</span>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-      <div className="flex flex-col gap-8 px-6 mt-4">
-        {/* Primary Metric: Revenue */}
-        <section>
-          <div className="bg-card rounded-[2.5rem] p-6 shadow-soft border border-primary/5 flex items-center justify-between transition-all hover:scale-[1.01]">
-            <div className="flex items-center gap-5">
-              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <IndianRupee className="h-8 w-8" />
+        <form onSubmit={handleSubmit} className="w-full space-y-10">
+          {/* Student Identity */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-primary">
+              <User className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Student Identity</h2>
+            </div>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-foreground ml-1">Full Name</label>
+                <input 
+                  required
+                  type="text" 
+                  placeholder="e.g. Rahul Sharma" 
+                  className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[15px] font-medium placeholder:text-muted/40 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all text-foreground"
+                  value={formData.studentName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, studentName: e.target.value }))}
+                />
               </div>
-              <div>
-                <p className="text-xs font-bold text-muted uppercase tracking-widest">Monthly Income</p>
-                <p className="text-3xl font-black text-foreground tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-foreground ml-1">Phone Number</label>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[15px] font-bold text-muted">+91</span>
+                  <input 
+                    required
+                    type="tel" 
+                    inputMode="numeric"
+                    placeholder="98765 43210" 
+                    className="w-full bg-card border border-border/50 rounded-3xl py-4 pl-16 pr-6 text-[15px] font-medium placeholder:text-muted/40 focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all text-foreground"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                  />
+                  {formData.phoneNumber && !isValidPhone(formData.phoneNumber) && (
+                    <p className="mt-1 ml-1 text-[11px] font-medium text-rose-500">Invalid phone number</p>
+                  )}
+                </div>
               </div>
             </div>
-            <Link href="/reminders" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-primary active:scale-95 transition-transform">
-              <ChevronRight className="h-6 w-6" />
-            </Link>
-          </div>
-        </section>
+          </section>
 
-        {/* Secondary Metrics Grid */}
-        <section className="grid grid-cols-2 gap-4">
-          <MetricsCard 
-            label="Active Students" 
-            value={metrics.activeStudents} 
-            icon={Users} 
-          />
-          <MetricsCard 
-            label="Available Seats" 
-            value={metrics.availableSeats} 
-            icon={Armchair} 
-          />
-        </section>
-
-        {/* Action Alerts */}
-        <section className="flex flex-col gap-4 mb-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
-              Action Alerts
-              <span className="bg-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full">
-                {metrics.urgentActions.length} Pending
-              </span>
-            </h2>
-            <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
-          </div>
-          
-          <div className="flex flex-col gap-4">
-            <AnimatePresence mode="popLayout">
-              {metrics.urgentActions.map((student) => {
-                const isOverdue = isStudentOverdue(student);
-                
-                // Normalizing dates for display to ensure absolute accuracy
-                const expiryDate = new Date(student.expiryDate);
-                expiryDate.setHours(0, 0, 0, 0);
-                const todayDate = new Date();
-                todayDate.setHours(0, 0, 0, 0);
-                const daysLeft = Math.round((expiryDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
-                
-                return (
-                  <motion.div 
-                    key={student.id} 
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-card rounded-3xl p-5 shadow-soft border border-border/5 flex flex-col gap-4 transition-all hover:scale-[1.01]"
-                  >
-                    {/* Top Row: Name + Amount */}
-                    <div className="flex items-center justify-between">
-                      <p className="font-extrabold text-foreground text-lg">{student.studentName}</p>
-                      <p className="font-extrabold text-foreground text-lg">₹{student.price}</p>
-                    </div>
-
-                    {/* Middle Row: Seat + Status */}
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-bold text-muted">Seat {student.deskNumber}</p>
-                      <p className={cn(
-                        "text-sm font-black",
-                        isOverdue ? "text-rose-600" : (student.paymentStatus === 'Pending' ? "text-amber-500" : "text-accent")
-                      )}>
-                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : (student.paymentStatus === 'Pending' ? "Payment Pending" : `Due in ${daysLeft}d`)}
-                      </p>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="h-px bg-border/20 w-full" />
-
-                    {/* Bottom Section: Stacked Actions */}
-                    <div className="flex flex-col gap-2.5">
-                      <WhatsAppReminderButton
-                        student={student}
-                        showText={true}
-                        className="w-full h-12 rounded-2xl bg-[#25D366] text-white shadow-lg shadow-[#25D366]/10 flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-widest active:scale-[0.98] transition-all"
-                      />
-                      <button 
-                        onClick={() => handleMarkAsPaid(student)}
-                        className="w-full h-12 rounded-2xl bg-background text-muted border border-border/50 flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-widest transition-all hover:bg-muted/5 active:scale-95"
-                      >
-                        <Check className="h-4 w-4" />
-                        Mark as Paid
-                      </button>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-            
-            {metrics.urgentActions.length === 0 && (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-card rounded-[2rem] border border-dashed border-border/50">
-                <div className="mb-3 rounded-full bg-background p-4 text-muted/30">
-                  <ShieldCheck className="h-8 w-8" />
+          {/* Allocation */}
+          <section className="bg-card rounded-[32px] p-6 shadow-soft border border-border/30 space-y-6">
+            <div className="flex items-center gap-2 text-primary">
+              <Armchair className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Allocation</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[13px] font-bold text-foreground ml-1">Desk No.</label>
+                <input 
+                  required
+                  type="number" 
+                  inputMode="numeric"
+                  placeholder="Enter assigned desk number" 
+                  className="w-full bg-background border-none rounded-2xl py-4 px-6 text-[15px] font-medium placeholder:text-muted/50 focus:ring-2 focus:ring-primary/20 focus:outline-none transition-all text-foreground"
+                  value={formData.deskNumber}
+                  onChange={(e) => setFormData(prev => ({ ...prev, deskNumber: e.target.value }))}
+                />
+                {formData.deskNumber && (
+                  <div className="flex items-center gap-2 mt-2">
+                    {(() => {
+                      const deskNum = parseInt(formData.deskNumber);
+                      const occupiedBy = students.find(s => 
+                        s.deskNumber && Number(s.deskNumber.toString().trim()) === deskNum && 
+                        (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')
+                      );
+                      if (occupiedBy) {
+                        return (
+                          <>
+                            <AlertCircle className="h-3 w-3 text-rose-500" />
+                            <span className="text-[11px] font-medium text-rose-500">
+                              Desk {deskNum} is occupied by {occupiedBy.studentName} ({occupiedBy.shift})
+                            </span>
+                          </>
+                        );
+                      }
+                      return (
+                        <>
+                          <CheckCircle2 className="h-3 w-3 text-primary" />
+                          <span className="text-[11px] font-medium text-primary">Desk {deskNum} is available for this shift</span>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                <label className="text-[13px] font-bold text-foreground ml-1">Preferred Shift</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {(['Morning', 'Afternoon', 'Evening', 'Full Day'] as Shift[]).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, shift: s }))}
+                      className={cn(
+                        "py-3.5 rounded-2xl text-[14px] font-bold transition-all active:scale-95 border",
+                        formData.shift === s 
+                          ? "bg-primary text-white border-primary shadow-lg shadow-primary/20" 
+                          : "bg-background text-foreground border-border/50"
+                      )}
+                    >
+                      {s}
+                    </button>
+                  ))}
                 </div>
-                <p className="font-bold text-muted">No urgent actions today!</p>
               </div>
-            )}
-          </div>
-        </section>
-      </div>
+            </div>
+          </section>
 
-      {/* Floating Action Button */}
-      <div className="fixed bottom-24 left-0 right-0 mx-auto max-w-md px-5 flex justify-end pointer-events-none z-[60]">
-        <button 
-          onClick={() => router.push('/add')}
-          className="bg-primary text-white shadow-xl shadow-primary/30 rounded-full h-14 px-6 flex items-center justify-center gap-2 active:scale-95 transition-transform font-bold tracking-wide pointer-events-auto"
-        >
-          <PlusCircle className="h-6 w-6" />
-          <span>Add Student</span>
-        </button>
-      </div>
-
-      {/* Logout Confirmation Modal */}
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowLogoutConfirm(false)}
-              className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] bg-card p-8 shadow-2xl text-center"
-            >
-              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LogOut className="h-8 w-8 ml-1" />
-              </div>
-              <h3 className="text-xl font-black text-foreground mb-2">Log Out?</h3>
-              <p className="text-sm font-semibold text-muted mb-6">
-                Are you sure you want to log out of your account?
-              </p>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 rounded-2xl bg-background py-4 text-[13px] font-black uppercase tracking-widest text-muted active:scale-95 transition-transform"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => {
-                    setShowLogoutConfirm(false);
-                    logout();
-                  }}
-                  className="flex-1 rounded-2xl bg-rose-600 py-4 text-[13px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-200 active:scale-95 transition-transform"
-                >
-                  Log Out
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Library Name Modal */}
-      <AnimatePresence>
-        {isEditingLibrary && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsEditingLibrary(false)}
-              className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] bg-card p-8 shadow-2xl"
-            >
-              <div className="flex flex-col gap-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-black text-foreground tracking-tight">Institute Name</h3>
-                  <button 
-                    onClick={() => setIsEditingLibrary(false)}
-                    className="h-11 w-11 rounded-full bg-background flex items-center justify-center text-muted active:scale-95 transition-transform"
-                  >
-                    <X className="h-6 w-6" />
-                  </button>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-bold text-muted uppercase tracking-widest ml-1">
-                    Library / Institute Name
-                  </label>
+          {/* Plan & Billing */}
+          <section className="space-y-6">
+            <div className="flex items-center gap-2 text-primary">
+              <CreditCard className="h-5 w-5" />
+              <h2 className="text-[13px] font-bold uppercase tracking-widest">Plan & Billing</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-foreground ml-1">Amount (₹)</label>
                   <input 
-                    type="text"
-                    value={newLibraryName}
-                    onChange={(e) => setNewLibraryName(e.target.value)}
-                    placeholder="e.g. Modern Study Library"
-                    className="w-full rounded-2xl bg-background border-none px-5 py-4 text-sm font-bold text-foreground focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted/50"
-                    autoFocus
+                    required
+                    type="number" 
+                    inputMode="numeric"
+                    className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[18px] font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                    value={formData.price}
+                    onChange={(e) => setFormData(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
                   />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-foreground ml-1">Duration</label>
+                  <div className="relative">
+                    <select 
+                      className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[15px] font-bold text-foreground appearance-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                      value={duration}
+                      onChange={(e) => handleDurationChange(e.target.value)}
+                    >
+                      <option value={1}>1 Month</option>
+                      <option value={3}>3 Months</option>
+                      <option value={6}>6 Months</option>
+                      <option value={12}>1 Year</option>
+                    </select>
+                    <div className="absolute right-6 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="h-5 w-5 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
 
-                <button 
-                  onClick={() => {
-                    updateSettings({ libraryName: newLibraryName });
-                    setIsEditingLibrary(false);
-                  }}
-                  className="w-full h-14 rounded-2xl bg-primary text-white font-black uppercase tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-transform"
-                >
-                  Save Changes
-                </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-foreground ml-1">Start Date</label>
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[14px] font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                      value={formData.joinDate}
+                      onChange={(e) => handleStartDateChange(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[13px] font-bold text-foreground ml-1">Fees Due Date</label>
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full bg-card border border-border/50 rounded-3xl py-4 px-6 text-[14px] font-bold text-foreground focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition-all"
+                      value={formData.expiryDate}
+                      onChange={(e) => setFormData(prev => ({ ...prev, expiryDate: e.target.value }))}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[13px] font-bold text-foreground ml-1">Payment Status</label>
+                <div className="flex bg-background p-1.5 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Paid' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentStatus === 'Paid' ? "bg-card text-primary shadow-sm" : "text-muted"
+                    )}
+                  >
+                    Paid
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentStatus: 'Pending' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentStatus === 'Pending' ? "bg-card text-amber-500 shadow-sm" : "text-muted"
+                    )}
+                  >
+                    Pending
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[13px] font-bold text-foreground ml-1">Payment Method</label>
+                <div className="flex bg-background p-1.5 rounded-2xl">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'UPI' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentMethod === 'UPI' ? "bg-card text-primary shadow-sm" : "text-muted"
+                    )}
+                  >
+                    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z" />
+                    </svg>
+                    UPI
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ ...prev, paymentMethod: 'Cash' }))}
+                    className={cn(
+                      "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[14px] font-bold transition-all",
+                      formData.paymentMethod === 'Cash' ? "bg-card text-primary shadow-sm" : "text-muted"
+                    )}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                    Cash
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <button 
+            disabled={isSubmitting}
+            type="submit" 
+            className="flex w-full items-center justify-center gap-3 rounded-3xl bg-primary py-5 text-[16px] font-bold text-white shadow-xl shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              <>
+                <User className="h-5 w-5" />
+                <span>Register Student</span>
+              </>
+            )}
+          </button>
+        </form>
+      </div>
+
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/40 backdrop-blur-md p-6"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-card rounded-[40px] p-10 flex flex-col items-center gap-6 text-center max-w-xs w-full shadow-2xl"
+            >
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <CheckCircle2 className="h-10 w-10" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-[24px] font-extrabold text-foreground">Success!</h3>
+                <p className="text-[15px] font-semibold text-muted">Student has been registered successfully.</p>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </main>
   );
 }
-

@@ -170,11 +170,21 @@ export default function StudentsPage() {
                       const currentExpiry = new Date(student.expiryDate);
                       const baseDate = currentExpiry > now ? currentExpiry : now;
                       const newExpiry = new Date(baseDate);
+                      const expectedMonth = (newExpiry.getMonth() + 1) % 12;
                       newExpiry.setMonth(newExpiry.getMonth() + 1);
+                      if (newExpiry.getMonth() !== expectedMonth) {
+                        newExpiry.setDate(0); 
+                      }
+                      
+                      const toLocalDateString = (date: Date) => {
+                        const offset = date.getTimezoneOffset() * 60000;
+                        return new Date(date.getTime() - offset).toISOString().split('T')[0];
+                      };
+
                       updateStudent(student.id, {
                         paymentStatus: 'Paid',
-                        expiryDate: newExpiry.toISOString().split('T')[0],
-                        lastPaymentDate: now.toISOString().split('T')[0],
+                        expiryDate: toLocalDateString(newExpiry),
+                        lastPaymentDate: toLocalDateString(now),
                       });
                     }}
                     className="h-11 w-11 rounded-full bg-primary text-white shadow-lg flex items-center justify-center active:scale-90 transition-transform"

@@ -15,6 +15,12 @@ import { SubscriptionBanner } from '@/components/subscription-banner';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
 
+// Helper to reliably get YYYY-MM-DD in local time, preventing IST to UTC date shifts
+const toLocalDateString = (date: Date) => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().split('T')[0];
+};
+
 export default function Dashboard() {
   const router = useRouter();
   const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
@@ -58,6 +64,8 @@ export default function Dashboard() {
   const metrics = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
 
     const activeStudents = students.length;
     const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
@@ -68,7 +76,17 @@ export default function Dashboard() {
       .filter(s => s.paymentStatus !== 'Paid')
       .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
-    const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? (Number(s.price) || 0) : 0), 0);
+    // Only sum revenue for payments made in the current calendar month
+    const revenueThisMonth = students.reduce((acc, s) => {
+      if (s.paymentStatus === 'Paid' && s.lastPaymentDate) {
+        const paymentDate = new Date(s.lastPaymentDate);
+        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+          return acc + (Number(s.price) || 0);
+        }
+      }
+      return acc;
+    }, 0);
+
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
     
     const urgentActions = students.filter(s => {
@@ -79,8 +97,10 @@ export default function Dashboard() {
 
       if (s.paymentStatus === 'Paid') {
         const expiry = new Date(s.expiryDate);
+        expiry.setHours(0, 0, 0, 0); // Normalize to midnight to prevent timezone jumps
+        
         const diffTime = expiry.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
         return diffDays <= 3 && diffDays >= 0;
       }
 
@@ -104,13 +124,19 @@ export default function Dashboard() {
     const baseDate = currentExpiry > now ? currentExpiry : now;
     
     const newExpiry = new Date(baseDate);
+    const expectedMonth = (newExpiry.getMonth() + 1) % 12;
     newExpiry.setMonth(newExpiry.getMonth() + 1);
+    
+    // Handle 31st to 28th/30th rollover
+    if (newExpiry.getMonth() !== expectedMonth) {
+      newExpiry.setDate(0); 
+    }
     
     try {
       await updateStudent(student.id, {
         paymentStatus: 'Paid',
-        expiryDate: newExpiry.toISOString().split('T')[0],
-        lastPaymentDate: now.toISOString().split('T')[0],
+        expiryDate: toLocalDateString(newExpiry),
+        lastPaymentDate: toLocalDateString(now),
       });
     } catch (e) {
       console.error('Failed to mark as paid', e);
@@ -242,7 +268,13 @@ export default function Dashboard() {
             <AnimatePresence mode="popLayout">
               {metrics.urgentActions.map((student) => {
                 const isOverdue = isStudentOverdue(student);
-                const daysLeft = Math.ceil((new Date(student.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                
+                // Normalizing dates for display to ensure absolute accuracy
+                const expiryDate = new Date(student.expiryDate);
+                expiryDate.setHours(0, 0, 0, 0);
+                const todayDate = new Date();
+                todayDate.setHours(0, 0, 0, 0);
+                const daysLeft = Math.round((expiryDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
                 
                 return (
                   <motion.div 
