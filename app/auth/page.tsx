@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const router = useRouter();
 
   const handleGoogleSignUp = async () => {
@@ -59,8 +60,8 @@ export default function SignUpPage() {
         if (data.session) {
           router.push('/');
         } else {
-          alert('Registration successful! Please check your email for confirmation.');
-          router.push('/login');
+          setSuccess('Registration successful! Please check your email for confirmation.');
+          setTimeout(() => router.push('/login'), 2000);
         }
       }
     } catch (error: any) {
@@ -112,6 +113,16 @@ export default function SignUpPage() {
             className="rounded-2xl bg-rose-50 p-4 text-center text-sm font-bold text-rose-600 border border-rose-100"
           >
             {error}
+          </motion.div>
+        )}
+
+        {success && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl bg-teal-50 p-4 text-center text-sm font-bold text-teal-600 border border-teal-100"
+          >
+            {success}
           </motion.div>
         )}
 

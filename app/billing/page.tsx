@@ -20,6 +20,7 @@ export default function BillingPage() {
   const { user, refreshProfile } = useAuth();
   const { isActive, daysLeft } = useSubscription();
   const [loading, setLoading] = useState(false);
+  const [paymentMsg, setPaymentMsg] = useState<{type: 'success'|'error', text: string} | null>(null);
 
   useEffect(() => {
     const script = document.createElement('script');
@@ -72,10 +73,10 @@ export default function BillingPage() {
           const result = await verifyRes.json();
           if (result.status === 'success') {
             await refreshProfile();
-            alert('Payment Successful! Your Pro features are now active.');
-            router.push('/');
+            setPaymentMsg({ type: 'success', text: 'Payment Successful! Your Pro features are now active.' });
+            setTimeout(() => router.push('/'), 2000);
           } else {
-            alert('Payment Verification Failed. Please contact support.');
+            setPaymentMsg({ type: 'error', text: 'Payment Verification Failed. Please contact support.' });
           }
         },
         prefill: {
@@ -90,7 +91,7 @@ export default function BillingPage() {
       rzp.open();
     } catch (error) {
       console.error('Payment error:', error);
-      alert('Something went wrong. Please try again.');
+      setPaymentMsg({ type: 'error', text: 'Something went wrong. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -107,6 +108,16 @@ export default function BillingPage() {
         </button>
         <h1 className="text-xl font-bold text-slate-900">Subscription</h1>
       </header>
+
+      {paymentMsg && (
+        <div className={cn(
+          "mb-6 p-4 rounded-2xl flex items-center gap-3 text-sm font-bold shadow-sm",
+          paymentMsg.type === 'success' ? "bg-teal-50 text-teal-700 border border-teal-100" : "bg-rose-50 text-rose-700 border border-rose-100"
+        )}>
+          {paymentMsg.type === 'success' ? <Check className="h-5 w-5 shrink-0" /> : <ShieldCheck className="h-5 w-5 shrink-0" />}
+          <p>{paymentMsg.text}</p>
+        </div>
+      )}
 
       <div className="mx-auto max-w-lg flex flex-col gap-6">
         {/* Status Card */}
