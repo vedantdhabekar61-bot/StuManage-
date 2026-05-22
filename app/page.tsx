@@ -1,6 +1,6 @@
 'use client';
 
-import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap, Clock, RefreshCw } from 'lucide-react';
+import { Users, Armchair, IndianRupee, Edit2, LogOut, ChevronRight, Check, ShieldCheck, PlusCircle, X, Zap, Clock } from 'lucide-react';
 import { MetricsCard } from '@/components/metrics-card';
 import Link from 'next/link';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
@@ -14,12 +14,6 @@ import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 import { SubscriptionBanner } from '@/components/subscription-banner';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
-
-// Helper to reliably get YYYY-MM-DD in local time, preventing IST to UTC date shifts
-const toLocalDateString = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split('T')[0];
-};
 
 export default function Dashboard() {
   const router = useRouter();
@@ -64,8 +58,6 @@ export default function Dashboard() {
   const metrics = useMemo(() => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
 
     const activeStudents = students.length;
     const availableSeats = Math.max(0, settings.totalSeats - activeStudents);
@@ -76,17 +68,7 @@ export default function Dashboard() {
       .filter(s => s.paymentStatus !== 'Paid')
       .reduce((acc, s) => acc + (Number(s.price) || 0), 0);
 
-    // FIX 1: Only sum revenue for payments made in the current calendar month
-    const revenueThisMonth = students.reduce((acc, s) => {
-      if (s.paymentStatus === 'Paid' && s.lastPaymentDate) {
-        const paymentDate = new Date(s.lastPaymentDate);
-        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-          return acc + (Number(s.price) || 0);
-        }
-      }
-      return acc;
-    }, 0);
-
+    const revenueThisMonth = students.reduce((acc, s) => acc + (s.paymentStatus === 'Paid' ? (Number(s.price) || 0) : 0), 0);
     const occupancyPercentage = settings.totalSeats > 0 ? Math.round((activeStudents / settings.totalSeats) * 100) : 0;
     
     const urgentActions = students.filter(s => {
@@ -97,10 +79,8 @@ export default function Dashboard() {
 
       if (s.paymentStatus === 'Paid') {
         const expiry = new Date(s.expiryDate);
-        expiry.setHours(0, 0, 0, 0); // FIX 2: Normalize to midnight to prevent Math.ceil timezone jumps
-        
         const diffTime = expiry.getTime() - today.getTime();
-        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays <= 3 && diffDays >= 0;
       }
 
@@ -124,30 +104,17 @@ export default function Dashboard() {
     const baseDate = currentExpiry > now ? currentExpiry : now;
     
     const newExpiry = new Date(baseDate);
-    const expectedMonth = (newExpiry.getMonth() + 1) % 12;
     newExpiry.setMonth(newExpiry.getMonth() + 1);
     
-    // FIX 3: Handle 31st to 28th/30th rollover (e.g., Jan 31 -> Feb 28, not Mar 3)
-    if (newExpiry.getMonth() !== expectedMonth) {
-      newExpiry.setDate(0); 
-    }
-    
     try {
-      // FIX 4: Use toLocalDateString to prevent IST shifting to yesterday in UTC
       await updateStudent(student.id, {
         paymentStatus: 'Paid',
-        expiryDate: toLocalDateString(newExpiry),
-        lastPaymentDate: toLocalDateString(now),
+        expiryDate: newExpiry.toISOString().split('T')[0],
+        lastPaymentDate: now.toISOString().split('T')[0],
       });
     } catch (e) {
       console.error('Failed to mark as paid', e);
     }
-  };
-
-  const handleManualRefresh = async () => {
-    setIsRefreshing(true);
-    await refreshStudents();
-    setIsRefreshing(false);
   };
 
   if (!authLoaded || !studentsLoaded || !settingsLoaded) {
@@ -212,15 +179,6 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 pl-2">
-          {/* FIX 5: Manual refresh button for non-iOS devices */}
-          <button 
-            onClick={handleManualRefresh}
-            disabled={isRefreshing}
-            className={cn("flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 active:scale-95", isRefreshing && "animate-spin text-primary")}
-            aria-label="Refresh data"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </button>
           <Link 
             href="/billing"
             className="flex h-10 w-10 sm:w-auto items-center justify-center sm:px-4 gap-2 rounded-full bg-teal-50 text-teal-600 transition-all hover:bg-teal-100 active:scale-95"
@@ -284,13 +242,7 @@ export default function Dashboard() {
             <AnimatePresence mode="popLayout">
               {metrics.urgentActions.map((student) => {
                 const isOverdue = isStudentOverdue(student);
-                
-                // Normalizing dates for display to ensure absolute accuracy
-                const expiryDate = new Date(student.expiryDate);
-                expiryDate.setHours(0, 0, 0, 0);
-                const todayDate = new Date();
-                todayDate.setHours(0, 0, 0, 0);
-                const daysLeft = Math.round((expiryDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24));
+                const daysLeft = Math.ceil((new Date(student.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                 
                 return (
                   <motion.div 
