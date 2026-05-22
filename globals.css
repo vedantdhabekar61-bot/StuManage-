@@ -39,6 +39,8 @@
 @layer base {
   body {
     @apply bg-background text-foreground antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overscroll-behavior-y: none; /* Prevent pull-to-refresh completely naturally */
   }
 }
 
