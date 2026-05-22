@@ -163,7 +163,7 @@ export default function StudentsPage() {
             >
               {/* Swipe Background Actions */}
               <div className="absolute inset-0 bg-primary/5 flex items-center justify-end px-4 gap-3">
-                {student.paymentStatus !== 'Paid' && (
+                {(student.paymentStatus !== 'Paid' || isStudentOverdue(student)) && (
                   <button 
                     onClick={() => {
                       const now = new Date();
@@ -233,7 +233,7 @@ export default function StudentsPage() {
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <div className="flex items-center gap-2">
-                    <StatusTag status={student.paymentStatus} />
+                    <StatusTag status={isStudentOverdue(student) ? 'Overdue' : student.paymentStatus} />
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();

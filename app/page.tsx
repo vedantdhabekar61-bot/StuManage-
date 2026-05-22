@@ -298,7 +298,7 @@ export default function Dashboard() {
                         "text-sm font-black",
                         isOverdue ? "text-rose-600" : (student.paymentStatus === 'Pending' ? "text-amber-500" : "text-accent")
                       )}>
-                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : (student.paymentStatus === 'Pending' ? "Payment Pending" : `Due in ${daysLeft}d`)}
+                        {isOverdue ? `${Math.abs(daysLeft)}d overdue` : (student.paymentStatus === 'Pending' ? "Unpaid" : `Due in ${daysLeft}d`)}
                       </p>
                     </div>
 
