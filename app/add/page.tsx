@@ -86,13 +86,16 @@ export default function AddStudentPage() {
     }
     
     try {
-      await addStudent({
+      const addPromise = addStudent({
         ...formData,
         deskNumber: parseInt(formData.deskNumber) || 0,
+        lastPaymentDate: formData.paymentStatus === 'Paid' ? toLocalDateString(new Date()) : undefined,
       });
       
       snackbar.show('Student successfully registered!', 'success');
       router.push('/students'); // Instant redirect
+      
+      await addPromise;
       
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to register student. Please try again.';
@@ -101,17 +104,6 @@ export default function AddStudentPage() {
       setIsSubmitting(false);
     }
   };
-
-  if (!studentsLoaded) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm font-bold text-muted uppercase tracking-widest">Loading Roster...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <main className="flex min-h-screen flex-col bg-background pb-24 font-sans">
@@ -204,6 +196,14 @@ export default function AddStudentPage() {
                   <div className="flex items-center gap-2 mt-2">
                     {(() => {
                       const deskNum = parseInt(formData.deskNumber);
+                      if (!studentsLoaded) {
+                        return (
+                          <>
+                            <Loader2 className="h-3 w-3 animate-spin text-muted" />
+                            <span className="text-[11px] font-medium text-muted">Checking availability...</span>
+                          </>
+                        );
+                      }
                       const occupiedBy = students.find(s => 
                         s.deskNumber && Number(s.deskNumber.toString().trim()) === deskNum && 
                         (s.shift === formData.shift || s.shift === 'Full Day' || formData.shift === 'Full Day')

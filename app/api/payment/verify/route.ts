@@ -37,7 +37,6 @@ export async function POST(req: Request) {
       const proExpiryDate = new Date();
       proExpiryDate.setDate(proExpiryDate.getDate() + 30);
 
-      const supabaseAdmin = getSupabaseAdmin();
       const { error } = await (supabaseAdmin
         .from('subscriptions') as any)
         .update({

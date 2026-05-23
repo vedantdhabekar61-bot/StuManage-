@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 
 export async function POST(req: Request) {
-  const ip = req.headers.get('x-forwarded-for') || 'unknown';
-  
   try {
     const { amount, currency = 'INR' } = await req.json();
 
