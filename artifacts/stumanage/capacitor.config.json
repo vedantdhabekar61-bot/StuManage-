@@ -4,10 +4,6 @@
   "webDir": "dist/public",
   "android": {
     "buildOptions": {
-      "keystorePath": "stumanage-release.keystore",
-      "keystorePassword": "stumanage2025",
-      "keystoreAlias": "stumanage",
-      "keystoreAliasPassword": "stumanage2025",
       "releaseType": "AAB"
     }
   },

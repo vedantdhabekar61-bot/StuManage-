@@ -65,9 +65,7 @@ router.post("/payment/create-order", async (req, res) => {
     res.json(order);
   } catch (err: any) {
     logger.error({ err }, "Payment create-order error");
-    res
-      .status(500)
-      .json({ error: err.message || "Internal server error" });
+    res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 
@@ -82,6 +80,7 @@ router.post("/payment/verify", async (req, res) => {
     }
 
     const supabase = getSupabaseAdmin();
+    const { keyId, keySecret } = getRazorpay();
 
     const {
       data: { user },
@@ -101,7 +100,7 @@ router.post("/payment/verify", async (req, res) => {
       return;
     }
 
-    const { keySecret } = getRazorpay();
+    // Step 1: Verify HMAC signature
     const body = `${razorpay_order_id}|${razorpay_payment_id}`;
     const expectedSignature = crypto
       .createHmac("sha256", keySecret)
@@ -114,6 +113,55 @@ router.post("/payment/verify", async (req, res) => {
       return;
     }
 
+    // Step 2: Verify payment with Razorpay API (prevents replay / out-of-band manipulation)
+    const paymentRes = await fetch(
+      `https://api.razorpay.com/v1/payments/${razorpay_payment_id}`,
+      {
+        headers: {
+          Authorization:
+            "Basic " +
+            Buffer.from(`${keyId}:${keySecret}`).toString("base64"),
+        },
+      }
+    );
+
+    if (!paymentRes.ok) {
+      logger.error({ razorpay_payment_id }, "Failed to fetch payment from Razorpay");
+      res.status(502).json({ error: "Could not verify payment with Razorpay" });
+      return;
+    }
+
+    const payment = (await paymentRes.json()) as any;
+
+    // Step 3: Validate payment is actually captured and matches expected order/amount
+    if (
+      payment.status !== "captured" ||
+      payment.order_id !== razorpay_order_id ||
+      payment.amount !== 5000 || // ₹50 in paise
+      payment.currency !== "INR"
+    ) {
+      logger.warn(
+        { userId: user.id, payment_status: payment.status, amount: payment.amount },
+        "Payment validation failed: unexpected state"
+      );
+      res.status(400).json({ status: "failure", error: "Payment validation failed" });
+      return;
+    }
+
+    // Step 4: Idempotency — check if this payment was already processed
+    const { data: existing } = await supabase
+      .from("subscriptions")
+      .select("last_payment_id, status")
+      .eq("owner_id", user.id)
+      .single();
+
+    if (existing?.last_payment_id === razorpay_payment_id) {
+      logger.info({ userId: user.id }, "Duplicate payment verification — already processed");
+      res.json({ status: "success", message: "Already activated" });
+      return;
+    }
+
+    // Step 5: Update subscription
     const proExpiryDate = new Date();
     proExpiryDate.setDate(proExpiryDate.getDate() + 30);
 
@@ -122,6 +170,7 @@ router.post("/payment/verify", async (req, res) => {
       .update({
         status: "active",
         expiry_date: proExpiryDate.toISOString().split("T")[0],
+        last_payment_id: razorpay_payment_id,
         updated_at: new Date().toISOString(),
       })
       .eq("owner_id", user.id);
@@ -138,9 +187,7 @@ router.post("/payment/verify", async (req, res) => {
     res.json({ status: "success" });
   } catch (err: any) {
     logger.error({ err }, "Payment verify error");
-    res
-      .status(500)
-      .json({ error: err.message || "Internal server error" });
+    res.status(500).json({ error: err.message || "Internal server error" });
   }
 });
 
