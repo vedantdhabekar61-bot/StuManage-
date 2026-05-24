@@ -6,6 +6,11 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export const toLocalDateString = (date: Date): string => {
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().split('T')[0];
+};
+
 export function formatWhatsAppMessage(template: string, student: Student, libraryName: string): string {
   if (!template) return '';
   let msg = template;

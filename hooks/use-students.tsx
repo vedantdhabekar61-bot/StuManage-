@@ -92,7 +92,6 @@ export function StudentsProvider({ children }: { children: ReactNode }) {
   }, [supabaseUser]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStudents();
   }, [fetchStudents]);
 

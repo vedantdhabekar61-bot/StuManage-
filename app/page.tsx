@@ -15,11 +15,7 @@ import { SubscriptionBanner } from '@/components/subscription-banner';
 import { useAuth } from '@/hooks/use-auth';
 import { Logo } from '@/components/logo';
 
-// Helper to reliably get YYYY-MM-DD in local time, preventing IST to UTC date shifts
-const toLocalDateString = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split('T')[0];
-};
+import { toLocalDateString } from '@/lib/utils';
 
 export default function Dashboard() {
   const router = useRouter();

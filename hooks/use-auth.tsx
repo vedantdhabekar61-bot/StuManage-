@@ -56,8 +56,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   });
 
-  // Remove the useEffect that was doing the same thing
-
   const ensureProfileExists = useCallback(async (uid: string, email: string, metadata: any) => {
     try {
       // Fetch owner profile and subscription in parallel
@@ -207,11 +205,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [initAuth, fetchProfile]);
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
     if (supabaseUser) {
       localStorage.removeItem(`auth_profile_${supabaseUser.id}`);
     }
     localStorage.removeItem('last_auth_uid');
+    setSupabaseUser(null);
     setUser(null);
   };
 

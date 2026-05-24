@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
-import { Search, PlusCircle, Users, Edit2, Trash2, X, CheckCircle2, User, Phone, Armchair, Clock, ArrowLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { Search, PlusCircle, Users, Edit2, Trash2, X, CheckCircle2, User, Phone, Armchair, Clock, ArrowLeft, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StatusTag } from '@/components/status-tag';
 import { Student, Shift } from '@/lib/types';
 import { useStudents } from '@/hooks/use-students';
 import { useSettings } from '@/hooks/use-settings';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
-import { formatWhatsAppMessage, openWhatsApp, cn, isStudentOverdue, isValidPhone } from '@/lib/utils';
+import { cn, isStudentOverdue, isValidPhone, toLocalDateString } from '@/lib/utils';
 import { WhatsAppReminderButton } from '@/components/whatsapp-reminder-button';
 
 export default function StudentsPage() {
@@ -176,11 +176,6 @@ export default function StudentsPage() {
                         newExpiry.setDate(0); 
                       }
                       
-                      const toLocalDateString = (date: Date) => {
-                        const offset = date.getTimezoneOffset() * 60000;
-                        return new Date(date.getTime() - offset).toISOString().split('T')[0];
-                      };
-
                       updateStudent(student.id, {
                         paymentStatus: 'Paid',
                         expiryDate: toLocalDateString(newExpiry),

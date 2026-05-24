@@ -9,11 +9,7 @@ import { useStudents } from '@/hooks/use-students';
 import { cn, isValidPhone } from '@/lib/utils';
 import { useSnackbar } from '@/components/snackbar';
 
-// Helper to reliably get YYYY-MM-DD in local time
-const toLocalDateString = (date: Date) => {
-  const offset = date.getTimezoneOffset() * 60000;
-  return new Date(date.getTime() - offset).toISOString().split('T')[0];
-};
+import { toLocalDateString } from '@/lib/utils';
 
 export default function AddStudentPage() {
   const router = useRouter();
