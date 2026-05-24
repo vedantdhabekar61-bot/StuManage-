@@ -1,0 +1,26 @@
+{
+  "appId": "com.stumanage.app",
+  "appName": "StuManage",
+  "webDir": "dist/public",
+  "android": {
+    "buildOptions": {
+      "keystorePath": "stumanage-release.keystore",
+      "keystorePassword": "stumanage2025",
+      "keystoreAlias": "stumanage",
+      "keystoreAliasPassword": "stumanage2025",
+      "releaseType": "AAB"
+    }
+  },
+  "server": {
+    "androidScheme": "https",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#0ea495",
+      "androidSplashResourceName": "splash",
+      "showSpinner": false
+    }
+  }
+}

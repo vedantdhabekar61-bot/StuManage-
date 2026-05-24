@@ -1,42 +1,69 @@
-import { Switch, Route, Router as WouterRouter } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
+import { Switch, Route, Router as WouterRouter } from 'wouter';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '@/hooks/use-auth';
+import { StudentsProvider } from '@/hooks/use-students';
+import { SnackbarProvider } from '@/components/snackbar';
+import { AuthGuard } from '@/components/auth-guard';
+import { BottomNav } from '@/components/bottom-nav';
+import { SubscriptionGuard } from '@/components/subscription-guard';
 
-const queryClient = new QueryClient();
+import Dashboard from '@/pages/dashboard';
+import StudentsPage from '@/pages/students';
+import AddStudentPage from '@/pages/add-student';
+import SeatsPage from '@/pages/seats';
+import RemindersPage from '@/pages/reminders';
+import BillingPage from '@/pages/billing';
+import TrialPage from '@/pages/trial';
+import LoginPage from '@/pages/login';
+import SignUpPage from '@/pages/auth';
+import AuthCallbackPage from '@/pages/auth-callback';
+import PrivacyPage from '@/pages/privacy';
+import TermsPage from '@/pages/terms';
+import NotFound from '@/pages/not-found';
 
-function Home() {
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1, staleTime: 60 * 1000 } }
+});
+
+function AppRoutes() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Replit Agent is building...</h1>
-        <p className="mt-2 text-sm text-gray-600">Your app will appear here once it's ready.</p>
-      </div>
-    </div>
+    <>
+      <SubscriptionGuard>
+        <BottomNav />
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/students" component={StudentsPage} />
+          <Route path="/add" component={AddStudentPage} />
+          <Route path="/seats" component={SeatsPage} />
+          <Route path="/reminders" component={RemindersPage} />
+          <Route path="/billing" component={BillingPage} />
+          <Route path="/trial" component={TrialPage} />
+          <Route path="/login" component={LoginPage} />
+          <Route path="/auth" component={SignUpPage} />
+          <Route path="/auth/callback" component={AuthCallbackPage} />
+          <Route path="/privacy" component={PrivacyPage} />
+          <Route path="/terms" component={TermsPage} />
+          <Route component={NotFound} />
+        </Switch>
+      </SubscriptionGuard>
+    </>
   );
 }
 
-function Router() {
-  return (
-    <Switch>
-      <Route path="/" component={Home} />
-      <Route component={NotFound} />
-    </Switch>
-  );
-}
-
-function App() {
+export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <Router />
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, '')}>
+        <AuthProvider>
+          <StudentsProvider>
+            <SnackbarProvider>
+              <AuthGuard>
+                <AppRoutes />
+              </AuthGuard>
+            </SnackbarProvider>
+          </StudentsProvider>
+        </AuthProvider>
+      </WouterRouter>
     </QueryClientProvider>
   );
 }
-
-export default App;
