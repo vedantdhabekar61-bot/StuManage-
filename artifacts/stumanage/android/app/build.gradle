@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// Load signing credentials from key.properties (never committed to git)
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.stumanage.app"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -17,10 +24,12 @@ android {
 
     signingConfigs {
         release {
-            storeFile file("stumanage-release.keystore")
-            storePassword "stumanage2025"
-            keyAlias "stumanage"
-            keyPassword "stumanage2025"
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
         }
     }
 
@@ -28,10 +37,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-        debug {
-            signingConfig signingConfigs.release
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }

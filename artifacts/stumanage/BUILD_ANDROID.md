@@ -4,55 +4,77 @@
 - Full web app migrated and built
 - Capacitor Android project initialized
 - App icons generated at all densities from your logo
-- Release signing keystore generated (`android/app/stumanage-release.keystore`)
-- Gradle signing config is set up
-- Web assets synced to Android project
+- 512×512 store icon generated (`android/store-icon-512.png`)
+- Gradle signing config wired up (reads from `android/key.properties`)
 
 ## What You Need (on your local machine)
 - [Android Studio](https://developer.android.com/studio) — free download
-- Java 17+ (comes with Android Studio)
+- Java 17+ (comes bundled with Android Studio)
+- The keystore file (generate once, keep forever — see below)
 
 ---
 
-## Step-by-Step: Build the .aab on Your Computer
+## Step 1 — Generate Your Signing Keystore (one-time)
 
-### 1. Download this project
-Download the entire project from Replit (Download as ZIP).
+Run this command inside the `artifacts/stumanage/android/app/` directory:
 
-### 2. Open in Android Studio
-- Open Android Studio → "Open an existing project"
-- Navigate to and select the `artifacts/stumanage/android` folder
-- Wait for Gradle sync to finish (first time takes 5-10 minutes)
-
-### 3. Build the AAB
-In Android Studio menu:
+```bash
+keytool -genkeypair -v \
+  -storetype PKCS12 \
+  -keystore stumanage-release.keystore \
+  -alias stumanage \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -dname "CN=StuManage, OU=Development, O=StuManage, L=, S=, C=IN"
 ```
-Build → Generate Signed Bundle / APK
-→ Choose "Android App Bundle"
-→ Key store path: app/stumanage-release.keystore
-→ Key store password: stumanage2025
-→ Key alias: stumanage
-→ Key password: stumanage2025
-→ Build variant: release
-→ Click Finish
+
+You will be prompted to set a password — use something strong and save it securely.
+
+## Step 2 — Create key.properties
+
+In the `artifacts/stumanage/android/` directory, copy the example file:
+
+```bash
+cp key.properties.example key.properties
 ```
+
+Then edit `key.properties` and fill in your password:
+
+```
+storeFile=app/stumanage-release.keystore
+storePassword=<your_password>
+keyAlias=stumanage
+keyPassword=<your_password>
+```
+
+**Never commit `key.properties` or the `.keystore` file to git** — they're already in `.gitignore`.
+
+## Step 3 — Build the AAB in Android Studio
+
+1. Open Android Studio → "Open an existing project"
+2. Select the `artifacts/stumanage/android` folder
+3. Wait for Gradle sync to complete (first time: 5-10 minutes)
+4. Go to: `Build → Generate Signed Bundle / APK`
+5. Choose **Android App Bundle**
+6. Point to `app/stumanage-release.keystore` and enter your password
+7. Select **release** variant → click **Finish**
 
 The `.aab` file will be at:
 ```
 android/app/build/outputs/bundle/release/app-release.aab
 ```
 
-### 4. Upload to Google Play Console
+## Step 4 — Upload to Google Play Console
+
 1. Go to [Google Play Console](https://play.google.com/console)
 2. Create new app → "StuManage"
 3. Go to **Release → Production** (or Internal Testing first)
-4. Click **Create new release**
-5. Upload your `app-release.aab`
-6. Fill in release notes → Save → Review → Rollout
+4. Click **Create new release** → Upload your `app-release.aab`
+5. Fill in release notes → Save → Review → Rollout
 
 ---
 
 ## App Details
+
 | Field | Value |
 |---|---|
 | Package Name | `com.stumanage.app` |
@@ -61,24 +83,32 @@ android/app/build/outputs/bundle/release/app-release.aab
 | Min Android | API 22 (Android 5.1+) |
 | Target Android | API 35 (Android 15) |
 
-## Keystore Details (KEEP SECRET)
-See `KEYSTORE_INFO.txt` for full fingerprint details.
+## Google Play Store Listing
 
-| Field | Value |
-|---|---|
-| File | `android/app/stumanage-release.keystore` |
-| Password | `stumanage2025` |
-| Alias | `stumanage` |
-| SHA-1 | `4E:24:06:E3:4E:63:64:D6:71:EA:2C:83:45:34:5D:02:92:48:B8:10` |
+- **App icon**: `android/store-icon-512.png` (512×512, already generated)
+- **Short description**: Manage your study center — students, seats, fees & WhatsApp reminders
+- **Full description**: StuManage helps reading room and study center owners manage students, track monthly fees, assign seats, and send WhatsApp payment reminders with one tap.
+- **Category**: Education or Business
+- **Content rating**: Everyone
+- **Privacy Policy URL**: Your deployed app URL + `/privacy`
 
-**IMPORTANT:** Never lose the keystore file — you cannot update your Play Store app without it!
+## SHA-1 Fingerprint (for Google Sign-In setup)
+
+After generating the keystore, run this to get the SHA-1:
+
+```bash
+keytool -list -v \
+  -keystore android/app/stumanage-release.keystore \
+  -alias stumanage
+```
+
+You'll need this SHA-1 when configuring Google OAuth in Supabase and Google Cloud Console.
 
 ---
 
-## Google Play Store Listing (you'll need these)
-- **App icon**: `android/store-icon-512.png` (512×512, already generated)
-- **Short description**: Manage your study center — students, seats, fees & WhatsApp reminders
-- **Full description**: StuManage helps reading room and tuition center owners manage students, track fees, assign seats, and send WhatsApp payment reminders easily.
-- **Category**: Education or Business
-- **Content rating**: Everyone
-- **Privacy Policy URL**: Add your deployed app URL + `/privacy`
+## IMPORTANT — Back Up Your Keystore
+
+**If you lose the keystore file or forget the password, you cannot update your app on Google Play.** Keep a secure backup:
+- Password manager (1Password, Bitwarden, etc.)
+- Encrypted cloud storage
+- Printed copy of the password stored safely

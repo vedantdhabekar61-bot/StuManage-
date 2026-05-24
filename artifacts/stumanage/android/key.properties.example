@@ -1,0 +1,8 @@
+# Copy this file to key.properties (in the android/ directory)
+# Fill in your actual keystore details.
+# NEVER commit key.properties to version control!
+
+storeFile=app/stumanage-release.keystore
+storePassword=YOUR_KEYSTORE_PASSWORD
+keyAlias=stumanage
+keyPassword=YOUR_KEY_PASSWORD
