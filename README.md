@@ -183,7 +183,7 @@ MIT License
 
 ## 👨‍💻 Author
 
-Vedant  
+Vedant Dhabekar 
 Founder — StuManage
 
 ---
