@@ -117,22 +117,6 @@ npm run dev
 
 ---
 
-## 🔑 Environment Variables
-
-Create a `.env.local` file in the root directory:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=
-
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-
-SUPABASE_SERVICE_ROLE_KEY=
-
-RAZORPAY_KEY_ID=
-
-RAZORPAY_KEY_SECRET=
-```
-
 ---
 
 ## 📂 Project Structure
