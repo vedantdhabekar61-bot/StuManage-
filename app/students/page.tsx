@@ -28,14 +28,18 @@ export default function StudentsPage() {
   const refreshScale = useTransform(scrollY, [-pullDistance, 0], [1, 0.5]);
 
   useEffect(() => {
-    const handleScroll = async () => {
-      if (window.scrollY < -pullDistance && !isRefreshing) {
+    let triggered = false;
+    const handleScroll = () => {
+      if (window.scrollY < -60 && !triggered && !isRefreshing) {
+        triggered = true;
         setIsRefreshing(true);
-        await refreshStudents();
-        setIsRefreshing(false);
+        refreshStudents().finally(() => {
+          setIsRefreshing(false);
+          triggered = false;
+        });
       }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isRefreshing, refreshStudents]);
 

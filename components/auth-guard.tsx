@@ -5,7 +5,6 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { WelcomeScreen } from './welcome-screen';
 import { AnimatePresence, motion } from 'motion/react';
-import { Activity } from 'lucide-react';
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, isLoaded } = useAuth();
@@ -41,7 +40,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!isLoaded) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
-        <Activity className="h-10 w-10 animate-spin text-[#0ea495]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0ea495] border-t-transparent" />
         <p className="mt-4 text-sm font-medium text-slate-500">Loading your space...</p>
       </div>
     );
@@ -55,7 +54,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!user && !isPublicPage && !showWelcome) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFBF7]">
-        <Activity className="h-10 w-10 animate-spin text-[#0ea495]" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0ea495] border-t-transparent" />
       </div>
     );
   }

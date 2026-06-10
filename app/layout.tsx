@@ -53,8 +53,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
         <AuthProvider>
-          <AuthGuard>
-            <StudentsProvider>
+          <StudentsProvider>
+            <AuthGuard>
               <SubscriptionGuard>
                 <SnackbarProvider> 
                   <div className="mx-auto min-h-screen max-w-md bg-background pb-20">
@@ -65,8 +65,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   </div>
                 </SnackbarProvider>
               </SubscriptionGuard>
-            </StudentsProvider>
-          </AuthGuard>
+            </AuthGuard>
+          </StudentsProvider>
         </AuthProvider>
       </body>
     </html>

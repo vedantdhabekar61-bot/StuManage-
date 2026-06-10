@@ -32,14 +32,18 @@ export default function Dashboard() {
   const refreshScale = useTransform(scrollY, [-pullDistance, 0], [1, 0.5]);
 
   useEffect(() => {
-    const handleScroll = async () => {
-      if (window.scrollY < -pullDistance && !isRefreshing) {
+    let triggered = false;
+    const handleScroll = () => {
+      if (window.scrollY < -60 && !triggered && !isRefreshing) {
+        triggered = true;
         setIsRefreshing(true);
-        await refreshStudents();
-        setIsRefreshing(false);
+        refreshStudents().finally(() => {
+          setIsRefreshing(false);
+          triggered = false;
+        });
       }
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [isRefreshing, refreshStudents]);
 
@@ -137,7 +141,7 @@ export default function Dashboard() {
     }
   };
 
-  if (!authLoaded || !studentsLoaded || !settingsLoaded) {
+  if (!authLoaded) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
@@ -191,7 +195,11 @@ export default function Dashboard() {
             >
               <div className="flex items-center gap-1 bg-teal-500/10 px-2 py-0.5 rounded-full border border-teal-500/10 transition-colors group-hover:bg-teal-500/20 max-w-full">
                 <span className="text-[10px] font-bold text-teal-600 uppercase tracking-wider truncate">
-                  {settings.libraryName}
+                  {!settingsLoaded ? (
+                    <span className="inline-block h-3 w-16 bg-teal-600/20 rounded animate-pulse" />
+                  ) : (
+                    settings.libraryName
+                  )}
                 </span>
                 <Edit2 className="h-2 w-2 shrink-0 text-teal-600/50" />
               </div>
@@ -223,7 +231,13 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-xs font-bold text-muted uppercase tracking-widest">Monthly Income</p>
-                <p className="text-3xl font-black text-foreground tracking-tight">₹{metrics.revenueThisMonth.toLocaleString('en-IN')}</p>
+                <p className="text-3xl font-black text-foreground tracking-tight">
+                  {studentsLoaded ? (
+                    `₹${metrics.revenueThisMonth.toLocaleString('en-IN')}`
+                  ) : (
+                    <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />
+                  )}
+                </p>
               </div>
             </div>
             <Link href="/reminders" className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-primary active:scale-95 transition-transform">
@@ -236,12 +250,12 @@ export default function Dashboard() {
         <section className="grid grid-cols-2 gap-4">
           <MetricsCard 
             label="Active Students" 
-            value={metrics.activeStudents} 
+            value={studentsLoaded ? metrics.activeStudents : <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />} 
             icon={Users} 
           />
           <MetricsCard 
             label="Available Seats" 
-            value={metrics.availableSeats} 
+            value={studentsLoaded && settingsLoaded ? metrics.availableSeats : <span className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-teal-600 border-t-transparent" />} 
             icon={Armchair} 
           />
         </section>
@@ -251,8 +265,8 @@ export default function Dashboard() {
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-extrabold text-foreground flex items-center gap-2">
               Action Alerts
-              <span className="bg-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full">
-                {metrics.urgentActions.length} Pending
+              <span className="bg-accent/20 text-accent text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center h-5">
+                {studentsLoaded ? `${metrics.urgentActions.length} Pending` : <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-accent border-t-transparent" />}
               </span>
             </h2>
             <Link href="/reminders" className="text-sm font-bold text-primary">View All</Link>
@@ -260,8 +274,16 @@ export default function Dashboard() {
           
           <div className="flex flex-col gap-4">
             <AnimatePresence mode="popLayout">
-              {metrics.urgentActions.map((student) => {
-                const isOverdue = isStudentOverdue(student);
+              {!studentsLoaded ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center bg-card rounded-[2rem] border border-dashed border-border/50">
+                  <div className="mb-3 rounded-full bg-background p-4 text-muted/30">
+                    <span className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
+                  </div>
+                  <p className="font-bold text-muted animate-pulse">Loading actions...</p>
+                </div>
+              ) : (
+                metrics.urgentActions.map((student) => {
+                  const isOverdue = isStudentOverdue(student);
                 
                 // Normalizing dates for display to ensure absolute accuracy
                 const expiryDate = new Date(student.expiryDate);
@@ -316,10 +338,10 @@ export default function Dashboard() {
                     </div>
                   </motion.div>
                 );
-              })}
+              }))}
             </AnimatePresence>
             
-            {metrics.urgentActions.length === 0 && (
+            {studentsLoaded && metrics.urgentActions.length === 0 && (
               <div className="flex flex-col items-center justify-center py-12 text-center bg-card rounded-[2rem] border border-dashed border-border/50">
                 <div className="mb-3 rounded-full bg-background p-4 text-muted/30">
                   <ShieldCheck className="h-8 w-8" />
