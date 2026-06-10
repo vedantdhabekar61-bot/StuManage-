@@ -21,12 +21,10 @@ export default function Dashboard() {
   const router = useRouter();
   const { settings, updateSettings, isLoaded: settingsLoaded } = useSettings();
   const { students, isLoaded: studentsLoaded, updateStudent, refreshStudents } = useStudents();
-  const { logout, user, isLoaded: authLoaded } = useAuth();
+  const { user, isLoaded: authLoaded } = useAuth();
   const [isEditingLibrary, setIsEditingLibrary] = useState(false);
   const [newLibraryName, setNewLibraryName] = useState(settings.libraryName);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const { scrollY } = useScroll();
   const pullDistance = 80;
@@ -170,10 +168,10 @@ export default function Dashboard() {
       <header className="flex items-center justify-between px-4 sm:px-6 pt-8 pb-4 sticky top-0 bg-[#FDFBF7]/95 backdrop-blur-sm z-10">
         <div className="flex items-center gap-3 min-w-0">
           <button 
-            onClick={() => setShowLogoutConfirm(true)}
+            onClick={() => router.push('/settings')}
             className="shrink-0 active:scale-95 transition-transform"
-            aria-label="Profile"
-            title="Log out"
+            aria-label="Settings"
+            title="Settings"
           >
             <div className="h-10 w-10 sm:h-11 sm:w-11 rounded-full bg-teal-100 flex items-center justify-center text-teal-700 text-lg font-bold shadow-sm">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
@@ -344,51 +342,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Logout Confirmation Modal */}
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowLogoutConfirm(false)}
-              className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
-            />
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-sm rounded-[2.5rem] bg-card p-8 shadow-2xl text-center"
-            >
-              <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <LogOut className="h-8 w-8 ml-1" />
-              </div>
-              <h3 className="text-xl font-black text-foreground mb-2">Log Out?</h3>
-              <p className="text-sm font-semibold text-muted mb-6">
-                Are you sure you want to log out of your account?
-              </p>
-              <div className="flex gap-3">
-                <button 
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 rounded-2xl bg-background py-4 text-[13px] font-black uppercase tracking-widest text-muted active:scale-95 transition-transform"
-                >
-                  Cancel
-                </button>
-                <button 
-                  onClick={() => {
-                    setShowLogoutConfirm(false);
-                    logout();
-                  }}
-                  className="flex-1 rounded-2xl bg-rose-600 py-4 text-[13px] font-black uppercase tracking-widest text-white shadow-lg shadow-rose-200 active:scale-95 transition-transform"
-                >
-                  Log Out
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+
 
       {/* Edit Library Name Modal */}
       <AnimatePresence>
