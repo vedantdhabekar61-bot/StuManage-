@@ -141,14 +141,6 @@ export default function Dashboard() {
     }
   };
 
-  if (!authLoaded) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-teal-600 border-t-transparent" />
-      </div>
-    );
-  }
-
   return (
     <main className="flex min-h-screen flex-col bg-background pb-24">
       {/* Pull to Refresh Indicator */}

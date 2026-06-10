@@ -9,7 +9,7 @@ export function SubscriptionBanner() {
   const { isActive, daysLeft, isTrial, isPro, loading } = useSubscription();
 
   // Don't show if loading
-  if (loading) return null;
+  if (loading) return <div className="px-6 pt-4"><div className="h-[88px]" /></div>;
   
   // Don't show if active Pro user with more than 5 days left
   if (isPro && isActive && daysLeft > 5) return null;

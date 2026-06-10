@@ -60,7 +60,7 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence mode="popLayout">
       {showWelcome ? (
         <motion.div
           key="welcome"

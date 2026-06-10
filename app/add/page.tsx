@@ -97,6 +97,7 @@ export default function AddStudentPage() {
       const errorMessage = err.message || 'Failed to register student. Please try again.';
       setError(errorMessage);
       snackbar.show(errorMessage, 'error');
+    } finally {
       setIsSubmitting(false);
     }
   };

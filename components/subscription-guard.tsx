@@ -24,8 +24,12 @@ export function SubscriptionGuard({ children }: { children: React.ReactNode }) {
     }
   }, [loading, user, isActive, isPublicPath, router]);
 
-  if (loading && !isPublicPath) {
+  if (!authLoaded && !isPublicPath) {
     return null; // Let AuthGuard handle the initial spinner
+  }
+
+  if (subLoading && authLoaded && !isPublicPath) {
+    return <>{children}</>; // Render content; redirect fires via useEffect if needed
   }
 
   // Return null while redirecting to billing if subscription is expired
