@@ -38,7 +38,11 @@ function getWhatsAppUrl(student: Student, message: string): string {
   const cleanPhone = student.phoneNumber.replace(/\D/g, '');
   // Ensure it has 91 prefix if it's a 10-digit number
   const phone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
-  return `https://wa.me/${phone}?text=${message}`;
+  
+  if (typeof navigator !== 'undefined' && /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    return `whatsapp://send?phone=${phone}&text=${message}`;
+  }
+  return `https://api.whatsapp.com/send?phone=${phone}&text=${message}`;
 }
 
 export function isStudentOverdue(student: Student): boolean {
@@ -71,6 +75,10 @@ export function isValidPhone(phone: string): boolean {
 export function openWhatsApp(student: Student, message: string): boolean {
   const url = getWhatsAppUrl(student, message);
   if (url !== '#') {
+    if (url.startsWith('whatsapp://')) {
+      window.location.href = url;
+      return true;
+    }
     const win = window.open(url, '_blank');
     if (!win || win.closed || typeof win.closed === 'undefined') {
       return false;
