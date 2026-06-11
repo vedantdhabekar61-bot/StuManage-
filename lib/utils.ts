@@ -18,9 +18,10 @@ export function formatWhatsAppMessage(template: string, student: Student, librar
   const replacements: Record<string, string> = {
     '[Amount]': (student.price || 0).toString(),
     '[Student Name]': student.studentName || '',
-    '[Due Date]': student.expiryDate ? new Date(student.expiryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }) : '',
-    '[Library Name]': libraryName || 'the Library',
-    '[Teacher / Library Name]': libraryName || 'the Library'
+    '[Due Date]': student.expiryDate 
+      ? new Date(student.expiryDate + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }) 
+      : '',
+    '[Teacher / Library Name]': libraryName || 'the Library',
   };
 
   Object.entries(replacements).forEach(([tag, value]) => {

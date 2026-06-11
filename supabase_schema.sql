@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.settings (
     owner_id UUID PRIMARY KEY REFERENCES public.owners(id) ON DELETE CASCADE,
     total_seats INTEGER DEFAULT 50,
     library_name TEXT DEFAULT 'StuManage app',
-    message_template TEXT,
+    message_template TEXT DEFAULT 'Namaste 🙏\n\nThis is a friendly reminder that the monthly fee of ₹[Amount] for [Student Name] is due on [Due Date].\n\nKindly make the payment on time.\n\nThank you,\n[Teacher / Library Name]',
     updated_at TIMESTAMPTZ DEFAULT now()
 );
 

@@ -80,9 +80,9 @@ export function useSettings() {
         console.warn('Supabase settings fetch error:', error.message);
       } else if (data) {
         const fetchedSettings = {
-          totalSeats: data.total_seats,
-          libraryName: data.library_name,
-          messageTemplate: data.message_template,
+          totalSeats: data.total_seats ?? DEFAULT_SETTINGS.totalSeats,
+          libraryName: data.library_name ?? DEFAULT_SETTINGS.libraryName,
+          messageTemplate: data.message_template ?? DEFAULT_SETTINGS.messageTemplate,
         };
         setSettings(fetchedSettings);
         localStorage.setItem(`settings_${supabaseUser.id}`, JSON.stringify(fetchedSettings));
