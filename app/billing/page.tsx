@@ -73,9 +73,9 @@ export default function BillingPage() {
           const result = await verifyRes.json();
           if (result.status === 'success') {
             if (user?.id) localStorage.removeItem(`auth_profile_${user.id}`);
+            await refreshProfile();
             setPaymentMsg({ type: 'success', text: 'Payment Successful! Pro is now active.' });
             router.push('/');
-            refreshProfile(); // Fire-and-forget
           } else {
             setPaymentMsg({ type: 'error', text: 'Payment Verification Failed. Please contact support.' });
           }
