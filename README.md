@@ -1,20 +1,27 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# 📚 StuManage
 
-# Run and deploy your AI Studio app
+> Reading Room & Study Library Management SaaS
 
-This contains everything you need to run your app locally.
+StuManage is a mobile-first SaaS platform built for reading room operators, tuition centers, and study library managers across India. It helps manage students, seat allocations, fee collections, and payment reminders through a simple and affordable digital solution.
 
-View your app in AI Studio: https://ai.studio/apps/e58ce3d3-3789-468d-9753-4c893f4c718a
+## ✨ Features
 
-## Run Locally
+- 👨‍🎓 Student Registration & Management
+- 🪑 Visual Seat Layout Management
+- 💰 Fee Tracking & Revenue Dashboard
+- 📱 One-Tap WhatsApp Fee Reminders
+- 📢 Bulk Payment Reminders
+- ⚠️ Overdue Student Detection
+- 🌙 Dark Mode Support
+- 📲 Progressive Web App (PWA)
+- 💳 Razorpay Subscription Billing
 
-**Prerequisites:**  Node.js
+## 📸 Screenshots
 
+> Add screenshots here
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+```text
+Dashboard
+Seat Layout
+Student Management
+Billing & Subscription
