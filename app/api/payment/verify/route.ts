@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       const proExpiryDate = new Date();
       proExpiryDate.setDate(proExpiryDate.getDate() + 30);
 
-      const { error, count } = await (supabaseAdmin
+      const { error, data } = await (supabaseAdmin
         .from('subscriptions') as any)
         .update({
           status: 'active',
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         .eq('owner_id', user.id)
         .select();
 
-      if (error || !count) {
+      if (error || !data || data.length === 0) {
         console.error('Supabase subscription update error:', error || 'No rows updated');
         return NextResponse.json({ error: 'Failed to update subscription' }, { status: 500 });
       }
